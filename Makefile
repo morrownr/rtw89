@@ -97,11 +97,13 @@ clean:
 install:
 	@strip -g *.ko
 	@install -Dvm 644 -t $(MODDIR) *.ko
+	@install -Dvm 644 -t /etc/modprobe.d blacklist-rtw89.conf
 	depmod -a $(KVER)
 
 uninstall:
 	@rm -rvf $(MODDIR)
 	@rmdir -v --ignore-fail-on-non-empty /lib/modules/$(KVER)/extra || true
+	@rm -vf /etc/modprobe.d/blacklist-rtw89.conf
 	depmod -a $(KVER)
 
 endif
