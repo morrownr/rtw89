@@ -2,9 +2,6 @@
 /* Copyright(c) 2019-2020  Realtek Corporation
  */
 
-#include <linux/version.h>
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 11, 0)
 #include "acpi.h"
 #include "debug.h"
 #include "phy.h"
@@ -369,7 +366,7 @@ static void rtw89_tas_state_update(struct rtw89_dev *rtwdev)
 	if (src == RTW89_SAR_SOURCE_NONE)
 		return;
 
-	chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+	chan = rtw89_chan_get(rtwdev, RTW89_CHANCTX_0);
 	ret = sar_hdl->query_sar_config(rtwdev, chan->freq, &cfg);
 	if (ret)
 		return;
@@ -495,4 +492,3 @@ void rtw89_tas_track(struct rtw89_dev *rtwdev)
 
 	rtw89_tas_state_update(rtwdev);
 }
-#endif
