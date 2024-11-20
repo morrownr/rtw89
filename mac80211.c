@@ -66,7 +66,11 @@ static int rtw89_ops_start(struct ieee80211_hw *hw)
 	return ret;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0)
+static void rtw89_ops_stop(struct ieee80211_hw *hw)
+#else
 static void rtw89_ops_stop(struct ieee80211_hw *hw, bool suspend)
+#endif
 {
 	struct rtw89_dev *rtwdev = hw->priv;
 
@@ -489,8 +493,10 @@ static void rtw89_ops_link_info_changed(struct ieee80211_hw *hw,
 	if (changed & BSS_CHANGED_CQM)
 		rtw89_fw_h2c_set_bcn_fltr_cfg(rtwdev, vif, true);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	if (changed & BSS_CHANGED_TPE)
 		rtw89_reg_6ghz_recalc(rtwdev, rtwvif, true);
+#endif
 
 	mutex_unlock(&rtwdev->mutex);
 }

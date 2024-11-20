@@ -839,6 +839,7 @@ static const struct dbgfs_txpwr_table *dbgfs_txpwr_tables[RTW89_CHIP_GEN_NUM] = 
 	[RTW89_CHIP_BE] = &dbgfs_txpwr_table_be,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 static
 void rtw89_debug_priv_txpwr_table_get_regd(struct seq_file *m,
 					   struct rtw89_dev *rtwdev,
@@ -860,6 +861,7 @@ void rtw89_debug_priv_txpwr_table_get_regd(struct seq_file *m,
 			seq_printf(m, "[TPE] %d dBm\n", tpe6->constraint);
 	}
 }
+#endif
 
 static int rtw89_debug_priv_txpwr_table_get(struct seq_file *m, void *v)
 {
@@ -874,7 +876,12 @@ static int rtw89_debug_priv_txpwr_table_get(struct seq_file *m, void *v)
 	rtw89_leave_ps_mode(rtwdev);
 	chan = rtw89_chan_get(rtwdev, RTW89_CHANCTX_0);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	rtw89_debug_priv_txpwr_table_get_regd(m, rtwdev, chan);
+#else
+	seq_puts(m, "[Regulatory] ");
+	__print_regd(m, rtwdev, chan);
+#endif
 
 	seq_puts(m, "[SAR]\n");
 	rtw89_print_sar(m, rtwdev, chan->freq);

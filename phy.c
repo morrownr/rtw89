@@ -1851,6 +1851,7 @@ static s8 rtw89_phy_txpwr_rf_to_mac(struct rtw89_dev *rtwdev, s8 txpwr_rf)
 	return txpwr_rf >> (chip->txpwr_factor_rf - chip->txpwr_factor_mac);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 static s8 rtw89_phy_txpwr_dbm_to_mac(struct rtw89_dev *rtwdev, s8 dbm)
 {
 	const struct rtw89_chip_info *chip = rtwdev->chip;
@@ -1880,6 +1881,7 @@ static s8 rtw89_phy_get_tpe_constraint(struct rtw89_dev *rtwdev, u8 band)
 
 	return rtw89_phy_txpwr_dbm_to_mac(rtwdev, cstr);
 }
+#endif
 
 s8 rtw89_phy_read_txpwr_byrate(struct rtw89_dev *rtwdev, u8 band, u8 bw,
 			       const struct rtw89_rate_desc *rate_desc)
@@ -1955,7 +1957,9 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
 	u8 regd = rtw89_regd_get(rtwdev, band);
 	u8 reg6 = regulatory->reg_6ghz_power;
 	s8 lmt = 0, sar;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	s8 cstr;
+#endif
 
 	switch (band) {
 	case RTW89_BAND_2G:
@@ -1988,9 +1992,14 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
 
 	lmt = rtw89_phy_txpwr_rf_to_mac(rtwdev, lmt);
 	sar = rtw89_query_sar(rtwdev, freq);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	cstr = rtw89_phy_get_tpe_constraint(rtwdev, band);
 
 	return min3(lmt, sar, cstr);
+#else
+	return min(lmt, sar);
+#endif
+
 }
 EXPORT_SYMBOL(rtw89_phy_read_txpwr_limit);
 
@@ -2214,7 +2223,9 @@ s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
 	u8 regd = rtw89_regd_get(rtwdev, band);
 	u8 reg6 = regulatory->reg_6ghz_power;
 	s8 lmt_ru = 0, sar;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	s8 cstr;
+#endif
 
 	switch (band) {
 	case RTW89_BAND_2G:
@@ -2247,9 +2258,14 @@ s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
 
 	lmt_ru = rtw89_phy_txpwr_rf_to_mac(rtwdev, lmt_ru);
 	sar = rtw89_query_sar(rtwdev, freq);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	cstr = rtw89_phy_get_tpe_constraint(rtwdev, band);
 
 	return min3(lmt_ru, sar, cstr);
+#else
+	return min(lmt_ru, sar);
+#endif
+
 }
 
 static void
