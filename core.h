@@ -26,6 +26,21 @@ struct rtw89_debugfs;
 
 extern const struct ieee80211_ops rtw89_ops;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 5, 0)
+/*
+ * Optional: only supported since gcc >= 15
+ * Optional: only supported since clang >= 18
+ *
+ *   gcc: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108896
+ * clang: https://github.com/llvm/llvm-project/pull/76348
+ */
+#if __has_attribute(__counted_by__)
+# define __counted_by(member)		__attribute__((__counted_by__(member)))
+#else
+# define __counted_by(member)
+#endif
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
 /* UL-bandwidth within common_info of trigger frame */
 #define IEEE80211_TRIGGER_ULBW_MASK		0xc0000
