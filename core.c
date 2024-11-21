@@ -2216,7 +2216,11 @@ static void rtw89_core_rx_to_mac80211(struct rtw89_dev *rtwdev,
 	struct napi_struct *napi = &rtwdev->napi;
 
 	/* In low power mode, napi isn't scheduled. Receive it to netif. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 	if (unlikely(!napi_is_scheduled(napi)))
+#else
+	if (unlikely(!test_bit(NAPI_STATE_SCHED, &napi->state)))
+#endif
 		napi = NULL;
 
 	rtw89_core_hw_to_sband_rate(rx_status);
