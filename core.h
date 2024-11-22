@@ -12,6 +12,7 @@
 #include <linux/iopoll.h>
 #include <linux/workqueue.h>
 #include <net/mac80211.h>
+#include <linux/version.h>
 
 struct rtw89_dev;
 struct rtw89_pci_info;
