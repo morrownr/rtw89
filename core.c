@@ -2751,7 +2751,11 @@ EXPORT_SYMBOL(rtw89_core_napi_stop);
 
 int rtw89_core_napi_init(struct rtw89_dev *rtwdev)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 10, 0)
 	rtwdev->netdev = alloc_netdev_dummy(0);
+#else
+	rtwdev->netdev = alloc_netdev(0, "dummy#", NET_NAME_UNKNOWN, ether_setup);
+#endif
 	if (!rtwdev->netdev)
 		return -ENOMEM;
 
