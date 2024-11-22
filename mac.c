@@ -4732,7 +4732,11 @@ void rtw89_mac_set_he_obss_narrow_bw_ru(struct rtw89_dev *rtwdev,
 		return;
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
 	oper = bss_conf->chanreq.oper;
+#else
+	oper = bss_conf->chandef;
+#endif
 	if (!(oper.chan->flags & IEEE80211_CHAN_RADAR)) {
 		rcu_read_unlock();
 		return;
