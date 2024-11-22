@@ -748,6 +748,7 @@ enum rtw89_reg_6ghz_power {
 	RTW89_REG_6GHZ_POWER_DFLT = RTW89_REG_6GHZ_POWER_VLP,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 #define RTW89_MIN_VALID_POWER_CONSTRAINT (-10) /* unit: dBm */
 
 /* calculate based on ieee80211 Transmit Power Envelope */
@@ -755,6 +756,7 @@ struct rtw89_reg_6ghz_tpe {
 	bool valid;
 	s8 constraint; /* unit: dBm */
 };
+#endif
 
 enum rtw89_fw_pkt_ofld_type {
 	RTW89_PKT_OFLD_TYPE_PROBE_RSP = 0,
@@ -3474,7 +3476,9 @@ struct rtw89_vif_link {
 	bool chanctx_assigned; /* only valid when running with chanctx_ops */
 	enum rtw89_chanctx_idx chanctx_idx;
 	enum rtw89_reg_6ghz_power reg_6ghz_power;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	struct rtw89_reg_6ghz_tpe reg_6ghz_tpe;
+#endif
 
 	u8 mac_id;
 	u8 port;
@@ -5090,7 +5094,9 @@ struct rtw89_regd {
 struct rtw89_regulatory_info {
 	const struct rtw89_regd *regd;
 	enum rtw89_reg_6ghz_power reg_6ghz_power;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	struct rtw89_reg_6ghz_tpe reg_6ghz_tpe;
+#endif
 	DECLARE_BITMAP(block_unii4, RTW89_REGD_MAX_COUNTRY_NUM);
 	DECLARE_BITMAP(block_6ghz, RTW89_REGD_MAX_COUNTRY_NUM);
 	DECLARE_BITMAP(block_6ghz_sp, RTW89_REGD_MAX_COUNTRY_NUM);
