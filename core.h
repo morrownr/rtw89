@@ -26,6 +26,53 @@ struct rtw89_debugfs;
 
 extern const struct ieee80211_ops rtw89_ops;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
+/* UL-bandwidth within common_info of trigger frame */
+#define IEEE80211_TRIGGER_ULBW_MASK		0xc0000
+#define IEEE80211_TRIGGER_ULBW_20MHZ		0x0
+#define IEEE80211_TRIGGER_ULBW_40MHZ		0x1
+#define IEEE80211_TRIGGER_ULBW_80MHZ		0x2
+#define IEEE80211_TRIGGER_ULBW_160_80P80MHZ	0x3
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_20MHZ 0
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_40MHZ 1
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_80MHZ 2
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_160MHZ 3
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_320MHZ_1 4
+#define IEEE80211_RADIOTAP_EHT_USIG_COMMON_BW_320MHZ_2 5
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
+/* sparse defines __CHECKER__; see Documentation/dev-tools/sparse.rst */
+#ifdef __CHECKER__
+/*
+ * This is used to mark the sband->iftype_data pointer which is supposed
+ * to be an array with special access semantics (per iftype), but a lot
+ * of code got it wrong in the past, so with this marking sparse will be
+ * noisy when the pointer is used directly.
+ */
+# define __iftd		__attribute__((noderef, address_space(__iftype_data)))
+#else
+# define __iftd
+#endif /* __CHECKER__ */
+/**
+ * _ieee80211_set_sband_iftype_data - set sband iftype data array
+ * @sband: the sband to initialize
+ * @iftd: the iftype data array pointer
+ * @n_iftd: the length of the iftype data array
+ *
+ * Set the sband iftype data array; use this where the length cannot
+ * be derived from the ARRAY_SIZE() of the argument, but prefer
+ * ieee80211_set_sband_iftype_data() where it can be used.
+ */
+static inline void
+_ieee80211_set_sband_iftype_data(struct ieee80211_supported_band *sband,
+				 const struct ieee80211_sband_iftype_data *iftd,
+				 u16 n_iftd)
+{
+	sband->iftype_data = (const void __iftd __force *)iftd;
+	sband->n_iftype_data = n_iftd;
+}
+#endif
+
 #define MASKBYTE0 0xff
 #define MASKBYTE1 0xff00
 #define MASKBYTE2 0xff0000
