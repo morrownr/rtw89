@@ -91,11 +91,20 @@ KDIR ?= /lib/modules/$(KVER)/build
 MODDIR ?= /lib/modules/$(KVER)/extra/rtw89
 FWDIR := /lib/firmware/rtw89
 
+.PHONY: modules clean cleanup install install_fw uninstall
+
 modules:
 	$(MAKE) -j`nproc` -C $(KDIR) M=$$PWD modules
 
 clean:
 	$(MAKE) -C $(KDIR) M=$$PWD clean
+
+cleanup:
+	@rm -vf /lib/modules/$(KVER)/kernel/drivers/net/wireless/realtek/rtw89/rtw89core*
+	@rm -vf /lib/modules/$(KVER)/kernel/drivers/net/wireless/realtek/rtw89/rtw89pci*
+	@rm -vf /lib/modules/$(KVER)/kernel/drivers/net/wireless/realtek/rtw89/rtw_*
+	@rm -vfr /lib/modules/$(KVER)/kernel/drivers/net/wireless/rtw89
+	depmod -a $(KVER)
 
 install:
 	@strip -g *.ko
