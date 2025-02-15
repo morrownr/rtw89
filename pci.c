@@ -339,8 +339,10 @@ static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
 
 	ret = rtw89_pci_sync_skb_for_device_and_validate_rx_info(rtwdev, rx_ring, skb);
 	if (ret) {
+#ifdef DONT_SUPRESS_ERROR_MESSAGES
 		rtw89_err(rtwdev, "failed to update %d RXBD info: %d\n",
 			  bd_ring->wp, ret);
+#endif
 		goto err_sync_device;
 	}
 
@@ -633,8 +635,10 @@ static u32 rtw89_pci_release_tx_skbs(struct rtw89_dev *rtwdev,
 
 	ret = rtw89_pci_sync_skb_for_device_and_validate_rx_info(rtwdev, rx_ring, skb);
 	if (ret) {
+#ifdef DONT_SUPRESS_ERROR_MESSAGES
 		rtw89_err(rtwdev, "failed to update %d RXBD info: %d\n",
 			  bd_ring->wp, ret);
+#endif
 		goto err_sync_device;
 	}
 

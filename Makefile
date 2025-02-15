@@ -82,7 +82,7 @@ rtw_8922a-objs :=   rtw8922a.o \
 obj-m += rtw_8922ae.o
 rtw_8922ae-objs := rtw8922ae.o
 
-ccflags-y += -Wno-compare-distinct-pointer-types
+# ccflags-y += -DDONT_SUPRESS_ERROR_MESSAGES
 
 else
 
