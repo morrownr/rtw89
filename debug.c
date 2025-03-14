@@ -217,6 +217,7 @@ static ssize_t rtw89_debugfs_file_write(struct file *file,
 	return debugfs_priv->cb_write(rtwdev, debugfs_priv, buf, count);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
 static const struct debugfs_short_fops file_ops_single_r = {
 	.read = rtw89_debugfs_file_read,
 	.llseek = generic_file_llseek,
@@ -232,6 +233,29 @@ static const struct debugfs_short_fops file_ops_single_w = {
 	.write = rtw89_debugfs_file_write,
 	.llseek = generic_file_llseek,
 };
+#else
+static const struct file_operations file_ops_single_r = {
+	.owner = THIS_MODULE,
+	.read = rtw89_debugfs_file_read,
+	.open = simple_open,
+	.llseek = generic_file_llseek,
+};
+
+static const struct file_operations file_ops_common_rw = {
+	.owner = THIS_MODULE,
+	.read = rtw89_debugfs_file_read,
+	.write = rtw89_debugfs_file_write,
+	.open = simple_open,
+	.llseek = generic_file_llseek,
+};
+
+static const struct file_operations file_ops_single_w = {
+	.owner = THIS_MODULE,
+	.write = rtw89_debugfs_file_write,
+	.open = simple_open,
+	.llseek = generic_file_llseek,
+};
+#endif
 
 static ssize_t
 rtw89_debug_priv_read_reg_select(struct rtw89_dev *rtwdev,

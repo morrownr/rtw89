@@ -483,11 +483,19 @@ static void rtw89_phy_ra_sta_update(struct rtw89_dev *rtwdev,
 	ra->csi_mode = csi_mode;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
 void rtw89_phy_ra_update_sta_link(struct rtw89_dev *rtwdev,
 				  struct rtw89_sta_link *rtwsta_link,
 				  u32 changed)
 {
 	struct rtw89_vif_link *rtwvif_link = rtwsta_link->rtwvif_link;
+#else
+static void __rtw89_phy_ra_update_sta(struct rtw89_dev *rtwdev,
+				      struct rtw89_vif_link *rtwvif_link,
+				      struct rtw89_sta_link *rtwsta_link,
+				      u32 changed)
+{
+#endif
 	struct ieee80211_vif *vif = rtwvif_link_to_vif(rtwvif_link);
 	struct rtw89_ra_info *ra = &rtwsta_link->ra;
 	struct ieee80211_link_sta *link_sta;
@@ -520,11 +528,21 @@ void rtw89_phy_ra_update_sta(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta
 			     u32 changed)
 {
 	struct rtw89_sta *rtwsta = sta_to_rtwsta(sta);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
+	struct rtw89_vif_link *rtwvif_link;
+#endif
 	struct rtw89_sta_link *rtwsta_link;
 	unsigned int link_id;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
 	rtw89_sta_for_each_link(rtwsta, rtwsta_link, link_id)
 		rtw89_phy_ra_update_sta_link(rtwdev, rtwsta_link, changed);
+#else
+	rtw89_sta_for_each_link(rtwsta, rtwsta_link, link_id) {
+		rtwvif_link = rtwsta_link->rtwvif_link;
+		__rtw89_phy_ra_update_sta(rtwdev, rtwvif_link, rtwsta_link, changed);
+	}
+#endif
 }
 
 static bool __check_rate_pattern(struct rtw89_phy_rate_pattern *next,

@@ -5,6 +5,7 @@
 #ifndef __RTW89_CORE_H__
 #define __RTW89_CORE_H__
 
+#include <linux/version.h>
 #include <linux/average.h>
 #include <linux/bitfield.h>
 #include <linux/dmi.h>
