@@ -5306,8 +5306,10 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
 	if (!chip->support_rnr)
 		hw->wiphy->flags |= WIPHY_FLAG_SPLIT_SCAN_6GHZ;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 3)
 	if (chip->chip_gen == RTW89_CHIP_BE)
 		hw->wiphy->flags |= WIPHY_FLAG_DISABLE_WEXT;
+#endif
 
 	if (rtwdev->support_mlo)
 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_MLO;
@@ -5429,10 +5431,17 @@ struct rtw89_dev *rtw89_alloc_ieee80211_hw(struct device *device,
 		     !RTW89_CHK_FW_FEATURE(BEACON_FILTER, &early_fw);
 
 	if (no_chanctx) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
 		ops->add_chanctx = ieee80211_emulate_add_chanctx;
 		ops->remove_chanctx = ieee80211_emulate_remove_chanctx;
 		ops->change_chanctx = ieee80211_emulate_change_chanctx;
 		ops->switch_vif_chanctx = ieee80211_emulate_switch_vif_chanctx;
+#else
+		ops->add_chanctx = NULL;
+ 		ops->remove_chanctx = NULL;
+ 		ops->change_chanctx = NULL;
+ 		ops->switch_vif_chanctx = NULL;
+#endif
 		ops->assign_vif_chanctx = NULL;
 		ops->unassign_vif_chanctx = NULL;
 		ops->remain_on_channel = NULL;
