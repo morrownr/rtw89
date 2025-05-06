@@ -1719,7 +1719,7 @@ static const struct rtw89_dle_mem *get_dle_mem_cfg(struct rtw89_dev *rtwdev,
 	struct rtw89_mac_info *mac = &rtwdev->mac;
 	const struct rtw89_dle_mem *cfg;
 
-	cfg = &rtwdev->chip->dle_mem[mode];
+	cfg = rtw89_hci_dle_mem(rtwdev, mode);
 	if (!cfg)
 		return NULL;
 

@@ -3630,6 +3630,8 @@ struct rtw89_hci_ops {
 	void (*disable_intr)(struct rtw89_dev *rtwdev);
 	void (*enable_intr)(struct rtw89_dev *rtwdev);
 	int (*rst_bdram)(struct rtw89_dev *rtwdev);
+	const struct rtw89_dle_mem *(*dle_mem)(struct rtw89_dev *rtwdev,
+					       u8 qta_mode);
 };
 
 struct rtw89_hci_info {
@@ -4322,7 +4324,7 @@ struct rtw89_chip_info {
 	bool dis_2g_40m_ul_ofdma;
 	u32 rsvd_ple_ofst;
 	const struct rtw89_hfc_param_ini *hfc_param_ini;
-	const struct rtw89_dle_mem *dle_mem;
+	const struct rtw89_dle_mem *dle_mem_pcie;
 	u8 wde_qempty_acq_grpnum;
 	u8 wde_qempty_mgq_grpsel;
 	u32 rf_base_addr[2];
@@ -6126,6 +6128,12 @@ static inline void rtw89_hci_clear(struct rtw89_dev *rtwdev, struct pci_dev *pde
 {
 	if (rtwdev->hci.ops->clear)
 		rtwdev->hci.ops->clear(rtwdev, pdev);
+}
+
+static inline const
+struct rtw89_dle_mem *rtw89_hci_dle_mem(struct rtw89_dev *rtwdev, u8 qta_mode)
+{
+	return rtwdev->hci.ops->dle_mem(rtwdev, qta_mode);
 }
 
 static inline
