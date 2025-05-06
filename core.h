@@ -4325,6 +4325,8 @@ struct rtw89_chip_info {
 	u32 rsvd_ple_ofst;
 	const struct rtw89_hfc_param_ini *hfc_param_ini_pcie;
 	const struct rtw89_dle_mem *dle_mem_pcie;
+	const struct rtw89_dle_mem *dle_mem_usb2;
+	const struct rtw89_dle_mem *dle_mem_usb3;
 	u8 wde_qempty_acq_grpnum;
 	u8 wde_qempty_mgq_grpsel;
 	u32 rf_base_addr[2];
