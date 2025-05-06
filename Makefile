@@ -37,6 +37,9 @@ rtw_8851b-objs :=   rtw8851b.o \
 obj-m += rtw_8851be.o
 rtw_8851be-objs := rtw8851be.o
 
+obj-m += rtw_8851bu.o
+rtw_8851bu-objs := rtw8851bu.o
+
 obj-m += rtw_8852a.o
 rtw_8852a-objs :=   rtw8852a.o \
 		    rtw8852a_table.o \
@@ -81,6 +84,9 @@ rtw_8922a-objs :=   rtw8922a.o \
 
 obj-m += rtw_8922ae.o
 rtw_8922ae-objs := rtw8922ae.o
+
+obj-m += rtw_usb.o
+rtw_usb-y := usb.o
 
 ccflags-y += -Wno-compare-distinct-pointer-types
 # ccflags-y += -DDONT_SUPPRESS_ERROR_MESSAGES
