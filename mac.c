@@ -881,7 +881,7 @@ static int hfc_reset_param(struct rtw89_dev *rtwdev)
 
 	switch (rtwdev->hci.type) {
 	case RTW89_HCI_TYPE_PCIE:
-		param_ini = rtwdev->chip->hfc_param_ini[qta_mode];
+		param_ini = rtwdev->chip->hfc_param_ini_pcie[qta_mode];
 		param->en = 0;
 		break;
 	default:
