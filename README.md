@@ -69,4 +69,4 @@ Tested with RTL8852BE on Arch Linux (kernel version: 6.6.83-1-lts66 / 6.12.19-1-
 
 ### Known Issues
 
-1. Cannot build against kernels older than 6.9, but will be fixed soon.
+1. [8922AE: Spam messges and disconnection occasionally](https://lore.kernel.org/linux-wireless/ae5013a930574e68b96544df82f93157@realtek.com/T/#me15f16d0cd4cf85b3317ffb3bc1303b9e85402e7)
