@@ -101,7 +101,7 @@ static const struct pci_device_id rtw89_8922ae_id_table[] = {
 MODULE_DEVICE_TABLE(pci, rtw89_8922ae_id_table);
 
 static struct pci_driver rtw89_8922ae_driver = {
-	.name		= "rtw89_8922ae",
+	.name		= KBUILD_MODNAME,
 	.id_table	= rtw89_8922ae_id_table,
 	.probe		= rtw89_pci_probe,
 	.remove		= rtw89_pci_remove,
