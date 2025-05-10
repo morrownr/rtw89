@@ -2,7 +2,7 @@
 
 ## Supported chips
 - **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE, RTL8852CE, RTL8922AE
-- **USB** : RTL8851BU(**NEW**)
+- **USB** : RTL8851BU, RTL8852BU (**NEW**)
 
 ## Prerequisites
 
