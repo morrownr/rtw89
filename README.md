@@ -48,6 +48,10 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
    sudo make install_fw
    ```
 
+5. Copy the configuration file `rtw89.conf` to /etc/modprobe.d/
+   ```
+   sudo cp -v rtw89.conf /etc/modprobe.d/
+   ```
 
 6. Enroll the MOK (Machine Owner Key). This is needed **ONLY IF** [Secure Boot](https://wiki.debian.org/SecureBoot) is enabled on your system. Please see [this guide](https://github.com/dell/dkms?tab=readme-ov-file#secure-boot) for details.
 
@@ -64,6 +68,12 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
 ## Uninstallation Guide
 
 For users who installed the driver via `DKMS`, run
+1. Check the version of the rtw89 driver installed on your system.
+```
+sudo dkms status 
+```
+
+2. Remove the rtw89 driver and its source code (Change the driver version accordingly)
 ```
 sudo dkms remove rtw89/6.15 --all
 ```
@@ -73,13 +83,18 @@ sudo rm -rf /var/lib/dkms/rtw89
 ```
 sudo rm -rf /usr/src/rtw89-6.15
 ```
+
+3. Remove the configuration file
 ```
 sudo rm -f /etc/modprobe.d/rtw89.conf
 ```
 
-For users who installed the driver via `make`, run this command in the rtw89 source directory
+For users who installed the driver via `make`, run these commands in the rtw89 source directory
 ```
 sudo make uninstall
+```
+```
+sudo rm -f /etc/modprobe.d/rtw89.conf
 ```
 
 ## Note
@@ -87,10 +102,6 @@ sudo make uninstall
 Kernel 6.6 ~ 6.14 are supported. For kernel 5.15 ~ 6.5 users, use the rtw89 driver in [6.6-lts branch](https://github.com/a5a5aa555oo/rtw89/tree/6.6-lts) instead.
 
 Tested with RTL8852BE on Arch Linux (kernel version: 6.6.83-1-lts66 / 6.12.19-1-lts) and it works.
-
-## Known Issues
-
-1. [8922AE: Spam messges and disconnection occasionally](https://lore.kernel.org/linux-wireless/ae5013a930574e68b96544df82f93157@realtek.com/T/#me15f16d0cd4cf85b3317ffb3bc1303b9e85402e7)
 
 ## Q&A
 
@@ -100,14 +111,27 @@ Tested with RTL8852BE on Arch Linux (kernel version: 6.6.83-1-lts66 / 6.12.19-1-
 
 ### Q2. How to update the driver installed via DKMS?
 
-   1. Remove the rtw89 driver completely. Please see [Uninstallation Guide](#uninstallation-guide) for details.
+   1. Check the version of the rtw89 driver installed on your system.
+      ```
+      sudo dkms status
+      ```   
+   2. Remove the rtw89 driver. (Change the driver version accordingly)
+      ```
+      sudo dkms remove rtw89/6.15 --all
+      ```
+      ```
+      sudo rm -rf /var/lib/dkms/rtw89/
+      ```
+      ```
+      sudo rm -rf /usr/src/rtw89-6.15/
+      ```
 
-   2. Run this command in the rtw89 source directory to pull the latest code
+   3. Run this command in the rtw89 source directory to pull the latest code
       ```
       git pull
       ```
 
-   3. Build and install the rtw89 driver from the latest code.
+   4. Build, sign and install the rtw89 driver from the latest code.
       ```
       sudo dkms install $PWD
       ```
@@ -119,7 +143,7 @@ Tested with RTL8852BE on Arch Linux (kernel version: 6.6.83-1-lts66 / 6.12.19-1-
        git pull
       ```
   
-   2. Rebuild and reinstall the driver
+   2. Rebuild and reinstall the driver from the latest code
       ```
       make clean modules && sudo make install
       ```

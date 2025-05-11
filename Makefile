@@ -121,7 +121,6 @@ cleanup_target_system:
 install:
 	@strip -g *.ko
 	@install -Dvm 644 -t $(MODDIR) *.ko
-	@install -Dvm 644 -t /etc/modprobe.d rtw89.conf
 	depmod -a $(KVER)
 
 install_fw:
@@ -145,7 +144,6 @@ endif
 uninstall:
 	@rm -rvf $(MODDIR)
 	@rmdir -v --ignore-fail-on-non-empty /lib/modules/$(KVER)/extra || true
-	@rm -vf /etc/modprobe.d/rtw89.conf
 	depmod -a $(KVER)
 
 endif
