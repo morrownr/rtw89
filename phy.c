@@ -2285,6 +2285,9 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
 	u8 ch_idx = rtw89_channel_to_idx(rtwdev, band, ch);
 	u8 regd = rtw89_regd_get(rtwdev, band);
 	u8 reg6 = regulatory->reg_6ghz_power;
+	struct rtw89_sar_parm sar_parm = {
+		.center_freq = freq,
+	};
 	s8 lmt = 0, sar, offset;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	s8 cstr;
@@ -2321,7 +2324,7 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
 
 	offset = rtw89_phy_ant_gain_offset(rtwdev, band, freq);
 	lmt = rtw89_phy_txpwr_rf_to_mac(rtwdev, lmt + offset);
-	sar = rtw89_query_sar(rtwdev, freq);
+	sar = rtw89_query_sar(rtwdev, &sar_parm);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	cstr = rtw89_phy_get_tpe_constraint(rtwdev, band);
 
@@ -2551,6 +2554,9 @@ s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
 	u8 ch_idx = rtw89_channel_to_idx(rtwdev, band, ch);
 	u8 regd = rtw89_regd_get(rtwdev, band);
 	u8 reg6 = regulatory->reg_6ghz_power;
+	struct rtw89_sar_parm sar_parm = {
+		.center_freq = freq,
+	};
 	s8 lmt_ru = 0, sar, offset;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	s8 cstr;
@@ -2587,7 +2593,7 @@ s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
 
 	offset = rtw89_phy_ant_gain_offset(rtwdev, band, freq);
 	lmt_ru = rtw89_phy_txpwr_rf_to_mac(rtwdev, lmt_ru + offset);
-	sar = rtw89_query_sar(rtwdev, freq);
+	sar = rtw89_query_sar(rtwdev, &sar_parm);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	cstr = rtw89_phy_get_tpe_constraint(rtwdev, band);
 
