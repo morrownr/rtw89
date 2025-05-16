@@ -101,7 +101,7 @@ sudo rm -f /etc/modprobe.d/rtw89.conf
 
 Kernel 6.6 ~ 6.14 are supported. For kernel 5.15 ~ 6.5 users, use the rtw89 driver in [6.6-lts branch](https://github.com/a5a5aa555oo/rtw89/tree/6.6-lts) instead.
 
-Tested with RTL8852BE on Arch Linux (kernel version: 6.6.83-1-lts66 / 6.12.19-1-lts) and it works.
+Tested with RTL8852BE on Arch Linux (kernel version: 6.6.90-1-lts66 / 6.12.28-1-lts) and it works.
 
 ## Q&A
 
