@@ -24,7 +24,7 @@ MODULE_PARM_DESC(debug_mask, "Debugging mask");
 
 #ifdef CONFIG_RTW89_DEBUGFS
 struct rtw89_debugfs_priv_opt {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 	bool rlock:1;
 	bool wlock:1;
 #endif
@@ -128,7 +128,7 @@ static u16 rtw89_rate_info_bw_to_mhz(enum rate_info_bw bw)
 	return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 static ssize_t rtw89_debugfs_file_read_helper(struct wiphy *wiphy, struct file *file,
 					      char *buf, size_t bufsz, void *data)
 {
@@ -165,7 +165,7 @@ static ssize_t rtw89_debugfs_file_read(struct file *file, char __user *userbuf,
 		goto out;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 	if (opt->rlock) {
 		n = wiphy_locked_debugfs_read(rtwdev->hw->wiphy, file, buf, bufsz,
 					      userbuf, count, ppos,
@@ -188,7 +188,7 @@ out:
 	return simple_read_from_buffer(userbuf, count, ppos, buf, n);
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 static ssize_t rtw89_debugfs_file_write_helper(struct wiphy *wiphy, struct file *file,
 					       char *buf, size_t count, void *data)
 {
@@ -204,7 +204,7 @@ static ssize_t rtw89_debugfs_file_write(struct file *file,
 					size_t count, loff_t *loff)
 {
 	struct rtw89_debugfs_priv *debugfs_priv = file->private_data;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 	struct rtw89_debugfs_priv_opt *opt = &debugfs_priv->opt;
 	ssize_t n;
 #endif
@@ -214,7 +214,7 @@ static ssize_t rtw89_debugfs_file_write(struct file *file,
 	if (!buf)
 		return -ENOMEM;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 	if (opt->wlock) {
 		n = wiphy_locked_debugfs_write(rtwdev->hw->wiphy,
 					       file, buf, count + 1,
@@ -4382,7 +4382,7 @@ rtw89_debug_priv_mlo_mode_set(struct rtw89_dev *rtwdev,
 #define RSIZE_64K .rsize = 0x10000
 #define RSIZE_128K .rsize = 0x20000
 #define RSIZE_1M .rsize = 0x100000
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 #define RLOCK .rlock = 1
 #define WLOCK .wlock = 1
 #define RWLOCK RLOCK, WLOCK
@@ -4400,7 +4400,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.btc_info = rtw89_debug_priv_get(btc_info, RSIZE_12K),
 	.btc_manual = rtw89_debug_priv_set(btc_manual),
 	.phy_info = rtw89_debug_priv_get(phy_info),
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && defined(CONFIG_CFG80211_DEBUGFS)
 	.txpwr_table = rtw89_debug_priv_get(txpwr_table, RSIZE_20K, RLOCK),
 	.mac_mem_dump = rtw89_debug_priv_select_and_get(mac_mem_dump, RSIZE_16K, RLOCK),
 	.early_h2c = rtw89_debug_priv_set_and_get(early_h2c, RWLOCK),
