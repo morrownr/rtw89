@@ -1,4 +1,6 @@
-The Mission of this Repo: To code, test and upstream great quality USB WiFi drivers for the Realtek RTW89 driver series.
+##The Mission of this Repo:
+
+To code, test and upstream great quality Linux Standards compliant (mac80211) USB WiFi drivers for the Realtek RTW89 driver series.
 
 # rtw89
 
