@@ -1,8 +1,10 @@
+The Mission of this Repo: To code, test and upstream great quality USB WiFi drivers for the Realtek RTW89 driver series.
+
 # rtw89
 
 ## Supported chips
+- **USB** :  (**NEW**) RTL8851BU, RTL8852BU, RTL8852CU
 - **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE, RTL8852CE, RTL8922AE
-- **USB** : RTL8851BU, RTL8852BU (**NEW**)
 
 ## Prerequisites
 
