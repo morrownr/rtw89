@@ -6515,7 +6515,7 @@ static int rtw89_fw_read_c2h_reg(struct rtw89_dev *rtwdev,
 
 	info->id = RTW89_FWCMD_C2HREG_FUNC_NULL;
 
-	ret = read_poll_timeout_atomic(rtw89_read8, val, val, 1,
+	ret = read_poll_timeout_atomic(rtw89_read8, val, val, 250,
 				       RTW89_C2H_TIMEOUT, false, rtwdev,
 				       chip->c2h_ctrl_reg);
 	if (ret) {
