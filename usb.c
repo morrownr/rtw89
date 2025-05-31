@@ -24,6 +24,9 @@ static void rtw89_usb_vendorreq(struct rtw89_dev *rtwdev, u32 addr,
 	value = addr & 0x0000ffff;
 	index = (addr & 0x00ff0000) >> 16;
 
+	if (mutex_is_locked(&rtwusb->vendor_req_mutex))
+		pr_err("mutex already locked elsewhere\n");
+
 	mutex_lock(&rtwusb->vendor_req_mutex);
 
 	for (attempt = 0; attempt < 10; attempt++) {
