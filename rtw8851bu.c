@@ -19,6 +19,9 @@ static const struct usb_device_id rtw_8851bu_id_table[] = {
 	/* TP-Link Archer TX10UB Nano */
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x3625, 0x010b, 0xff, 0xff, 0xff),
 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
+	/* Edimax EW-7611UXB */
+	{ USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xe611, 0xff, 0xff, 0xff),
+	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
 	{},
 };
 MODULE_DEVICE_TABLE(usb, rtw_8851bu_id_table);
