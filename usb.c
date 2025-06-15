@@ -263,14 +263,32 @@ static int rtw89_usb_fwcmd_submit(struct rtw89_dev *rtwdev,
 	struct rtw89_tx_desc_info *desc_info = &tx_req->desc_info;
 	struct rtw89_usb_tx_ctrl_block *txcb;
 	struct sk_buff *skb = tx_req->skb;
+	struct sk_buff *skb512;
 	int txdesc_size = rtwdev->chip->h2c_desc_size;
 	void *txdesc;
 	int ret;
 
 	if (((desc_info->pkt_size + txdesc_size) % 512) == 0) {
 		rtw89_info(rtwdev, "avoiding multiple of 512\n");
-		desc_info->pkt_size += 4;
-		skb_put(skb, 4);
+
+		skb512 = dev_alloc_skb(txdesc_size + desc_info->pkt_size +
+				       RTW89_USB_MOD512_PADDING);
+		if (!skb512) {
+			rtw89_err(rtwdev, "%s: failed to allocate skb\n",
+				  __func__);
+
+			return -ENOMEM;
+		}
+
+		skb_pull(skb512, txdesc_size);
+		skb_put_data(skb512, skb->data, skb->len);
+		skb_put_zero(skb512, RTW89_USB_MOD512_PADDING);
+
+		dev_kfree_skb_any(skb);
+		skb = skb512;
+		tx_req->skb = skb512;
+
+		desc_info->pkt_size += RTW89_USB_MOD512_PADDING;
 	}
 
 	txcb = kmalloc(sizeof(*txcb), GFP_ATOMIC);
