@@ -24,11 +24,6 @@ static void rtw89_usb_vendorreq(struct rtw89_dev *rtwdev, u32 addr,
 	value = addr & 0x0000ffff;
 	index = (addr & 0x00ff0000) >> 16;
 
-	if (mutex_is_locked(&rtwusb->vendor_req_mutex))
-		pr_err("mutex already locked elsewhere\n");
-
-	mutex_lock(&rtwusb->vendor_req_mutex);
-
 	for (attempt = 0; attempt < 10; attempt++) {
 		*rtwusb->vendor_req_buf = 0;
 
@@ -70,8 +65,6 @@ static void rtw89_usb_vendorreq(struct rtw89_dev *rtwdev, u32 addr,
 			break;
 		}
 	}
-
-	mutex_unlock(&rtwusb->vendor_req_mutex);
 }
 
 static u32 rtw89_usb_read_cmac(struct rtw89_dev *rtwdev, u32 addr)
@@ -952,8 +945,6 @@ static int rtw89_usb_intf_init(struct rtw89_dev *rtwdev,
 
 	SET_IEEE80211_DEV(rtwdev->hw, &intf->dev);
 
-	mutex_init(&rtwusb->vendor_req_mutex);
-
 	return 0;
 }
 
@@ -962,7 +953,6 @@ static void rtw89_usb_intf_deinit(struct rtw89_dev *rtwdev,
 {
 	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
 
-	mutex_destroy(&rtwusb->vendor_req_mutex);
 	usb_put_dev(rtwusb->udev);
 	kfree(rtwusb->vendor_req_buf);
 	usb_set_intfdata(intf, NULL);

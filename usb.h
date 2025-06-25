@@ -33,8 +33,6 @@ struct rtw89_usb {
 	struct rtw89_dev *rtwdev;
 	struct usb_device *udev;
 
-	/* Serialises the register accesses. */
-	struct mutex vendor_req_mutex;
 	__le32 *vendor_req_buf;
 
 	atomic_t continual_io_error;
