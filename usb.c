@@ -931,7 +931,8 @@ static int rtw89_usb_intf_init(struct rtw89_dev *rtwdev,
 	if (ret)
 		return ret;
 
-	rtwusb->vendor_req_buf = kmalloc(sizeof(u32), GFP_KERNEL);
+	rtwusb->vendor_req_buf = kmalloc(sizeof(*rtwusb->vendor_req_buf),
+					 GFP_KERNEL);
 	if (!rtwusb->vendor_req_buf)
 		return -ENOMEM;
 
