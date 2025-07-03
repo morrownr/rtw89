@@ -818,18 +818,6 @@ static void rtw89_usb_ops_dump_err_status(struct rtw89_dev *rtwdev)
 	rtw89_warn(rtwdev, "%s TODO\n", __func__);
 }
 
-static const
-struct rtw89_dle_mem *rtw89_usb_ops_dle_mem(struct rtw89_dev *rtwdev,
-					    u8 qta_mode)
-{
-	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
-
-	if (rtwusb->udev->speed == USB_SPEED_SUPER)
-		return &rtwdev->chip->dle_mem_usb3[qta_mode];
-	else
-		return &rtwdev->chip->dle_mem_usb2[qta_mode];
-}
-
 static const struct rtw89_hci_ops rtw89_usb_ops = {
 	.tx_write	= rtw89_usb_ops_tx_write,
 	.tx_kick_off	= rtw89_usb_ops_tx_kick_off,
@@ -871,8 +859,6 @@ static const struct rtw89_hci_ops rtw89_usb_ops = {
 	.disable_intr	= NULL,
 	.enable_intr	= NULL,
 	.rst_bdram	= NULL,
-
-	.dle_mem	= rtw89_usb_ops_dle_mem,
 };
 
 static int rtw89_usb_parse(struct rtw89_dev *rtwdev,
@@ -991,6 +977,11 @@ int rtw89_usb_probe(struct usb_interface *intf,
 		rtw89_err(rtwdev, "failed to initialise intf: %d\n", ret);
 		goto err_free_hw;
 	}
+
+	if (rtwusb->udev->speed == USB_SPEED_SUPER)
+		rtwdev->hci.dle_type = RTW89_HCI_DLE_TYPE_USB3;
+	else
+		rtwdev->hci.dle_type = RTW89_HCI_DLE_TYPE_USB2;
 
 	rtw89_usb_init_tx(rtwdev);
 

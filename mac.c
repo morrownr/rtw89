@@ -875,35 +875,30 @@ EXPORT_SYMBOL(rtw89_mac_set_err_status);
 
 static int hfc_reset_param(struct rtw89_dev *rtwdev)
 {
+	const struct rtw89_hfc_param_ini *param_ini, *param_inis;
 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-	struct rtw89_hfc_param_ini param_ini = {NULL};
 	u8 qta_mode = rtwdev->mac.dle_info.qta_mode;
 
-	switch (rtwdev->hci.type) {
-	case RTW89_HCI_TYPE_PCIE:
-		param_ini = rtwdev->chip->hfc_param_ini_pcie[qta_mode];
-		break;
-	case RTW89_HCI_TYPE_USB:
-		param_ini = rtwdev->chip->hfc_param_ini_usb[qta_mode];
-		break;
-	default:
+	param_inis = rtwdev->chip->hfc_param_ini[rtwdev->hci.type];
+	if (!param_inis)
 		return -EINVAL;
-	}
+
+	param_ini = &param_inis[qta_mode];
 
 	param->en = 0;
 
-	if (param_ini.pub_cfg)
-		param->pub_cfg = *param_ini.pub_cfg;
+	if (param_ini->pub_cfg)
+		param->pub_cfg = *param_ini->pub_cfg;
 
-	if (param_ini.prec_cfg)
-		param->prec_cfg = *param_ini.prec_cfg;
+	if (param_ini->prec_cfg)
+		param->prec_cfg = *param_ini->prec_cfg;
 
-	if (param_ini.ch_cfg)
-		param->ch_cfg = param_ini.ch_cfg;
+	if (param_ini->ch_cfg)
+		param->ch_cfg = param_ini->ch_cfg;
 
 	memset(&param->ch_info, 0, sizeof(param->ch_info));
 	memset(&param->pub_info, 0, sizeof(param->pub_info));
-	param->mode = param_ini.mode;
+	param->mode = param_ini->mode;
 
 	return 0;
 }
@@ -1744,12 +1739,13 @@ static const struct rtw89_dle_mem *get_dle_mem_cfg(struct rtw89_dev *rtwdev,
 						   enum rtw89_qta_mode mode)
 {
 	struct rtw89_mac_info *mac = &rtwdev->mac;
-	const struct rtw89_dle_mem *cfg;
+	const struct rtw89_dle_mem *cfg, *cfgs;
 
-	cfg = rtw89_hci_dle_mem(rtwdev, mode);
-	if (!cfg)
+	cfgs = rtwdev->chip->dle_mem[rtwdev->hci.dle_type];
+	if (!cfgs)
 		return NULL;
 
+	cfg = &cfgs[mode];
 	if (cfg->mode != mode) {
 		rtw89_warn(rtwdev, "qta mode unmatch!\n");
 		return NULL;

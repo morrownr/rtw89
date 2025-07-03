@@ -207,6 +207,17 @@ enum rtw89_hci_type {
 	RTW89_HCI_TYPE_PCIE,
 	RTW89_HCI_TYPE_USB,
 	RTW89_HCI_TYPE_SDIO,
+
+	RTW89_HCI_TYPE_NUM,
+};
+
+enum rtw89_hci_dle_type {
+	RTW89_HCI_DLE_TYPE_PCIE,
+	RTW89_HCI_DLE_TYPE_USB2,
+	RTW89_HCI_DLE_TYPE_USB3,
+	RTW89_HCI_DLE_TYPE_SDIO,
+
+	RTW89_HCI_DLE_TYPE_NUM,
 };
 
 enum rtw89_core_chip_id {
@@ -3672,13 +3683,12 @@ struct rtw89_hci_ops {
 	void (*disable_intr)(struct rtw89_dev *rtwdev);
 	void (*enable_intr)(struct rtw89_dev *rtwdev);
 	int (*rst_bdram)(struct rtw89_dev *rtwdev);
-	const struct rtw89_dle_mem *(*dle_mem)(struct rtw89_dev *rtwdev,
-					       u8 qta_mode);
 };
 
 struct rtw89_hci_info {
 	const struct rtw89_hci_ops *ops;
 	enum rtw89_hci_type type;
+	enum rtw89_hci_dle_type dle_type;
 	u32 rpwm_addr;
 	u32 cpwm_addr;
 	bool paused;
@@ -4375,11 +4385,8 @@ struct rtw89_chip_info {
 	u16 max_amsdu_limit;
 	bool dis_2g_40m_ul_ofdma;
 	u32 rsvd_ple_ofst;
-	const struct rtw89_hfc_param_ini *hfc_param_ini_pcie;
-	const struct rtw89_hfc_param_ini *hfc_param_ini_usb;
-	const struct rtw89_dle_mem *dle_mem_pcie;
-	const struct rtw89_dle_mem *dle_mem_usb2;
-	const struct rtw89_dle_mem *dle_mem_usb3;
+	const struct rtw89_hfc_param_ini *hfc_param_ini[RTW89_HCI_TYPE_NUM];
+	const struct rtw89_dle_mem *dle_mem[RTW89_HCI_DLE_TYPE_NUM];
 	u8 wde_qempty_acq_grpnum;
 	u8 wde_qempty_mgq_grpsel;
 	u32 rf_base_addr[2];
@@ -6279,12 +6286,6 @@ static inline void rtw89_hci_clear(struct rtw89_dev *rtwdev, struct pci_dev *pde
 {
 	if (rtwdev->hci.ops->clear)
 		rtwdev->hci.ops->clear(rtwdev, pdev);
-}
-
-static inline const
-struct rtw89_dle_mem *rtw89_hci_dle_mem(struct rtw89_dev *rtwdev, u8 qta_mode)
-{
-	return rtwdev->hci.ops->dle_mem(rtwdev, qta_mode);
 }
 
 static inline
