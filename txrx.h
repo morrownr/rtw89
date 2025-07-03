@@ -734,6 +734,25 @@ rtw89_core_get_qsel_mgmt(struct rtw89_dev *rtwdev, struct rtw89_core_tx_request 
 
 static inline u8 rtw89_core_get_ch_dma(struct rtw89_dev *rtwdev, u8 qsel)
 {
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB &&
+	    rtwdev->chip->chip_id == RTL8852C) {
+		switch (qsel) {
+		default:
+			rtw89_warn(rtwdev, "Cannot map qsel to dma: %d\n",
+				   qsel);
+			fallthrough;
+		case RTW89_TX_QSEL_BE_0:
+		case RTW89_TX_QSEL_VO_0:
+			return RTW89_TXCH_ACH0;
+		case RTW89_TX_QSEL_BK_0:
+		case RTW89_TX_QSEL_VI_0:
+			return RTW89_TXCH_ACH2;
+		case RTW89_TX_QSEL_B0_MGMT:
+		case RTW89_TX_QSEL_B0_HI:
+			return RTW89_TXCH_CH8;
+		}
+	}
+
 	switch (qsel) {
 	default:
 		rtw89_warn(rtwdev, "Cannot map qsel to dma: %d\n", qsel);
