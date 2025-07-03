@@ -1338,9 +1338,6 @@ static void rtw89_mac_send_rpwm(struct rtw89_dev *rtwdev,
 {
 	u16 request;
 
-	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB)
-		return;
-
 	spin_lock_bh(&rtwdev->rpwm_lock);
 
 	request = rtw89_read16(rtwdev, R_AX_RPWM);

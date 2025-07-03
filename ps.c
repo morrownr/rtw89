@@ -56,9 +56,6 @@ static void rtw89_ps_power_mode_change_with_hci(struct rtw89_dev *rtwdev,
 
 static void rtw89_ps_power_mode_change(struct rtw89_dev *rtwdev, bool enter)
 {
-	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB)
-		return;
-
 	if (rtwdev->chip->low_power_hci_modes & BIT(rtwdev->ps_mode) &&
 	    !test_bit(RTW89_FLAG_WOWLAN, rtwdev->flags))
 		rtw89_ps_power_mode_change_with_hci(rtwdev, enter);
