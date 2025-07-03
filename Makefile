@@ -78,6 +78,9 @@ rtw89_8852c_git-objs := rtw8852c.o \
 obj-m += rtw89_8852ce_git.o
 rtw89_8852ce_git-objs := rtw8852ce.o
 
+obj-m += rtw89_8852cu_git.o
+rtw89_8852cu_git-objs := rtw8852cu.o
+
 obj-m += rtw89_8922a_git.o
 rtw89_8922a_git-objs := rtw8922a.o \
 			rtw8922a_rfk.o

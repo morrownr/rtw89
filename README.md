@@ -7,7 +7,7 @@ To code, test and upstream great quality Linux Standards compliant (mac80211) US
 Compatible with **Linux kernel versions 6.6 and newer** as long as your distro hasn't modified any kernel APIs. RHEL and all distros based on RHEL will have modified kernel APIs and are unlikely to be compatible with this driver.
 
 #### Supported chips
-- **USB** :  (**NEW**) RTL8851BU, RTL8852BU
+- **USB** :  (**NEW**) RTL8851BU, RTL8852BU, RTL8852CU
 - **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE, RTL8852CE, RTL8922AE
 
 ## Prerequisites
