@@ -5422,6 +5422,9 @@ int rtw89_fw_h2c_scan_list_offload_ax(struct rtw89_dev *rtwdev, int ch_num,
 			      H2C_CAT_MAC, H2C_CL_MAC_FW_OFLD,
 			      H2C_FUNC_ADD_SCANOFLD_CH, 1, 1, skb_len);
 
+	if (rtw89_debug_is_enabled(rtwdev, RTW89_DBG_HW_SCAN))
+		print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, skb->data, skb->len, false);
+
 	cond = RTW89_SCANOFLD_WAIT_COND_ADD_CH;
 
 	ret = rtw89_h2c_tx_and_wait(rtwdev, skb, wait, cond);
