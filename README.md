@@ -42,16 +42,16 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
 
 3. Build and install the driver
 
-   * _via dkms (Recommended especially if Secure Boot is enabled in your system)_
-
-     ```
-     sudo dkms install $PWD
-     ```
-
-   * _via make_
+   * _via make_ (**The testers of the new drivers for the USB devices MUST install the driver in this way.**)
 
      ```
      make clean modules && sudo make install
+     ```
+
+   * _via dkms (Recommended if Secure Boot is enabled in your system)_
+
+     ```
+     sudo dkms install $PWD
      ```
 
 4. Install the firmware necessary for the driver
