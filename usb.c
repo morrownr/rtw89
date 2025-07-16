@@ -9,6 +9,11 @@
 #include "txrx.h"
 #include "usb.h"
 
+static bool rtw89_switch_usb_mode = true;
+module_param_named(switch_usb_mode, rtw89_switch_usb_mode, bool, 0644);
+MODULE_PARM_DESC(switch_usb_mode,
+		 "Set to N to disable switching to USB 3 mode to avoid potential interference in the 2.4 GHz band (default: Y)");
+
 static void rtw89_usb_read_port_complete(struct urb *urb);
 
 static void rtw89_usb_vendorreq(struct rtw89_dev *rtwdev, u32 addr,
@@ -1014,6 +1019,35 @@ static void rtw89_usb_intf_deinit(struct rtw89_dev *rtwdev,
 	usb_set_intfdata(intf, NULL);
 }
 
+static int rtw89_usb_switch_mode(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
+
+	if (!rtw89_switch_usb_mode)
+		return 0;
+
+	/* No known USB 3 devices with this chip. */
+	if (rtwdev->chip->chip_id == RTL8851B)
+		return 0;
+
+	if (rtwusb->udev->speed == USB_SPEED_SUPER)
+		return 0;
+
+	rtw89_debug(rtwdev, RTW89_DBG_HCI, "%s: pad_ctrl2: %#x %#x\n",
+		    __func__,
+		    rtw89_read8(rtwdev, R_AX_PAD_CTRL2 + 1),
+		    rtw89_read8(rtwdev, R_AX_PAD_CTRL2 + 2));
+
+	/* Already tried to switch but it's a USB 2 port. */
+	if (rtw89_read8(rtwdev, R_AX_PAD_CTRL2 + 1) == USB_SWITCH_DELAY)
+		return 0;
+
+	rtw89_write8(rtwdev, R_AX_PAD_CTRL2 + 1, USB_SWITCH_DELAY);
+	rtw89_write8(rtwdev, R_AX_PAD_CTRL2 + 2, U2SWITCHU3);
+
+	return 1;
+}
+
 int rtw89_usb_probe(struct usb_interface *intf,
 		    const struct usb_device_id *id)
 {
@@ -1042,6 +1076,13 @@ int rtw89_usb_probe(struct usb_interface *intf,
 	if (ret) {
 		rtw89_err(rtwdev, "failed to initialise intf: %d\n", ret);
 		goto err_free_hw;
+	}
+
+	ret = rtw89_usb_switch_mode(rtwdev);
+	if (ret) {
+		/* Not a fail, but we do need to skip rtw89_core_register. */
+		ret = 0;
+		goto err_intf_deinit;
 	}
 
 	if (rtwusb->udev->speed == USB_SPEED_SUPER)
