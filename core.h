@@ -28,7 +28,8 @@ struct rtw89_regd_data;
 
 extern const struct ieee80211_ops rtw89_ops;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0) && \
+    LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 static inline void ieee80211_purge_tx_queue(struct ieee80211_hw *hw,
 					    struct sk_buff_head *skbs)
 {
