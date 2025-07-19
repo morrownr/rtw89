@@ -76,7 +76,11 @@ static void rtw89_ops_stop(struct ieee80211_hw *hw)
 	rtw89_core_stop(rtwdev);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
 static int rtw89_ops_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
+#else
+static int rtw89_ops_config(struct ieee80211_hw *hw, u32 changed)
+#endif
 {
 	struct rtw89_dev *rtwdev = hw->priv;
 
@@ -1021,8 +1025,12 @@ static int rtw89_ops_ampdu_action(struct ieee80211_hw *hw,
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
 static int rtw89_ops_set_rts_threshold(struct ieee80211_hw *hw, int radio_idx,
 				       u32 value)
+#else
+static int rtw89_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+#endif
 {
 	struct rtw89_dev *rtwdev = hw->priv;
 
@@ -1134,7 +1142,11 @@ static int rtw89_ops_set_bitrate_mask(struct ieee80211_hw *hw,
 }
 
 static
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
 int rtw89_ops_set_antenna(struct ieee80211_hw *hw, int radio_idx, u32 tx_ant, u32 rx_ant)
+#else
+int rtw89_ops_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+#endif
 {
 	struct rtw89_dev *rtwdev = hw->priv;
 	struct rtw89_hal *hal = &rtwdev->hal;
@@ -1157,8 +1169,12 @@ int rtw89_ops_set_antenna(struct ieee80211_hw *hw, int radio_idx, u32 tx_ant, u3
 }
 
 static
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
 int rtw89_ops_get_antenna(struct ieee80211_hw *hw, int radio_idx, u32 *tx_ant,
 			  u32 *rx_ant)
+#else
+int rtw89_ops_get_antenna(struct ieee80211_hw *hw,  u32 *tx_ant, u32 *rx_ant)
+#endif
 {
 	struct rtw89_dev *rtwdev = hw->priv;
 	struct rtw89_hal *hal = &rtwdev->hal;

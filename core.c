@@ -3848,7 +3848,7 @@ static void rtw89_track_ps_work(struct wiphy *wiphy, struct wiphy_work *work)
 
 	lockdep_assert_wiphy(wiphy);
 
-	if (test_bit(RTW89_FLAG_FORBIDDEN_TRACK_WORK, rtwdev->flags))
+	if (test_bit(RTW89_FLAG_FORBIDDEN_TRACK_WROK, rtwdev->flags))
 		return;
 
 	if (!test_bit(RTW89_FLAG_RUNNING, rtwdev->flags))
