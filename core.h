@@ -5669,6 +5669,7 @@ struct rtw89_hw_scan_info {
 	bool connected;
 	bool abort;
 	u16 delay; /* in unit of ms */
+	u8 seq: 2;
 };
 
 enum rtw89_phy_bb_gain_band {
