@@ -801,8 +801,8 @@ static int rtw89_ops_start_ap(struct ieee80211_hw *hw,
 	}
 
 	chan = rtw89_chan_get(rtwdev, rtwvif_link->chanctx_idx);
-	if (chan->band_type == RTW89_BAND_6G)
-		return -EOPNOTSUPP;
+	// if (chan->band_type == RTW89_BAND_6G)
+	// 	return -EOPNOTSUPP;
 
 	if (rtwdev->scanning)
 		rtw89_hw_scan_abort(rtwdev, rtwdev->scan_info.scanning_vif);
