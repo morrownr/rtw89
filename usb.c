@@ -819,6 +819,8 @@ static int rtw89_usb_ops_mac_post_init(struct rtw89_dev *rtwdev)
 		usb_endpoint_0 = R_AX_USB_ENDPOINT_0_V1;
 		usb_endpoint_2 = R_AX_USB_ENDPOINT_2_V1;
 		break;
+	case RTL8922A:
+		return 0; /* Nothing to do? */
 	default:
 		rtw89_err(rtwdev, "%s: unknown chip\n", __func__);
 		return -EOPNOTSUPP;
