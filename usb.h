@@ -18,6 +18,7 @@
 #define RTW89_USB_MOD512_PADDING	4
 
 #define RTW89_MAX_ENDPOINT_NUM		9
+#define RTW89_MAX_BULKIN_NUM		2
 #define RTW89_MAX_BULKOUT_NUM		7
 
 struct rtw89_usb_rx_ctrl_block {
@@ -40,7 +41,7 @@ struct rtw89_usb {
 
 	atomic_t continual_io_error;
 
-	u8 in_pipe;
+	u8 in_pipe[RTW89_MAX_BULKIN_NUM];
 	u8 out_pipe[RTW89_MAX_BULKOUT_NUM];
 
 	struct workqueue_struct *rxwq;

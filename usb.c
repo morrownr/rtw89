@@ -506,7 +506,7 @@ static void rtw89_usb_rx_resubmit(struct rtw89_usb *rtwusb,
 	rxcb->rx_skb = rx_skb;
 
 	usb_fill_bulk_urb(rxcb->rx_urb, rtwusb->udev,
-			  usb_rcvbulkpipe(rtwusb->udev, rtwusb->in_pipe),
+			  usb_rcvbulkpipe(rtwusb->udev, rtwusb->in_pipe[0]),
 			  rxcb->rx_skb->data, RTW89_USB_RECVBUF_SZ,
 			  rtw89_usb_read_port_complete, rxcb);
 
@@ -940,6 +940,7 @@ static int rtw89_usb_parse(struct rtw89_dev *rtwdev,
 	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
 	struct usb_endpoint_descriptor *endpoint;
 	int num_out_pipes = 0;
+	int num_in_pipes = 0;
 	u8 num;
 	int i;
 
@@ -955,13 +956,14 @@ static int rtw89_usb_parse(struct rtw89_dev *rtwdev,
 
 		if (usb_endpoint_dir_in(endpoint) &&
 		    usb_endpoint_xfer_bulk(endpoint)) {
-			if (rtwusb->in_pipe) {
+			if (num_in_pipes >= RTW89_MAX_BULKIN_NUM) {
 				rtw89_err(rtwdev,
-					  "found more than 1 bulk in endpoint\n");
+					  "found more than %d bulk in endpoint\n",
+					  RTW89_MAX_BULKIN_NUM);
 				return -EINVAL;
 			}
 
-			rtwusb->in_pipe = num;
+			rtwusb->in_pipe[num_in_pipes++] = num;
 		}
 
 		if (usb_endpoint_dir_out(endpoint) &&
@@ -975,6 +977,11 @@ static int rtw89_usb_parse(struct rtw89_dev *rtwdev,
 
 			rtwusb->out_pipe[num_out_pipes++] = num;
 		}
+	}
+
+	if (num_in_pipes < 1) {
+		rtw89_err(rtwdev, "no bulk in endpoints found\n");
+		return -EINVAL;
 	}
 
 	if (num_out_pipes < 1) {
