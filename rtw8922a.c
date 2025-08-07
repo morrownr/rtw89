@@ -298,17 +298,24 @@ static int rtw8922a_pwr_on_func(struct rtw89_dev *rtwdev)
 	rtw89_write32_clr(rtwdev, R_BE_FEN_RST_ENABLE, B_BE_R_SYM_ISO_ADDA_P02PP |
 						       B_BE_R_SYM_ISO_ADDA_P12PP);
 	rtw89_write8_set(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_PLATFORM_EN);
-	rtw89_write32_set(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HAXIDMA_IO_EN);
 
-	ret = read_poll_timeout(rtw89_read32, val32, val32 & B_BE_HAXIDMA_IO_ST,
-				1000, 3000000, false, rtwdev, R_BE_HCI_OPT_CTRL);
-	if (ret)
-		return ret;
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE) {
+		rtw89_write32_set(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HAXIDMA_IO_EN);
 
-	ret = read_poll_timeout(rtw89_read32, val32, !(val32 & B_BE_HAXIDMA_BACKUP_RESTORE_ST),
-				1000, 3000000, false, rtwdev, R_BE_HCI_OPT_CTRL);
-	if (ret)
-		return ret;
+		ret = read_poll_timeout(rtw89_read32, val32,
+					val32 & B_BE_HAXIDMA_IO_ST,
+					1000, 3000000, false, rtwdev,
+					R_BE_HCI_OPT_CTRL);
+		if (ret)
+			return ret;
+
+		ret = read_poll_timeout(rtw89_read32, val32,
+					!(val32 & B_BE_HAXIDMA_BACKUP_RESTORE_ST),
+					1000, 3000000, false, rtwdev,
+					R_BE_HCI_OPT_CTRL);
+		if (ret)
+			return ret;
+	}
 
 	rtw89_write32_set(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HCI_WLAN_IO_EN);
 
@@ -317,7 +324,9 @@ static int rtw8922a_pwr_on_func(struct rtw89_dev *rtwdev)
 	if (ret)
 		return ret;
 
-	rtw89_write32_clr(rtwdev, R_BE_SYS_SDIO_CTRL, B_BE_PCIE_FORCE_IBX_EN);
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE)
+		rtw89_write32_clr(rtwdev, R_BE_SYS_SDIO_CTRL,
+				  B_BE_PCIE_FORCE_IBX_EN);
 
 	ret = rtw89_mac_write_xtal_si(rtwdev, XTAL_SI_PLL, 0x02, 0x02);
 	if (ret)
@@ -371,6 +380,10 @@ static int rtw8922a_pwr_on_func(struct rtw89_dev *rtwdev)
 	if (ret)
 		return ret;
 
+	ret = rtw89_mac_write_xtal_si(rtwdev, XTAL_SI_SRAM_CTRL, 0, XTAL_SI_SRAM_DIS);
+	if (ret)
+		return ret;
+
 	if (hal->cv != CHIP_CAV) {
 		rtw89_write32_set(rtwdev, R_BE_PMC_DBG_CTRL2, B_BE_SYSON_DIS_PMCR_BE_WRMSK);
 		rtw89_write32_set(rtwdev, R_BE_SYS_ISO_CTRL, B_BE_ISO_EB2CORE);
@@ -382,14 +395,16 @@ static int rtw8922a_pwr_on_func(struct rtw89_dev *rtwdev)
 		rtw89_write32_clr(rtwdev, R_BE_PMC_DBG_CTRL2, B_BE_SYSON_DIS_PMCR_BE_WRMSK);
 	}
 
-	rtw89_write32_set(rtwdev, R_BE_DMAC_FUNC_EN,
-			  B_BE_MAC_FUNC_EN | B_BE_DMAC_FUNC_EN | B_BE_MPDU_PROC_EN |
-			  B_BE_WD_RLS_EN | B_BE_DLE_WDE_EN | B_BE_TXPKT_CTRL_EN |
-			  B_BE_STA_SCH_EN | B_BE_DLE_PLE_EN | B_BE_PKT_BUF_EN |
-			  B_BE_DMAC_TBL_EN | B_BE_PKT_IN_EN | B_BE_DLE_CPUIO_EN |
-			  B_BE_DISPATCHER_EN | B_BE_BBRPT_EN | B_BE_MAC_SEC_EN |
-			  B_BE_H_AXIDMA_EN | B_BE_DMAC_MLO_EN | B_BE_PLRLS_EN |
-			  B_BE_P_AXIDMA_EN | B_BE_DLE_DATACPUIO_EN | B_BE_LTR_CTL_EN);
+	val32 = B_BE_MAC_FUNC_EN | B_BE_DMAC_FUNC_EN | B_BE_MPDU_PROC_EN |
+		B_BE_WD_RLS_EN | B_BE_DLE_WDE_EN | B_BE_TXPKT_CTRL_EN |
+		B_BE_STA_SCH_EN | B_BE_DLE_PLE_EN | B_BE_PKT_BUF_EN |
+		B_BE_DMAC_TBL_EN | B_BE_PKT_IN_EN | B_BE_DLE_CPUIO_EN |
+		B_BE_DISPATCHER_EN | B_BE_BBRPT_EN | B_BE_MAC_SEC_EN |
+		B_BE_H_AXIDMA_EN | B_BE_DMAC_MLO_EN | B_BE_PLRLS_EN |
+		B_BE_P_AXIDMA_EN | B_BE_DLE_DATACPUIO_EN;
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE)
+		val32 |= B_BE_LTR_CTL_EN;
+	rtw89_write32_set(rtwdev, R_BE_DMAC_FUNC_EN, val32);
 
 	set_bit(RTW89_FLAG_DMAC_FUNC, rtwdev->flags);
 
@@ -465,17 +480,23 @@ static int rtw8922a_pwr_off_func(struct rtw89_dev *rtwdev)
 	if (ret)
 		return ret;
 
-	rtw89_write32_clr(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HAXIDMA_IO_EN);
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE) {
+		rtw89_write32_clr(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HAXIDMA_IO_EN);
 
-	ret = read_poll_timeout(rtw89_read32, val32, !(val32 & B_BE_HAXIDMA_IO_ST),
-				1000, 3000000, false, rtwdev, R_BE_HCI_OPT_CTRL);
-	if (ret)
-		return ret;
+		ret = read_poll_timeout(rtw89_read32, val32,
+					!(val32 & B_BE_HAXIDMA_IO_ST),
+					1000, 3000000, false, rtwdev,
+					R_BE_HCI_OPT_CTRL);
+		if (ret)
+			return ret;
 
-	ret = read_poll_timeout(rtw89_read32, val32, !(val32 & B_BE_HAXIDMA_BACKUP_RESTORE_ST),
-				1000, 3000000, false, rtwdev, R_BE_HCI_OPT_CTRL);
-	if (ret)
-		return ret;
+		ret = read_poll_timeout(rtw89_read32, val32,
+					!(val32 & B_BE_HAXIDMA_BACKUP_RESTORE_ST),
+					1000, 3000000, false, rtwdev,
+					R_BE_HCI_OPT_CTRL);
+		if (ret)
+			return ret;
+	}
 
 	rtw89_write32_clr(rtwdev, R_BE_HCI_OPT_CTRL, B_BE_HCI_WLAN_IO_EN);
 
@@ -491,9 +512,22 @@ static int rtw8922a_pwr_off_func(struct rtw89_dev *rtwdev)
 	if (ret)
 		return ret;
 
-	rtw89_write32(rtwdev, R_BE_WLLPS_CTRL, 0x0000A1B2);
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE)
+		rtw89_write32(rtwdev, R_BE_WLLPS_CTRL, 0x0000A1B2);
+	else if (rtwdev->hci.type == RTW89_HCI_TYPE_USB)
+		rtw89_write32_clr(rtwdev, R_BE_SYS_PW_CTRL, B_BE_SOP_EASWR);
+
 	rtw89_write32_set(rtwdev, R_BE_SYS_PW_CTRL, B_BE_XTAL_OFF_A_DIE);
-	rtw89_write32_set(rtwdev, R_BE_SYS_PW_CTRL, B_BE_APFM_SWLPS);
+
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE) {
+		rtw89_write32_set(rtwdev, R_BE_SYS_PW_CTRL, B_BE_APFM_SWLPS);
+	} else if (rtwdev->hci.type == RTW89_HCI_TYPE_USB) {
+		val32 = rtw89_read32(rtwdev, R_BE_SYS_PW_CTRL);
+		val32 |= B_BE_AFSM_WLSUS_EN;
+		val32 &= ~B_BE_AFSM_PCIE_SUS_EN;
+		rtw89_write32(rtwdev, R_BE_SYS_PW_CTRL, val32);
+	}
+
 	rtw89_write32(rtwdev, R_BE_UDM1, 0);
 
 	return 0;
