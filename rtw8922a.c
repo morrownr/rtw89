@@ -57,6 +57,126 @@ static const struct rtw89_hfc_param_ini rtw8922a_hfc_param_ini_pcie[] = {
 	[RTW89_QTA_INVALID] = {NULL},
 };
 
+static const struct rtw89_hfc_ch_cfg rtw8922a_hfc_chcfg_ch7[] = {
+	{54, 222, grp_0}, /* ACH 0 */
+	{0, 0, grp_0}, /* ACH 1 */
+	{54, 222, grp_0}, /* ACH 2 */
+	{0, 0, grp_0}, /* ACH 3 */
+	{54, 222, grp_0}, /* ACH 4 */
+	{0, 0, grp_0}, /* ACH 5 */
+	{54, 222, grp_0}, /* ACH 6 */
+	{0, 0, grp_0}, /* ACH 7 */
+	{54, 222, grp_0}, /* B0MGQ */
+	{0, 0, grp_0}, /* B0HIQ */
+	{54, 222, grp_0}, /* B1MGQ */
+	{0, 0, grp_0}, /* B1HIQ */
+	{0, 0, 0}, /* FWCMDQ */
+	{0, 0, 0}, /* BMC */
+	{0, 0, 0}, /* H2D */
+};
+
+static const struct rtw89_hfc_pub_cfg rtw8922a_hfc_pubcfg_p7 = {
+	492, /* Group 0 */
+	0, /* Group 1 */
+	492, /* Public Max */
+	0, /* WP threshold */
+};
+
+static const struct rtw89_hfc_ch_cfg rtw8922a_hfc_chcfg_ch8[] = {
+	{24, 196, grp_0}, /* ACH 0 */
+	{0, 0, grp_0}, /* ACH 1 */
+	{54, 226, grp_0}, /* ACH 2 */
+	{0, 0, grp_0}, /* ACH 3 */
+	{54, 196, grp_1}, /* ACH 4 */
+	{0, 0, grp_1}, /* ACH 5 */
+	{54, 196, grp_1}, /* ACH 6 */
+	{0, 0, grp_1}, /* ACH 7 */
+	{54, 226, grp_0}, /* B0MGQ */
+	{0, 0, grp_0}, /* B0HIQ */
+	{54, 196, grp_1}, /* B1MGQ */
+	{0, 0, grp_0}, /* B1HIQ */
+	{0, 0, 0}, /* FWCMDQ */
+	{0, 0, 0}, /* BMC */
+	{0, 0, 0}, /* H2D */
+};
+
+static const struct rtw89_hfc_pub_cfg rtw8922a_hfc_pubcfg_p8 = {
+	304, /* Group 0 */
+	304, /* Group 1 */
+	608, /* Public Max */
+	96, /* WP threshold */
+};
+
+static const struct rtw89_hfc_param_ini rtw8922a_hfc_param_ini_usb2[] = {
+	[RTW89_QTA_SCC] = {rtw8922a_hfc_chcfg_ch7, &rtw8922a_hfc_pubcfg_p7,
+			   &rtw89_mac_size.hfc_prec_cfg_c5, RTW89_HCIFC_STF},
+	[RTW89_QTA_DBCC] = {rtw8922a_hfc_chcfg_ch8, &rtw8922a_hfc_pubcfg_p8,
+			   &rtw89_mac_size.hfc_prec_cfg_c6, RTW89_HCIFC_STF},
+	[RTW89_QTA_DLFW] = {NULL, NULL, &rtw89_mac_size.hfc_prec_cfg_c2,
+			    RTW89_HCIFC_POH},
+	[RTW89_QTA_INVALID] = {NULL},
+};
+
+static const struct rtw89_hfc_ch_cfg rtw8922a_hfc_chcfg_ch4[] = {
+	{54, 606, grp_0}, /* ACH 0 */
+	{0, 0, grp_0}, /* ACH 1 */
+	{54, 606, grp_0}, /* ACH 2 */
+	{0, 0, grp_0}, /* ACH 3 */
+	{54, 606, grp_0}, /* ACH 4 */
+	{0, 0, grp_0}, /* ACH 5 */
+	{54, 606, grp_0}, /* ACH 6 */
+	{0, 0, grp_0}, /* ACH 7 */
+	{54, 606, grp_0}, /* B0MGQ */
+	{0, 0, grp_0}, /* B0HIQ */
+	{54, 606, grp_0}, /* B1MGQ */
+	{0, 0, grp_0}, /* B1HIQ */
+	{0, 0, 0}, /* FWCMDQ */
+	{0, 0, 0}, /* BMC */
+	{0, 0, 0}, /* H2D */
+};
+
+static const struct rtw89_hfc_pub_cfg rtw8922a_hfc_pubcfg_p4 = {
+	876, /* Group 0 */
+	0, /* Group 1 */
+	876, /* Public Max */
+	0, /* WP threshold */
+};
+
+static const struct rtw89_hfc_ch_cfg rtw8922a_hfc_chcfg_ch5[] = {
+	{54, 311, grp_0}, /* ACH 0 */
+	{0, 0, grp_0}, /* ACH 1 */
+	{54, 311, grp_0}, /* ACH 2 */
+	{0, 0, grp_0}, /* ACH 3 */
+	{54, 311, grp_1}, /* ACH 4 */
+	{0, 0, grp_1}, /* ACH 5 */
+	{54, 311, grp_1}, /* ACH 6 */
+	{0, 0, grp_1}, /* ACH 7 */
+	{54, 311, grp_0}, /* B0MGQ */
+	{0, 0, grp_0}, /* B0HIQ */
+	{54, 311, grp_1}, /* B1MGQ */
+	{0, 0, grp_0}, /* B1HIQ */
+	{0, 0, 0}, /* FWCMDQ */
+	{0, 0, 0}, /* BMC */
+	{0, 0, 0}, /* H2D */
+};
+
+static const struct rtw89_hfc_pub_cfg rtw8922a_hfc_pubcfg_p5 = {
+	419, /* Group 0 */
+	419, /* Group 1 */
+	838, /* Public Max */
+	0, /* WP threshold */
+};
+
+static const struct rtw89_hfc_param_ini rtw8922a_hfc_param_ini_usb3[] = {
+	[RTW89_QTA_SCC] = {rtw8922a_hfc_chcfg_ch4, &rtw8922a_hfc_pubcfg_p4,
+			   &rtw89_mac_size.hfc_prec_cfg_c3, RTW89_HCIFC_STF},
+	[RTW89_QTA_DBCC] = {rtw8922a_hfc_chcfg_ch5, &rtw8922a_hfc_pubcfg_p5,
+			   &rtw89_mac_size.hfc_prec_cfg_c3, RTW89_HCIFC_STF},
+	[RTW89_QTA_DLFW] = {NULL, NULL, &rtw89_mac_size.hfc_prec_cfg_c2,
+			    RTW89_HCIFC_POH},
+	[RTW89_QTA_INVALID] = {NULL},
+};
+
 static const struct rtw89_dle_mem rtw8922a_dle_mem_pcie[] = {
 	[RTW89_QTA_SCC] = {RTW89_QTA_SCC, &rtw89_mac_size.wde_size0_v1,
 			   &rtw89_mac_size.ple_size0_v1, &rtw89_mac_size.wde_qt0_v1,
@@ -2898,7 +3018,10 @@ const struct rtw89_chip_info rtw8922a_chip_info = {
 	.max_amsdu_limit	= 8000,
 	.dis_2g_40m_ul_ofdma	= false,
 	.rsvd_ple_ofst		= 0x8f800,
-	.hfc_param_ini		= {rtw8922a_hfc_param_ini_pcie, NULL, NULL, NULL},
+	.hfc_param_ini		= {rtw8922a_hfc_param_ini_pcie,
+				   rtw8922a_hfc_param_ini_usb2,
+				   rtw8922a_hfc_param_ini_usb3,
+				   NULL},
 	.dle_mem		= {rtw8922a_dle_mem_pcie, NULL, NULL, NULL},
 	.wde_qempty_acq_grpnum	= 4,
 	.wde_qempty_mgq_grpsel	= 4,

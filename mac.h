@@ -916,6 +916,9 @@ struct rtw89_mac_size_set {
 	const struct rtw89_hfc_prec_cfg hfc_preccfg_pcie;
 	const struct rtw89_hfc_prec_cfg hfc_prec_cfg_c0;
 	const struct rtw89_hfc_prec_cfg hfc_prec_cfg_c2;
+	const struct rtw89_hfc_prec_cfg hfc_prec_cfg_c3;
+	const struct rtw89_hfc_prec_cfg hfc_prec_cfg_c5;
+	const struct rtw89_hfc_prec_cfg hfc_prec_cfg_c6;
 	const struct rtw89_dle_size wde_size0;
 	const struct rtw89_dle_size wde_size0_v1;
 	const struct rtw89_dle_size wde_size4;

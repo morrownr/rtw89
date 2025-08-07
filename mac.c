@@ -1647,6 +1647,9 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	.hfc_preccfg_pcie = {2, 40, 0, 0, 1, 0, 0, 0},
 	.hfc_prec_cfg_c0 = {2, 32, 0, 0, 0, 0, 0, 0},
 	.hfc_prec_cfg_c2 = {0, 256, 0, 0, 0, 0, 0, 0},
+	.hfc_prec_cfg_c3 = {18, 32, 148, 148, 1, 1, 1, 1},
+	.hfc_prec_cfg_c5 = {18, 32, 148, 148, 1, 1, 0, 1},
+	.hfc_prec_cfg_c6 = {8, 32, 148, 148, 1, 1, 0, 1},
 	/* PCIE 64 */
 	.wde_size0 = {RTW89_WDE_PG_64, 4095, 1,},
 	.wde_size0_v1 = {RTW89_WDE_PG_64, 3328, 0, 0,},
