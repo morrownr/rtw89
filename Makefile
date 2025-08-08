@@ -88,6 +88,9 @@ rtw89_8922a_git-objs := rtw8922a.o \
 obj-m += rtw89_8922ae_git.o
 rtw89_8922ae_git-objs := rtw8922ae.o
 
+obj-m += rtw89_8922au_git.o
+rtw89_8922au_git-objs := rtw8922au.o
+
 obj-m += rtw89_pci_git.o
 rtw89_pci_git-y := pci.o pci_be.o
 

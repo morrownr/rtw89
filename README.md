@@ -7,7 +7,7 @@ To code, test and upstream great quality Linux Standards compliant (mac80211) US
 Compatible with **Linux kernel versions 6.6 and newer** as long as your distro hasn't modified any kernel APIs. RHEL and all distros based on RHEL will have modified kernel APIs and are unlikely to be compatible with this driver.
 
 #### Supported chips
-- **USB** :  (**NEW**) RTL8851BU, RTL8831BU, RTL8852BU, RTL8832BU, RTL8852CU, RTL8832CU
+- **USB** :  (**NEW**) RTL8851BU, RTL8831BU, RTL8852BU, RTL8832BU, RTL8852CU, RTL8832CU, RTL8922AU, RTL8912AU (no MLO yet)
 - **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE, RTL8852CE, RTL8922AE
 
 Note: If you own a USB WiFi adapter with any of the above supported
