@@ -175,6 +175,7 @@ rtw89_usb_ops_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
 static u8 rtw89_usb_get_bulkout_id(struct rtw89_dev *rtwdev, u8 ch_dma)
 {
 	if (rtwdev->chip->chip_id == RTL8852C ||
+	    rtwdev->chip->chip_id == RTL8852A ||
 	    rtwdev->chip->chip_id == RTL8922A) {
 		switch (ch_dma) {
 		case RTW89_DMA_ACH0:
