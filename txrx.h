@@ -736,6 +736,7 @@ static inline u8 rtw89_core_get_ch_dma(struct rtw89_dev *rtwdev, u8 qsel)
 {
 	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB &&
 	    (rtwdev->chip->chip_id == RTL8852C ||
+	     rtwdev->chip->chip_id == RTL8852A ||
 	     rtwdev->chip->chip_id == RTL8922A)) {
 		switch (qsel) {
 		default:
