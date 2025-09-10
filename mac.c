@@ -1698,6 +1698,8 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	.wde_size23 = {RTW89_WDE_PG_64, 1022, 2,},
 	/* 8852B USB2.0/USB3.0 SCC */
 	.wde_size25 = {RTW89_WDE_PG_64, 162, 94,},
+	/* 8852B USB2.0 SCC */
+	.wde_size30 = {RTW89_WDE_PG_64, 220, 36,},
 	/* 8852C USB2.0 */
 	.wde_size31 = {RTW89_WDE_PG_64, 384, 0,},
 	/* PCIE */
@@ -1724,6 +1726,10 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	.ple_size18 = {RTW89_PLE_PG_128, 2544, 16,},
 	/* 8852C PCIE SCC */
 	.ple_size19 = {RTW89_PLE_PG_128, 1904, 16,},
+	/* 8852B USB2.0 TURBO */
+	.ple_size27 = {RTW89_PLE_PG_128, 1396, 12,},
+	/* 8852B USB3.0 TURBO */
+	.ple_size31 = {RTW89_PLE_PG_128, 1386, 22,},
 	/* 8852B USB2.0 SCC */
 	.ple_size32 = {RTW89_PLE_PG_128, 620, 20,},
 	/* 8852B USB3.0 SCC */
@@ -1756,6 +1762,8 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	.wde_qt23 = {958, 48, 0, 16,},
 	/* 8852B USB2.0/USB3.0 SCC */
 	.wde_qt25 = {152, 2, 0, 8,},
+	/* 8852B USB2.0/USB3.0 SCC TURBO */
+	.wde_qt30 = {210, 2, 0, 8,},
 	/* 8852C USB2.0 */
 	.wde_qt31 = {338, 6, 0, 40,},
 	.ple_qt0 = {320, 320, 32, 16, 13, 13, 292, 292, 64, 18, 1, 4, 0,},
@@ -1785,6 +1793,10 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	/* 8852A USB SCC */
 	.ple_qt25 = {1536, 0, 16, 48, 13, 13, 360, 0, 32, 40, 8, 0,},
 	.ple_qt26 = {2654, 0, 1134, 48, 64, 13, 1478, 0, 64, 128, 120, 0,},
+	/* USB3.0 52B TURBO */
+	.ple_qt27 = {1040, 0, 16, 48, 4, 13, 178, 0, 32, 14, 8, 0, 0,},
+	/* USB3.0 52B TURBO */
+	.ple_qt28 = {1040, 0, 32, 48, 37, 13, 211, 0, 65, 14, 24, 0, 0,},
 	/* USB 52C USB3.0 */
 	.ple_qt42 = {1068, 0, 16, 48, 4, 13, 178, 0, 16, 1, 8, 16, 0,},
 	/* USB 52C USB3.0 */
@@ -1801,6 +1813,10 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
 	/* PCIE 64 */
 	.ple_qt58 = {147, 0, 16, 20, 157, 13, 229, 0, 172, 14, 24, 0,},
 	.ple_qt59 = {147, 0, 32, 20, 1860, 13, 2025, 0, 1879, 14, 24, 0,},
+	/* USB2.0 52B TURBO */
+	.ple_qt61 = {858, 0, 16, 48, 4, 13, 370, 0, 32, 14, 8, 0, 0,},
+	/* USB2.0 52B TURBO */
+	.ple_qt62 = {858, 0, 32, 48, 37, 13, 403, 0, 65, 14, 24, 0, 0,},
 	/* USB2.0 52B SCC */
 	.ple_qt72 = {130, 0, 16, 48, 4, 13, 322, 0, 32, 14, 8, 0, 0,},
 	/* USB2.0 52B 92K */

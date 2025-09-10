@@ -5998,6 +5998,17 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
 	rtwdev->mlo_dbcc_mode = MLO_DBCC_NOT_SUPPORT;
 	rtwdev->mac.qta_mode = RTW89_QTA_SCC;
 
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB) {
+		switch (rtwdev->chip->chip_id) {
+			case RTL8851B:
+			case RTL8852B:
+				rtwdev->mac.qta_mode = RTW89_QTA_SCC_TURBO;
+				break;
+			default:
+				break;
+		}
+	}
+
 	if (rtwdev->chip->chip_gen == RTW89_CHIP_BE) {
 		rtwdev->dbcc_en = true;
 		rtwdev->mac.qta_mode = RTW89_QTA_DBCC;

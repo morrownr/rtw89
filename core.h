@@ -4015,6 +4015,7 @@ enum rtw89_qta_mode {
 	RTW89_QTA_DBCC,
 	RTW89_QTA_DLFW,
 	RTW89_QTA_WOW,
+	RTW89_QTA_SCC_TURBO,
 
 	/* keep last */
 	RTW89_QTA_INVALID,
