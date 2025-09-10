@@ -52,25 +52,25 @@ static const struct rtw89_hfc_param_ini rtw8851b_hfc_param_ini_pcie[] = {
 };
 
 static const struct rtw89_hfc_ch_cfg rtw8851b_hfc_chcfg_usb[] = {
-	{18, 152, grp_0}, /* ACH 0 */
-	{18, 152, grp_0}, /* ACH 1 */
-	{18, 152, grp_0}, /* ACH 2 */
-	{18, 152, grp_0}, /* ACH 3 */
+	{18, 210, grp_0}, /* ACH 0 */
+	{18, 210, grp_0}, /* ACH 1 */
+	{18, 210, grp_0}, /* ACH 2 */
+	{18, 210, grp_0}, /* ACH 3 */
 	{0, 0, grp_0}, /* ACH 4 */
 	{0, 0, grp_0}, /* ACH 5 */
 	{0, 0, grp_0}, /* ACH 6 */
 	{0, 0, grp_0}, /* ACH 7 */
-	{18, 152, grp_0}, /* B0MGQ */
-	{18, 152, grp_0}, /* B0HIQ */
+	{18, 210, grp_0}, /* B0MGQ */
+	{18, 210, grp_0}, /* B0HIQ */
 	{0, 0, grp_0}, /* B1MGQ */
 	{0, 0, grp_0}, /* B1HIQ */
 	{0, 0, 0} /* FWCMDQ */
 };
 
 static const struct rtw89_hfc_pub_cfg rtw8851b_hfc_pubcfg_usb = {
-	152, /* Group 0 */
+	210, /* Group 0 */
 	0, /* Group 1 */
-	152, /* Public Max */
+	210, /* Public Max */
 	0 /* WP threshold */
 };
 
@@ -86,10 +86,10 @@ static const struct rtw89_hfc_prec_cfg rtw8851b_hfc_preccfg_usb = {
 };
 
 static const struct rtw89_hfc_param_ini rtw8851b_hfc_param_ini_usb[] = {
-	[RTW89_QTA_SCC] = {rtw8851b_hfc_chcfg_usb, &rtw8851b_hfc_pubcfg_usb,
-			   &rtw8851b_hfc_preccfg_usb, RTW89_HCIFC_STF},
 	[RTW89_QTA_DLFW] = {NULL, NULL,
 			   &rtw8851b_hfc_preccfg_usb, RTW89_HCIFC_STF},
+	[RTW89_QTA_SCC_TURBO] = {rtw8851b_hfc_chcfg_usb, &rtw8851b_hfc_pubcfg_usb,
+				 &rtw8851b_hfc_preccfg_usb, RTW89_HCIFC_STF},
 	[RTW89_QTA_INVALID] = {NULL},
 };
 
@@ -119,6 +119,10 @@ static const struct rtw89_dle_mem rtw8851b_dle_mem_usb2[] = {
 			    &rtw89_mac_size.ple_size8, &rtw89_mac_size.wde_qt4,
 			    &rtw89_mac_size.wde_qt4, &rtw89_mac_size.ple_qt13,
 			    &rtw89_mac_size.ple_qt13},
+	[RTW89_QTA_SCC_TURBO] = {RTW89_QTA_SCC_TURBO, &rtw89_mac_size.wde_size30,
+				 &rtw89_mac_size.ple_size27, &rtw89_mac_size.wde_qt30,
+				 &rtw89_mac_size.wde_qt30, &rtw89_mac_size.ple_qt61,
+				 &rtw89_mac_size.ple_qt62},
 	[RTW89_QTA_INVALID] = {RTW89_QTA_INVALID, NULL, NULL, NULL, NULL, NULL,
 			       NULL},
 };
@@ -132,6 +136,10 @@ static const struct rtw89_dle_mem rtw8851b_dle_mem_usb3[] = {
 			    &rtw89_mac_size.ple_size8, &rtw89_mac_size.wde_qt4,
 			    &rtw89_mac_size.wde_qt4, &rtw89_mac_size.ple_qt13,
 			    &rtw89_mac_size.ple_qt13},
+	[RTW89_QTA_SCC_TURBO] = {RTW89_QTA_SCC_TURBO, &rtw89_mac_size.wde_size30,
+				 &rtw89_mac_size.ple_size31, &rtw89_mac_size.wde_qt30,
+				 &rtw89_mac_size.wde_qt30, &rtw89_mac_size.ple_qt27,
+				 &rtw89_mac_size.ple_qt28},
 	[RTW89_QTA_INVALID] = {RTW89_QTA_INVALID, NULL, NULL, NULL, NULL, NULL,
 			       NULL},
 };
