@@ -77,8 +77,8 @@ static const struct rtw89_hfc_pub_cfg rtw8852c_hfc_pubcfg_usb = {
 static const struct rtw89_hfc_prec_cfg rtw8852c_hfc_preccfg_usb = {
 	9, /* CH 0-11 pre-cost */
 	32, /* H2C pre-cost */
-	48, /* WP CH 0-7 pre-cost */
-	48, /* WP CH 8-11 pre-cost */
+	146, /* WP CH 0-7 pre-cost */
+	146, /* WP CH 8-11 pre-cost */
 	1, /* CH 0-11 full condition */
 	1, /* H2C full condition */
 	1, /* WP CH 0-7 full condition */
