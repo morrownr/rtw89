@@ -194,7 +194,7 @@ static void rtw89_usb_write_port_complete(struct urb *urb)
 		txdesc = (struct rtw89_txwd_body *)skb->data;
 
 		txdesc_size = rtwdev->chip->txwd_body_size;
-		if (u32_get_bits(txdesc->dword0, RTW89_TXWD_BODY0_WD_INFO_EN))
+		if (le32_get_bits(txdesc->dword0, RTW89_TXWD_BODY0_WD_INFO_EN))
 			txdesc_size += rtwdev->chip->txwd_info_size;
 
 		skb_pull(skb, txdesc_size);
