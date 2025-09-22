@@ -1809,14 +1809,14 @@ static int rtw89_ops_suspend(struct ieee80211_hw *hw,
 
 	lockdep_assert_wiphy(hw->wiphy);
 
-	set_bit(RTW89_FLAG_FORBIDDEN_TRACK_WROK, rtwdev->flags);
+	set_bit(RTW89_FLAG_FORBIDDEN_TRACK_WORK, rtwdev->flags);
 	wiphy_delayed_work_cancel(hw->wiphy, &rtwdev->track_work);
 	wiphy_delayed_work_cancel(hw->wiphy, &rtwdev->track_ps_work);
 
 	ret = rtw89_wow_suspend(rtwdev, wowlan);
 	if (ret) {
 		rtw89_warn(rtwdev, "failed to suspend for wow %d\n", ret);
-		clear_bit(RTW89_FLAG_FORBIDDEN_TRACK_WROK, rtwdev->flags);
+		clear_bit(RTW89_FLAG_FORBIDDEN_TRACK_WORK, rtwdev->flags);
 		return 1;
 	}
 
@@ -1834,7 +1834,7 @@ static int rtw89_ops_resume(struct ieee80211_hw *hw)
 	if (ret)
 		rtw89_warn(rtwdev, "failed to resume for wow %d\n", ret);
 
-	clear_bit(RTW89_FLAG_FORBIDDEN_TRACK_WROK, rtwdev->flags);
+	clear_bit(RTW89_FLAG_FORBIDDEN_TRACK_WORK, rtwdev->flags);
 	wiphy_delayed_work_queue(hw->wiphy, &rtwdev->track_work,
 				 RTW89_TRACK_WORK_PERIOD);
 	wiphy_delayed_work_queue(hw->wiphy, &rtwdev->track_ps_work,
