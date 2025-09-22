@@ -7,8 +7,9 @@ To code, test and upstream great quality Linux Standards compliant (mac80211) US
 Compatible with **Linux kernel versions 6.6 and newer** as long as your distro hasn't modified any kernel APIs. RHEL and all distros based on RHEL will have modified kernel APIs and are unlikely to be compatible with this driver.
 
 #### Supported chips
-- **USB** :  (**NEW**) RTL8851BU, RTL8831BU, RTL8852AU, RTL8832AU, RTL8852BU, RTL8832BU, RTL8852CU, RTL8832CU, RTL8922AU, RTL8912AU (no MLO yet)
-- **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE, RTL8852CE, RTL8922AE
+- **USB** : RTL8831BU, RTL8851BU, RTL8832AU, RTL8852AU, RTL8832BU, RTL8852BU
+- **USB** : RTL8832CU, RTL8852CU, RTL8912AU, RTL8922AU (no MLO yet)
+- **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE(-VS, -VT), RTL8852CE, RTL8922AE(-VS)
 
 Note: If you own a USB WiFi adapter with any of the above supported
 chips and your adapter is single-state (no Windows driver on board) and
@@ -85,7 +86,7 @@ For users who installed the driver via `DKMS`, run:
 
 1. Check the version of the rtw89 driver installed on your system.
 ```
-sudo dkms status 
+sudo dkms status rtw89
 ```
 
 2. Remove the rtw89 driver and its source code (Change the driver version accordingly)
@@ -119,7 +120,7 @@ sudo rm -f /etc/modprobe.d/rtw89.conf
 
    1. Check the version of the rtw89 driver installed on your system.
       ```
-      sudo dkms status
+      sudo dkms status rtw89
       ```   
    2. Remove the rtw89 driver. (Change the driver version accordingly)
       ```
