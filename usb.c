@@ -739,31 +739,14 @@ static int rtw89_usb_ops_mac_pre_deinit(struct rtw89_dev *rtwdev)
 static int rtw89_usb_ops_mac_post_init(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
-	u32 usb3_mac_npi_config_intf_0, usb_endpoint_0, usb_endpoint_2;
+	const struct rtw89_usb_info *info = rtwusb->info;
 	enum usb_device_speed speed;
 	u32 ep;
 
-	switch (rtwdev->chip->chip_id) {
-	case RTL8851B:
-	case RTL8852A:
-	case RTL8852B:
-		usb3_mac_npi_config_intf_0 = R_AX_USB3_MAC_NPI_CONFIG_INTF_0;
-		usb_endpoint_0 = R_AX_USB_ENDPOINT_0;
-		usb_endpoint_2 = R_AX_USB_ENDPOINT_2;
-		break;
-	case RTL8852C:
-		usb3_mac_npi_config_intf_0 = R_AX_USB3_MAC_NPI_CONFIG_INTF_0_V1;
-		usb_endpoint_0 = R_AX_USB_ENDPOINT_0_V1;
-		usb_endpoint_2 = R_AX_USB_ENDPOINT_2_V1;
-		break;
-	case RTL8922A:
-		return 0; /* Nothing to do? */
-	default:
-		rtw89_err(rtwdev, "%s: unknown chip\n", __func__);
-		return -EOPNOTSUPP;
-	}
+	if (rtwdev->chip->chip_id == RTL8922A) 
+		return 0;
 
-	rtw89_write32_clr(rtwdev, usb3_mac_npi_config_intf_0,
+	rtw89_write32_clr(rtwdev, info->usb3_mac_npi_config_intf_0,
 			  B_AX_SSPHY_LFPS_FILTER);
 
 	speed = rtwusb->udev->speed;
@@ -779,9 +762,9 @@ static int rtw89_usb_ops_mac_post_init(struct rtw89_dev *rtwdev)
 		if (ep == 8)
 			continue;
 
-		rtw89_write8_mask(rtwdev, usb_endpoint_0,
+		rtw89_write8_mask(rtwdev, info->usb_endpoint_0,
 				  B_AX_EP_IDX, ep);
-		rtw89_write8(rtwdev, usb_endpoint_2 + 1, NUMP);
+		rtw89_write8(rtwdev, info->usb_endpoint_2 + 1, NUMP);
 	}
 
 	return 0;
