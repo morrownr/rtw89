@@ -231,12 +231,16 @@ static u64 rtw89_phy_ra_mask_cfg(struct rtw89_dev *rtwdev,
 		return -1;
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 	if (link_sta->eht_cap.has_eht) {
 		cfg_mask |= u64_encode_bits(mask->control[band].eht_mcs[0],
 					    RA_MASK_EHT_1SS_RATES);
 		cfg_mask |= u64_encode_bits(mask->control[band].eht_mcs[1],
 					    RA_MASK_EHT_2SS_RATES);
 	} else if (link_sta->he_cap.has_he) {
+#else
+	if (link_sta->he_cap.has_he) {
+#endif
 		cfg_mask |= u64_encode_bits(mask->control[band].he_mcs[0],
 					    RA_MASK_HE_1SS_RATES);
 		cfg_mask |= u64_encode_bits(mask->control[band].he_mcs[1],
@@ -584,6 +588,7 @@ static bool __check_rate_pattern(struct rtw89_phy_rate_pattern *next,
 	return true;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 enum __rtw89_hw_rate_invalid_bases {
 	/* no EHT rate for ax chip */
 	RTW89_HW_RATE_EHT_NSS1_MCS0 = RTW89_HW_RATE_INVAL,
@@ -591,6 +596,7 @@ enum __rtw89_hw_rate_invalid_bases {
 	RTW89_HW_RATE_EHT_NSS3_MCS0 = RTW89_HW_RATE_INVAL,
 	RTW89_HW_RATE_EHT_NSS4_MCS0 = RTW89_HW_RATE_INVAL,
 };
+#endif
 
 #define RTW89_HW_RATE_BY_CHIP_GEN(rate) \
 	{ \
@@ -607,12 +613,14 @@ void __rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
 	struct rtw89_phy_rate_pattern next_pattern = {0};
 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev,
 						       rtwvif_link->chanctx_idx);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 	static const u16 hw_rate_eht[][RTW89_CHIP_GEN_NUM] = {
 		RTW89_HW_RATE_BY_CHIP_GEN(EHT_NSS1_MCS0),
 		RTW89_HW_RATE_BY_CHIP_GEN(EHT_NSS2_MCS0),
 		RTW89_HW_RATE_BY_CHIP_GEN(EHT_NSS3_MCS0),
 		RTW89_HW_RATE_BY_CHIP_GEN(EHT_NSS4_MCS0),
 	};
+#endif
 	static const u16 hw_rate_he[][RTW89_CHIP_GEN_NUM] = {
 		RTW89_HW_RATE_BY_CHIP_GEN(HE_NSS1_MCS0),
 		RTW89_HW_RATE_BY_CHIP_GEN(HE_NSS2_MCS0),
@@ -637,6 +645,7 @@ void __rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
 	u8 tx_nss = rtwdev->hal.tx_nss;
 	u8 i;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 	if (chip_gen == RTW89_CHIP_AX)
 		goto rs_11ax;
 
@@ -648,6 +657,7 @@ void __rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
 			goto out;
 
 rs_11ax:
+#endif
 	for (i = 0; i < tx_nss; i++)
 		if (!__check_rate_pattern(&next_pattern, hw_rate_he[i][chip_gen],
 					  RA_MASK_HE_RATES, RTW89_RA_MODE_HE,
@@ -692,12 +702,14 @@ rs_11ax:
 	if (!next_pattern.enable)
 		goto out;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 	if (unlikely(next_pattern.rate >= RTW89_HW_RATE_INVAL)) {
 		rtw89_debug(rtwdev, RTW89_DBG_RA,
 			    "pattern invalid target: chip_gen %d, mode 0x%x\n",
 			    chip_gen, next_pattern.ra_mode);
 		goto out;
 	}
+#endif
 
 	rtwvif_link->rate_pattern = next_pattern;
 	rtw89_debug(rtwdev, RTW89_DBG_RA,
