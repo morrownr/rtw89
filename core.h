@@ -133,6 +133,7 @@ static inline u64 roundup_u64(u64 x, u32 y)
 #define RTW89_TRACK_WORK_PERIOD	round_jiffies_relative(HZ * 2)
 #define RTW89_TRACK_PS_WORK_PERIOD msecs_to_jiffies(100)
 #define RTW89_FORBID_BA_TIMER round_jiffies_relative(HZ * 4)
+#define RTW89_PS_HANG_MAX_CNT 3
 #define CFO_TRACK_MAX_USER 64
 #define MAX_RSSI 110
 #define RSSI_FACTOR 1
@@ -6180,6 +6181,7 @@ struct rtw89_dev {
 	struct rtw89_btc btc;
 	enum rtw89_ps_mode ps_mode;
 	bool lps_enabled;
+	u8 ps_hang_cnt;
 
 	struct rtw89_wow_param wow;
 
