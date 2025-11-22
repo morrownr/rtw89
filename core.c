@@ -6176,7 +6176,11 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
 	u16 usable_links = ieee80211_vif_usable_links(vif);
 	u16 active_links = vif->active_links;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 	struct rtw89_vif_link *target;
+#else
+	struct rtw89_vif_link *target, *cur;
+#endif
 	int ret;
 
 	lockdep_assert_wiphy(rtwdev->hw->wiphy);
@@ -6202,12 +6206,23 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
 	ieee80211_stop_queues(rtwdev->hw);
 	flush_work(&rtwdev->txq_work);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 	ret = ieee80211_set_active_links(vif, BIT(link_id));
 	if (ret) {
 		rtw89_err(rtwdev, "%s: failed to work on link id %u\n",
 			  __func__, link_id);
 		goto wake_queue;
 	}
+#else
+	cur = rtw89_get_designated_link(rtwvif);
+
+	ret = ieee80211_set_active_links(vif, active_links | BIT(link_id));
+	if (ret) {
+		rtw89_err(rtwdev, "%s: failed to activate link id %u\n",
+			  __func__, link_id);
+		goto wake_queue;
+	}
+#endif
 
 	target = rtwvif->links[link_id];
 	if (unlikely(!target)) {
@@ -6218,6 +6233,18 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
 		ret = -EFAULT;
 		goto wake_queue;
 	}
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
+	if (likely(cur))
+		rtw89_fw_h2c_mlo_link_cfg(rtwdev, cur, false);
+
+	rtw89_fw_h2c_mlo_link_cfg(rtwdev, target, true);
+
+	ret = ieee80211_set_active_links(vif, BIT(link_id));
+	if (ret)
+		rtw89_err(rtwdev, "%s: failed to inactivate links 0x%x\n",
+			  __func__, active_links);
+#endif
 
 	rtw89_chip_rfk_channel(rtwdev, target);
 
