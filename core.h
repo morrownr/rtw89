@@ -5545,6 +5545,8 @@ struct rtw89_regd_ctrl {
 struct rtw89_regulatory_info {
 	struct rtw89_regd_ctrl ctrl;
 	const struct rtw89_regd *regd;
+	bool programmed;
+
 	enum rtw89_reg_6ghz_power reg_6ghz_power;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
 	struct rtw89_reg_6ghz_tpe reg_6ghz_tpe;
