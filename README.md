@@ -171,17 +171,15 @@ Install `usb-modeswitch` (or usb_modeswitch), a tool that can switch your adapte
 
 ### Q6. My computer takes a very long time to boot when the Wi-Fi dongle is pre-inserted, how to fix it?
 
-Copy `usb_storage.conf` to `/etc/modprobe.d/` and regenerate initramfs images.
+   1. Copy [usb_storage.conf](https://github.com/morrownr/rtw89/blob/main/usb_storage.conf) to `/etc/modprobe.d/`. This file will tell the culprit `usb_storage` not to touch the Wi-Fi dongles.
+      ```
+      sudo cp usb_storage.conf /etc/modprobe.d/
+      ```
 
-On Ubuntu/Debian, run these commands in the rtw89 source directroy
-
-```
-sudo cp usb_storage.conf /etc/modprobe.d/
-```
-
-```
-sudo update-initramfs -u -k all
-```
+   2. Regenerate initramfs images. The following command is only applicable to Debian/Ubuntu and their variants. Please consult the manual if you are running other distros.
+      ```
+      sudo update-initramfs -u -k all
+      ```
 
 ## The Main Menu for this site contains a lot of information regarding USB WiFi Adapters
 
