@@ -81,6 +81,7 @@ struct rtw89_debugfs {
 	struct rtw89_debugfs_priv send_h2c;
 	struct rtw89_debugfs_priv early_h2c;
 	struct rtw89_debugfs_priv fw_crash;
+	struct rtw89_debugfs_priv ser_counters;
 	struct rtw89_debugfs_priv btc_info;
 	struct rtw89_debugfs_priv btc_manual;
 	struct rtw89_debugfs_priv fw_log_manual;
@@ -3727,6 +3728,60 @@ rtw89_debug_priv_fw_crash_set(struct rtw89_dev *rtwdev,
 	return count;
 }
 
+struct rtw89_dbg_ser_counters {
+	unsigned int l0;
+	unsigned int l1;
+	unsigned int l0_to_l1;
+};
+
+static void rtw89_dbg_get_ser_counters_ax(struct rtw89_dev *rtwdev,
+					  struct rtw89_dbg_ser_counters *cnt)
+{
+	const u32 val = rtw89_read32(rtwdev, R_AX_SER_DBG_INFO);
+
+	cnt->l0 = u32_get_bits(val, B_AX_SER_L0_COUNTER_MASK);
+	cnt->l1 = u32_get_bits(val, B_AX_SER_L1_COUNTER_MASK);
+	cnt->l0_to_l1 = u32_get_bits(val, B_AX_L0_TO_L1_EVENT_MASK);
+}
+
+static void rtw89_dbg_get_ser_counters_be(struct rtw89_dev *rtwdev,
+					  struct rtw89_dbg_ser_counters *cnt)
+{
+	const u32 val = rtw89_read32(rtwdev, R_BE_SER_DBG_INFO);
+
+	cnt->l0 = u32_get_bits(val, B_BE_SER_L0_COUNTER_MASK);
+	cnt->l1 = u32_get_bits(val, B_BE_SER_L1_COUNTER_MASK);
+	cnt->l0_to_l1 = u32_get_bits(val, B_BE_SER_L0_PROMOTE_L1_EVENT_MASK);
+}
+
+static ssize_t rtw89_debug_priv_ser_counters_get(struct rtw89_dev *rtwdev,
+						 struct rtw89_debugfs_priv *debugfs_priv,
+						 char *buf, size_t bufsz)
+{
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	struct rtw89_dbg_ser_counters cnt = {};
+	char *p = buf, *end = buf + bufsz;
+
+	rtw89_leave_ps_mode(rtwdev);
+
+	switch (chip->chip_gen) {
+	case RTW89_CHIP_AX:
+		rtw89_dbg_get_ser_counters_ax(rtwdev, &cnt);
+		break;
+	case RTW89_CHIP_BE:
+		rtw89_dbg_get_ser_counters_be(rtwdev, &cnt);
+		break;
+	default:
+		return -EOPNOTSUPP;
+	}
+
+	p += scnprintf(p, end - p, "SER L0 Count: %d\n", cnt.l0);
+	p += scnprintf(p, end - p, "SER L1 Count: %d\n", cnt.l1);
+	p += scnprintf(p, end - p, "SER L0 promote event: %d\n", cnt.l0_to_l1);
+
+	return p - buf;
+}
+
 static ssize_t rtw89_debug_priv_btc_info_get(struct rtw89_dev *rtwdev,
 					     struct rtw89_debugfs_priv *debugfs_priv,
 					     char *buf, size_t bufsz)
@@ -4825,6 +4880,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.mac_mem_dump = rtw89_debug_priv_select_and_get(mac_mem_dump, RSIZE_16K, RLOCK),
 	.early_h2c = rtw89_debug_priv_set_and_get(early_h2c, RWLOCK),
 	.fw_crash = rtw89_debug_priv_set_and_get(fw_crash, WLOCK),
+	.ser_counters = rtw89_debug_priv_get(ser_counters, RLOCK),
 	.fw_log_manual = rtw89_debug_priv_set(fw_log_manual, WLOCK),
 	.stations = rtw89_debug_priv_get(stations, RLOCK),
 	.disable_dm = rtw89_debug_priv_set_and_get(disable_dm, RWLOCK),
@@ -4835,6 +4891,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.mac_mem_dump = rtw89_debug_priv_select_and_get(mac_mem_dump, RSIZE_16K),
 	.early_h2c = rtw89_debug_priv_set_and_get(early_h2c),
  	.fw_crash = rtw89_debug_priv_set_and_get(fw_crash),
+	.ser_counters = rtw89_debug_priv_get(ser_counters),
 	.fw_log_manual = rtw89_debug_priv_set(fw_log_manual),
 	.stations = rtw89_debug_priv_get(stations),
 	.disable_dm = rtw89_debug_priv_set_and_get(disable_dm),
@@ -4879,6 +4936,7 @@ void rtw89_debugfs_add_sec1(struct rtw89_dev *rtwdev, struct dentry *debugfs_top
 	rtw89_debugfs_add_w(send_h2c);
 	rtw89_debugfs_add_rw(early_h2c);
 	rtw89_debugfs_add_rw(fw_crash);
+	rtw89_debugfs_add_r(ser_counters);
 	rtw89_debugfs_add_r(btc_info);
 	rtw89_debugfs_add_w(btc_manual);
 	rtw89_debugfs_add_w(fw_log_manual);
