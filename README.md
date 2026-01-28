@@ -49,7 +49,7 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
      sudo dkms install $PWD
      ```
 
-   * _via make_ 
+   * _via make (In this way you will have to manually reinstall the driver after each kernel update)_ 
 
      ```
      make clean modules && sudo make install
