@@ -1756,8 +1756,10 @@ int rtw89_ops_change_vif_links(struct ieee80211_hw *hw,
 						  BIT(RTW89_VIF_IDLE_LINK_ID));
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 	if (!ret)
 		rtw89_vif_update_fw_links(rtwdev, rtwvif, new_links, false);
+#endif
 
 	rtw89_enter_ips_by_hwflags(rtwdev);
 	return ret;

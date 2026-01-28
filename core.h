@@ -31,6 +31,17 @@ struct rtw89_wow_cam_info;
 
 extern const struct ieee80211_ops rtw89_ops;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 16)
+/**
+ * umin - return minimum of two non-negative values
+ *   Signed types are zero extended to match a larger unsigned type.
+ * @x: first value
+ * @y: second value
+ */
+#define umin(x, y)	\
+	__careful_cmp((x) + 0u + 0ul + 0ull, (y) + 0u + 0ul + 0ull, <)
+#endif
+
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0) && LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)) || \
     (LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0)  && LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)) || \
     (LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 70) && LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
