@@ -299,10 +299,14 @@ static void rtw89_phy_ra_gi_ltf(struct rtw89_dev *rtwdev,
 	if (!rtwsta_link->use_cfg_mask)
 		return;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 	if (link_sta->eht_cap.has_eht) {
 		ltf = mask->control[nl_band].eht_ltf;
 		gi = mask->control[nl_band].eht_gi;
 	} else if (link_sta->he_cap.has_he) {
+#else
+	if (link_sta->he_cap.has_he) {
+#endif
 		ltf = mask->control[nl_band].he_ltf;
 		gi = mask->control[nl_band].he_gi;
 	} else {
