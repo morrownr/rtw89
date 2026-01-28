@@ -132,7 +132,6 @@ static const struct rtw89_dle_mem rtw8852c_dle_mem_usb3[] = {
 			       NULL},
 };
 
-
 static const u32 rtw8852c_h2c_regs[RTW89_H2CREG_MAX] = {
 	R_AX_H2CREG_DATA0_V1, R_AX_H2CREG_DATA1_V1, R_AX_H2CREG_DATA2_V1,
 	R_AX_H2CREG_DATA3_V1
