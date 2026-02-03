@@ -19,6 +19,18 @@ MODULE_PARM_DESC(disable_clkreq, "Set Y to disable PCI clkreq support");
 MODULE_PARM_DESC(disable_aspm_l1, "Set Y to disable PCI ASPM L1 support");
 MODULE_PARM_DESC(disable_aspm_l1ss, "Set Y to disable PCI L1SS support");
 
+static const struct dmi_system_id rtw89_pci_quirks[] = {
+	{
+		.ident = "MACHINIST X99-RS9",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "MACHINIST"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "X99-RS9"),
+		},
+		.driver_data = (void *)RTW89_QUIRK_PCI_NO_DAC,
+	},
+	{},
+};
+
 static int rtw89_pci_get_phy_offset_by_link_speed(struct rtw89_dev *rtwdev,
 						  u32 *phy_offset)
 {
@@ -3305,6 +3317,11 @@ static bool rtw89_pci_is_dac_compatible_bridge(struct rtw89_dev *rtwdev)
 	if (!bridge)
 		return false;
 
+	if (test_bit(RTW89_QUIRK_PCI_NO_DAC, rtwdev->quirks)){
+		rtw89_info(rtwdev, "Rollback to 32-bit DMA\n");
+		return false;
+	}
+
 	switch (bridge->vendor) {
 	case PCI_VENDOR_ID_INTEL:
 		return true;
@@ -4769,6 +4786,7 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	rtwdev->hci.cpwm_addr = pci_info->cpwm_addr;
 
 	rtw89_check_quirks(rtwdev, info->quirks);
+	rtw89_check_quirks(rtwdev, rtw89_pci_quirks);
 	rtw89_check_pci_ssid_quirks(rtwdev, pdev, pci_info->ssid_quirks);
 
 	SET_IEEE80211_DEV(rtwdev->hw, &pdev->dev);
