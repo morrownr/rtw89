@@ -1103,11 +1103,6 @@ int rtw89_usb_probe(struct usb_interface *intf,
 		return -ENOMEM;
 	}
 
-	rtw89_debug(rtwdev, RTW89_DBG_CHAN,
-		    "%s: disabling MLO for now\n",
-		    __func__);
-	rtwdev->support_mlo = false;
-
 	rtwusb = rtw89_usb_priv(rtwdev);
 	rtwusb->rtwdev = rtwdev;
 	rtwusb->info = info->bus.usb;
