@@ -8,7 +8,7 @@ Compatible with **Linux kernel versions 6.6 and newer** as long as your distro h
 
 #### Supported chips
 - **USB** : RTL8831BU, RTL8851BU, RTL8832AU, RTL8852AU, RTL8832BU, RTL8852BU
-- **USB** : RTL8832CU, RTL8852CU, RTL8912AU, RTL8922AU (no MLO yet)
+- **USB** : RTL8832CU, RTL8852CU, RTL8912AU, RTL8922AU
 - **PCIe**: RTL8851BE, RTL8852AE, RTL8852BE(-VS, -VT), RTL8852CE, RTL8922AE(-VS)
 
 Note: If you own a USB WiFi adapter with any of the above supported
@@ -114,7 +114,7 @@ sudo rm -f /etc/modprobe.d/rtw89.conf
 
 ### Q1. Bluetooth is still not working after installing this driver, why?
 
-   The `rtw89` driver is the **Wi-Fi** driver for Realtek Wi-Fi 6/7 adapters and has nothing to do with Bluetooth.
+   The `rtw89` driver is the **Wi-Fi** driver for Realtek Wi-Fi 6/7 adapters and has nothing to do with Bluetooth. Open a new issue and share the output of the command `sudo cat /sys/kernel/debug/usb/devices` with us if you run into a Bluetooth problem.
 
 ### Q2. How to update the driver installed via DKMS?
 
