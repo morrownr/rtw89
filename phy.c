@@ -4029,6 +4029,14 @@ int rtw89_phy_rfk_report_wait(struct rtw89_dev *rtwdev, const char *rfk_name,
 	struct rtw89_rfk_wait_info *wait = &rtwdev->rfk_wait;
 	unsigned long time_left;
 
+	/*
+	 * USB transport adds latency to H2C/C2H round-trips, so RF
+	 * calibrations take longer than on PCIe. Apply a 4x multiplier
+	 * to avoid spurious timeouts.
+	 */
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB)
+		ms *= 4;
+
 	/* Since we can't receive C2H event during SER, use a fixed delay. */
 	if (test_bit(RTW89_FLAG_SER_HANDLING, rtwdev->flags)) {
 		fsleep(1000 * ms / 2);
