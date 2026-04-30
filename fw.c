@@ -5084,7 +5084,11 @@ int rtw89_fw_h2c_join_info(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rtwv
 		     le32_encode_bits(0, RTW89_H2C_JOININFO_W1_EMLSR_CAB) |
 		     le32_encode_bits(0, RTW89_H2C_JOININFO_W1_NSTR_EN) |
 		     le32_encode_bits(init_ps, RTW89_H2C_JOININFO_W1_INIT_PWR_STATE) |
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 2, 0)
 		     le32_encode_bits(IEEE80211_EML_CAP_EMLSR_PADDING_DELAY_256US,
+#else
+		     le32_encode_bits(IEEE80211_EML_CAP_EML_PADDING_DELAY_256US,
+#endif
 				      RTW89_H2C_JOININFO_W1_EMLSR_PADDING) |
 		     le32_encode_bits(IEEE80211_EML_CAP_EMLSR_TRANSITION_DELAY_256US,
 				      RTW89_H2C_JOININFO_W1_EMLSR_TRANS_DELAY) |
