@@ -861,8 +861,8 @@ static int rtw89_usb_ops_mac_post_init(struct rtw89_dev *rtwdev)
 	enum usb_device_speed speed;
 	u32 ep;
 
-	if (rtwdev->chip->chip_id == RTL8922A) 
-		return 0;
+	if (rtwdev->chip->chip_id == RTL8922A)
+		goto rx_agg_cfg;
 
 	rtw89_write32_clr(rtwdev, info->usb3_mac_npi_config_intf_0,
 			  B_AX_SSPHY_LFPS_FILTER);
@@ -885,6 +885,7 @@ static int rtw89_usb_ops_mac_post_init(struct rtw89_dev *rtwdev)
 		rtw89_write8(rtwdev, info->usb_endpoint_2 + 1, NUMP);
 	}
 
+rx_agg_cfg:
 	rtw89_usb_rx_agg_cfg(rtwdev);
 
 	return 0;
