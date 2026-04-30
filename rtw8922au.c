@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-/* Copyright(c) 2025  Realtek Corporation
+/* Copyright(c) 2026  Realtek Corporation
  */
 
 #include <linux/module.h>
@@ -8,7 +8,13 @@
 #include "usb.h"
 
 static const struct rtw89_usb_info rtw8922a_usb_info = {
-	.rx_agg_alignment = 16,
+	.usb_host_request_2		= 0,
+	.usb_wlan0_1			= 0,
+	.hci_func_en			= 0,
+	.usb3_mac_npi_config_intf_0	= 0,
+	.usb_endpoint_0			= 0,
+	.usb_endpoint_2			= 0,
+	.rx_agg_alignment		= 16,
 	.bulkout_id = {
 		[RTW89_DMA_ACH0] = 3,
 		[RTW89_DMA_ACH2] = 5,
