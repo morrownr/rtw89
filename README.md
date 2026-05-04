@@ -41,7 +41,7 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
    sudo make cleanup_target_system
    ```
 
-3. Build and install the driver
+4. Build and install the driver
 
    * _via dkms (Recommended especially if Secure Boot is enabled in your system)_
 
@@ -55,20 +55,20 @@ git, make, gcc, kernel-headers, dkms and mokutil (dkms and mokutil are optional.
      make clean modules && sudo make install
      ```
 
-4. Install the firmware necessary for the driver
+5. Install the firmware necessary for the driver
 
    ```
    sudo make install_fw
    ```
 
-5. Copy the configuration file `rtw89.conf` to /etc/modprobe.d/
+6. Copy the configuration file `rtw89.conf` to /etc/modprobe.d/
    ```
    sudo cp -v rtw89.conf /etc/modprobe.d/
    ```
    
    Note: The above step will blacklist in-kernel drivers that can conflict with drivers in this repo.
 
-6. Enroll the MOK (Machine Owner Key). This is needed **ONLY IF** [Secure Boot](https://wiki.debian.org/SecureBoot) is enabled in your system. Please see [this guide](https://github.com/dell/dkms?tab=readme-ov-file#secure-boot) for details.
+7. Enroll the MOK (Machine Owner Key). This is needed **ONLY IF** [Secure Boot](https://wiki.debian.org/SecureBoot) is enabled in your system. Please see [this guide](https://github.com/dell/dkms?tab=readme-ov-file#secure-boot) for details.
 
    ```
    sudo mokutil --import /var/lib/dkms/mok.pub
