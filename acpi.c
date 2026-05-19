@@ -35,10 +35,12 @@ static u32 rtw89_acpi_traversal_object(struct rtw89_dev *rtwdev,
 			goto err;
 		}
 
+		if (unlikely(check_add_overflow(len, obj->buffer.length, &len)))
+			goto err;
+
 		if (pos)
 			memcpy(pos, obj->buffer.pointer, obj->buffer.length);
 
-		len += obj->buffer.length;
 		break;
 	case ACPI_TYPE_PACKAGE:
 		if (unlikely(obj->package.count == 0)) {
