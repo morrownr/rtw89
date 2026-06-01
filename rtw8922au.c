@@ -70,6 +70,9 @@ static const struct usb_device_id rtw_8922au_id_table[] = {
 	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0x5822, 0xff, 0xff, 0xff),
 	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
+    { USB_DEVICE_AND_INTERFACE_INFO(0x057c, 0x8701, 0xff, 0xff, 0xff),
+      .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
+
 	{},
 };
 MODULE_DEVICE_TABLE(usb, rtw_8922au_id_table);
