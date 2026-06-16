@@ -3977,6 +3977,7 @@ static int rtw89_sta_link_info_get_iter(struct rtw89_dev *rtwdev,
 		       rtw89_rate_info_bw_to_mhz(rate->bw));
 	p += scnprintf(p, end - p, " (hw_rate=0x%x)",
 		       rtwsta_link->ra_report.hw_rate);
+	p += scnprintf(p, end - p, " PER:%d", rtwsta_link->ra_report.retry_ratio);
 	p += scnprintf(p, end - p, " ==> agg_wait=%d (%d)\n",
 		       rtwsta_link->max_agg_wait,
 		       max_rc_amsdu_len);
@@ -4189,11 +4190,179 @@ static ssize_t rtw89_debug_priv_phy_info_get(struct rtw89_dev *rtwdev,
 	return p - buf;
 }
 
+static const char *const lcck[] = {"L_CCK"};
+static const char *const scck[] = {"S_CCK"};
+static const char *const ht_gf[] = {"HT_GF"};
+static const char *const vht_mu[] = {"VHT_MU"};
+static const char *const he_er_su[] = {"HE_ER_SU"};
+static const char *const eht_tb[] = {"EHT_TB"};
+static const char *const legacy_ax[] = {"LEGACY"};
+static const char *const ht_ax[] = {"HT"};
+static const char *const vht_su_ax[] = {"VHT_SU"};
+static const char *const he_su_ax[] = {"HE_SU"};
+static const char *const he_mu_ax[] = {"HE_MU"};
+static const char *const he_tb_ax[] = {"HE_TB"};
+static const char *const legacy_be[] = {
+	"LEGACY", "LEGACY_DUP", "LEGACY_DUP_PUNC"
+};
+
+static const char *const ht_be[] = {
+	"HT_MF", "HT_SND_NDP"
+};
+
+static const char *const vht_su_be[] = {
+	"VHT_SU", "VHT_SND_NDP"
+};
+
+static const char *const he_su_be[] = {
+	"HE_SU", "HE_SND_NDP", "HE_SND_NDP_PUNC", "HE_RANG_NDP"
+};
+
+static const char *const he_mu_be[] = {
+	"HE_MU_RU", "HE_MU_MU", "HE_MU_RU_PUNC"
+};
+
+static const char *const he_tb_be[] = {
+	"HE_TB", "HE_TB_FB_NDP", "HE_MU_RANG_NDP"
+};
+
+static const char *const eht_mu[] = {
+	"EHT_MU_SU", "EHT_MU_ER", "EHT_MU_RU", "EHT_MU_MU",
+	"EHT_MU_SND_NDP", "EHT_MU_SU_PUNC", "EHT_MU_RU_PUNC",
+	"EHT_SND_NDP_PUNC", "EHT_MU_MU_PUNC"
+};
+
+#define PPDU_SAME(ppdu) \
+	{.str = {ppdu, ppdu}, \
+	 .cnt = {ARRAY_SIZE(ppdu), ARRAY_SIZE(ppdu)} }
+#define PPDU_VARIANT(ppdu) \
+	{.str = {ppdu##_ax, ppdu##_be}, \
+	 .cnt = {ARRAY_SIZE(ppdu##_ax), ARRAY_SIZE(ppdu##_be)} }
+#define PPDU_GEV1(ppdu) \
+	{.str = {NULL, ppdu}, \
+	 .cnt = {0, ARRAY_SIZE(ppdu)} }
+
+static const struct rtw89_ppdu_info {
+	const char *const *str[RTW89_CHIP_GEN_NUM];
+	u8 cnt[RTW89_CHIP_GEN_NUM];
+} rtw89_ppdu_infos[] = {
+	[0] = PPDU_SAME(lcck),
+	[1] = PPDU_SAME(scck),
+	[2] = PPDU_VARIANT(legacy),
+	[3] = PPDU_VARIANT(ht),
+	[4] = PPDU_SAME(ht_gf),
+	[5] = PPDU_VARIANT(vht_su),
+	[6] = PPDU_SAME(vht_mu),
+	[7] = PPDU_VARIANT(he_su),
+	[8] = PPDU_SAME(he_er_su),
+	[9] = PPDU_VARIANT(he_mu),
+	[10] = PPDU_VARIANT(he_tb),
+	[11] = PPDU_GEV1(eht_mu),
+	[12] = PPDU_GEV1(eht_tb),
+};
+
+#define TXCMD_SAME(txcmd) {txcmd, txcmd}
+#define TXCMD_DIFF(txcmd, txcmd_v1) {txcmd, txcmd_v1}
+#define TXCMD_GEV1(txcmd) {"RSVD", txcmd}
+
+static const struct rtw89_txcmd_info {
+	const char *str[RTW89_CHIP_GEN_NUM];
+} rtw89_txcmd_infos[] = {
+	[0] = {TXCMD_SAME("DATA")},
+	[1] = {TXCMD_SAME("BCN")},
+	[2] = {TXCMD_SAME("HT_NDPA")},
+	[3] = {TXCMD_SAME("VHT_NDPA")},
+	[4] = {TXCMD_SAME("HE_NDPA")},
+	[5] = {TXCMD_GEV1("EHT_NDPA")},
+	[6] = {TXCMD_GEV1("11MC_FTM")},
+	[7] = {TXCMD_GEV1("11MC_FTM_ACK")},
+	[8] = {TXCMD_SAME("RTS")},
+	[9] = {TXCMD_SAME("CTS2S")},
+	[10] = {TXCMD_SAME("CF_END")},
+	[11] = {TXCMD_SAME("CMP_BAR")},
+	[12] = {TXCMD_SAME("BFRP")},
+	[13] = {TXCMD_SAME("NDP")},
+	[14] = {TXCMD_SAME("QoS_NULL")},
+	[15] = {TXCMD_GEV1("CTS_2_MURTS")},
+	[16] = {TXCMD_SAME("ACK")},
+	[17] = {TXCMD_SAME("CTS")},
+	[18] = {TXCMD_SAME("CMP_BA")},
+	[19] = {TXCMD_SAME("MSTA_BA")},
+	[20] = {TXCMD_SAME("HT_CSI")},
+	[21] = {TXCMD_SAME("VHT_CSI")},
+	[22] = {TXCMD_SAME("HE_CSI")},
+	[23] = {TXCMD_GEV1("EHT_CSI")},
+	[24] = {TXCMD_GEV1("NTB_I2R_NDPA")},
+	[25] = {TXCMD_GEV1("NTB_I2R_NDP")},
+	[26] = {TXCMD_GEV1("NTB_I2R_LMR")},
+	[27] = {TXCMD_GEV1("NTB_I2R_NDP")},
+	[28] = {TXCMD_GEV1("NTB_I2R_LMR")},
+	[29] = {TXCMD_GEV1("NTB_R2I_RANG_NDPA")},
+	[30] = {TXCMD_GEV1("NTB_R2I_NDP")},
+	[31] = {TXCMD_DIFF("TB_PPDU", "NTB_R2I_LMR")},
+	[32] = {TXCMD_SAME("TRIG_BASIC")},
+	[33] = {TXCMD_SAME("TRIG_BFRP")},
+	[34] = {TXCMD_SAME("TRIG_MUBAR")},
+	[35] = {TXCMD_SAME("TRIG_MURTS")},
+	[36] = {TXCMD_SAME("TRIG_BSRP")},
+	[37] = {TXCMD_SAME("TRIG_BQRP")},
+	[38] = {TXCMD_SAME("TRIG_NFRP")},
+	[39] = {TXCMD_GEV1("TRIG_BASIC_DATA")},
+	[40] = {TXCMD_GEV1("TRIG_RANG_POLL")},
+	[41] = {TXCMD_GEV1("TRIG_RANG_SNR")},
+	[42] = {TXCMD_GEV1("TRIG_RANG_LMR")},
+	[48] = {TXCMD_DIFF("TRIG_BASIC_DATA", "TRIG_TB_CSI")},
+	[49] = {TXCMD_GEV1("TRIG_TB_CBA")},
+	[50] = {TXCMD_GEV1("TRIG_TB_MBA")},
+	[51] = {TXCMD_GEV1("TRIG_TB_BSR")},
+	[52] = {TXCMD_GEV1("TRIG_TB_BQR")},
+	[53] = {TXCMD_GEV1("TRIG_TB_ACK")},
+	[54] = {TXCMD_GEV1("TRIG_TB_PPDU")},
+	[55] = {TXCMD_GEV1("TRIG_TB_I2R_CTS2S")},
+	[56] = {TXCMD_GEV1("TRIG_TB_I2R_NDP")},
+	[57] = {TXCMD_GEV1("TRIG_TB_I2R_LMR")},
+};
+
+static const char *rtw89_ppdu_str(struct rtw89_dev *rtwdev, u8 type, u8 subtype)
+{
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	const struct rtw89_ppdu_info *ppdu_info;
+
+	if (type > ARRAY_SIZE(rtw89_ppdu_infos))
+		return "RSVD";
+
+	ppdu_info = &rtw89_ppdu_infos[type];
+
+	if (!ppdu_info->str[chip->chip_gen] ||
+	    subtype >= ppdu_info->cnt[chip->chip_gen])
+		return "RSVD";
+
+	return ppdu_info->str[chip->chip_gen][subtype];
+}
+
+static const char *rtw89_txcmd_str(struct rtw89_dev *rtwdev, u8 txcmd)
+{
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+
+	if (txcmd < ARRAY_SIZE(rtw89_txcmd_infos))
+		return rtw89_txcmd_infos[txcmd].str[chip->chip_gen] ?: "RSVD";
+
+	return "RSVD";
+}
+
 static int rtw89_get_bb_stat(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb,
 			     char *buf, size_t bufsz)
 {
+	const struct rtw89_phy_gen_def *phy = rtwdev->chip->phy_def;
+	const struct rtw89_physts_regs *physts = phy->physts;
 	struct rtw89_pmac_stat_info *pmac = &bb->pmac_stat;
+	struct rtw89_tx_stat_info *tx_stat = &bb->tx_stat;
+	const struct rtw89_chip_info *chip = rtwdev->chip;
 	char *p = buf, *end = buf + bufsz;
+	u8 factor = chip->txpwr_factor_rf;
+	u32 reg_nr;
+	s32 val;
+	int i;
 
 	p += scnprintf(p, end - p, "\n[PHY %u]\n", bb->phy_idx);
 
@@ -4228,6 +4397,43 @@ static int rtw89_get_bb_stat(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb,
 		       pmac->cnt_lsig_brk_s_th, pmac->cnt_lsig_brk_l_th,
 		       pmac->cnt_sb_search_fail);
 	p += scnprintf(p, end - p, "AMPDU miss: %d\n\n", pmac->cnt_ampdu_miss);
+
+	p += scnprintf(p, end - p, "== TX General\n");
+	p += scnprintf(p, end - p, "%s %s\n",
+		       rtw89_ppdu_str(rtwdev, tx_stat->type, tx_stat->subtype),
+		       rtw89_txcmd_str(rtwdev, tx_stat->txcmd));
+
+	p += scnprintf(p, end - p, "BW: %d, TX_SC: %d, TX_PATH_EN: %d, PATH_MAP: 0x%x\n",
+		       20 << tx_stat->bw, tx_stat->txsc,
+		       tx_stat->tx_path_en, tx_stat->path_map);
+
+	val = sign_extend32(tx_stat->tmac_txpwr, 8);
+	p += scnprintf(p, end - p, "TXPWR TMAC: %d,", val >> factor);
+
+	reg_nr = min(chip->rf_path_num, ARRAY_SIZE(tx_stat->txpwr));
+	for (i = 0; i < reg_nr; i++) {
+		val = sign_extend32(tx_stat->txpwr[i], 8);
+		p += scnprintf(p, end - p, " P%d: %d%s",
+			       i, val >> factor, (i < reg_nr - 1) ? "," : "");
+	}
+	p += scnprintf(p, end - p, " dBm\n");
+
+	p += scnprintf(p, end - p, "MCS: %d, STBC: %d\n",
+		       tx_stat->max_mcs, tx_stat->stbc);
+
+	p += scnprintf(p, end - p, "Info: [");
+	reg_nr = min(physts->tx_info.reg_nr, ARRAY_SIZE(tx_stat->info));
+	for (i = 0; i < reg_nr; i++)
+		p += scnprintf(p, end - p, "0x%08x%s",
+			       tx_stat->info[i], (i < reg_nr - 1) ? ", " : "");
+	p += scnprintf(p, end - p, "]\n");
+
+	p += scnprintf(p, end - p, "Common ctrl: [");
+	reg_nr = min(physts->tx_common_ctrl.reg_nr, ARRAY_SIZE(tx_stat->common_ctrl));
+	for (i = 0; i < reg_nr; i++)
+		p += scnprintf(p, end - p, "0x%08x%s",
+			       tx_stat->common_ctrl[i], (i < reg_nr - 1) ? ", " : "");
+	p += scnprintf(p, end - p, "]\n\n");
 
 	p += scnprintf(p, end - p, "== RSSI/RX Rate\n");
 	p += rtw89_get_rx_pkt_stat(rtwdev, bb, p, end - p);

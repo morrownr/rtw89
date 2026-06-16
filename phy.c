@@ -3312,6 +3312,7 @@ static void __rtw89_phy_c2h_ra_rpt_iter(struct rtw89_sta_link *rtwsta_link,
 	bool format_v1 = chip->chip_gen == RTW89_CHIP_BE;
 	u8 mode, rate, bw, giltf, mac_id;
 	u16 legacy_bitrate, amsdu_len;
+	u8 retry_ratio = 0;
 	bool valid;
 	u8 mcs = 0;
 	u8 t;
@@ -3332,6 +3333,7 @@ static void __rtw89_phy_c2h_ra_rpt_iter(struct rtw89_sta_link *rtwsta_link,
 		bw |= u8_encode_bits(t, BIT(2));
 		t = le32_get_bits(c2h->w3, RTW89_C2H_RA_RPT_W3_MD_SEL_B2);
 		mode |= u8_encode_bits(t, BIT(2));
+		retry_ratio = le32_get_bits(c2h->w2, RTW89_C2H_RA_RPT_W2_RETRY_RATIO);
 	}
 
 	if (mode == RTW89_RA_RPT_MODE_LEGACY) {
@@ -3407,6 +3409,7 @@ static void __rtw89_phy_c2h_ra_rpt_iter(struct rtw89_sta_link *rtwsta_link,
 			     u16_encode_bits(rate, RTW89_HW_RATE_V1_MASK_VAL) :
 			     u16_encode_bits(mode, RTW89_HW_RATE_MASK_MOD) |
 			     u16_encode_bits(rate, RTW89_HW_RATE_MASK_VAL);
+	ra_report->retry_ratio = retry_ratio;
 	ra_report->might_fallback_legacy = mcs <= 2;
 
 	amsdu_len = get_max_amsdu_len(rtwdev, ra_report);
@@ -6107,6 +6110,71 @@ static void rtw89_phy_pmac_stat_update(struct rtw89_dev *rtwdev,
 	rtw89_phy_pmac_stat_reset(rtwdev, bb, cck);
 }
 
+static void rtw89_phy_tx_stat_update(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb)
+{
+	const struct rtw89_phy_gen_def *phy = rtwdev->chip->phy_def;
+	const struct rtw89_physts_regs *physts = phy->physts;
+	struct rtw89_tx_stat_info *tx_stat = &bb->tx_stat;
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	u32 reg_nr;
+	u32 val;
+	u32 i;
+
+	if (rtwdev->mlo_dbcc_mode == MLO_1_PLUS_1_1RF &&
+	    bb->phy_idx != RTW89_PHY_0)
+		val = 1;
+	else
+		val = 0;
+
+	rtw89_phy_write32_mask(rtwdev, physts->mac_phy_intf_sel.addr,
+			       physts->mac_phy_intf_sel.mask, val);
+
+	reg_nr = min(physts->tx_info.reg_nr, ARRAY_SIZE(tx_stat->info));
+	for (i = 0; i < reg_nr; i++)
+		tx_stat->info[i] = rtw89_phy_read32(rtwdev, physts->tx_info.regs[i]);
+
+	reg_nr = min(physts->tx_common_ctrl.reg_nr, ARRAY_SIZE(tx_stat->common_ctrl));
+	for (i = 0; i < reg_nr; i++)
+		tx_stat->common_ctrl[i] =
+			rtw89_phy_read32(rtwdev, physts->tx_common_ctrl.regs[i]);
+
+	reg_nr = min(chip->rf_path_num, ARRAY_SIZE(tx_stat->txpwr));
+	for (i = 0; i < reg_nr; i++)
+		tx_stat->txpwr[i] = rtw89_phy_read32_mask(rtwdev, physts->txpwr[i].addr,
+							  physts->txpwr[i].mask);
+
+	tx_stat->type = u32_get_bits(tx_stat->info[0], TX_STATUS_TYPE);
+
+	if (chip->chip_gen == RTW89_CHIP_AX) {
+		tx_stat->tx_path_en = u32_get_bits(tx_stat->info[0], TX_STATUS_TX_PATH_EN);
+		tx_stat->path_map = u32_get_bits(tx_stat->info[0], TX_STATUS_PATH_MAP);
+		tx_stat->txcmd = u32_get_bits(tx_stat->info[0], TX_STATUS_TXCMD);
+		tx_stat->txsc = u32_get_bits(tx_stat->info[1], TX_STATUS_TXSC);
+		tx_stat->bw = u32_get_bits(tx_stat->info[1], TX_STATUS_BW);
+		tx_stat->tmac_txpwr = u32_get_bits(tx_stat->info[1], TX_STATUS_TMAC_TXPWR);
+
+		if (!(chip->chip_id == RTL8852A || rtw89_is_rtl885xb(rtwdev)))
+			tx_stat->max_mcs = u32_get_bits(tx_stat->info[3], TX_STATUS_MAX_MCS);
+	} else {
+		tx_stat->type = u32_get_bits(tx_stat->info[0], TX_STATUS_TYPE);
+		tx_stat->subtype = u32_get_bits(tx_stat->info[0], TX_STATUS_SUBTYPE);
+
+		if (chip->chip_id == RTL8922A)
+			tx_stat->txcmd = u32_get_bits(tx_stat->info[0], TX_STATUS_TXCMD_V1);
+		else
+			tx_stat->txcmd = u32_get_bits(tx_stat->info[0], TX_STATUS_TXCMD_V2);
+
+		tx_stat->txsc = u32_get_bits(tx_stat->info[0], TX_STATUS_TXSC_V1);
+		tx_stat->bw = u32_get_bits(tx_stat->info[1], TX_STATUS_BW_V1);
+		tx_stat->tmac_txpwr = u32_get_bits(tx_stat->info[1], TX_STATUS_TMAC_TXPWR_V1);
+		tx_stat->tx_path_en = u32_get_bits(tx_stat->info[2], TX_STATUS_TX_PATH_EN_V1);
+		tx_stat->path_map = u32_get_bits(tx_stat->info[2], TX_STATUS_PATH_MAP_V1);
+		tx_stat->max_mcs = u32_get_bits(tx_stat->info[4], TX_STATUS_MAX_MCS_V1);
+	}
+
+	tx_stat->stbc = !!(tx_stat->common_ctrl[0] & TX_STATUS_STBC);
+}
+
 static void rtw89_phy_trigger_tx_count(struct rtw89_dev *rtwdev)
 {
 	if (RTW89_CHK_FW_FEATURE(TX_HISTORY_V1, &rtwdev->fw))
@@ -6124,8 +6192,10 @@ static void rtw89_phy_stat_update(struct rtw89_dev *rtwdev)
 
 	rtw89_phy_trigger_tx_count(rtwdev);
 
-	rtw89_for_each_active_bb(rtwdev, bb)
+	rtw89_for_each_active_bb(rtwdev, bb) {
 		rtw89_phy_pmac_stat_update(rtwdev, bb);
+		rtw89_phy_tx_stat_update(rtwdev, bb);
+	}
 }
 
 void rtw89_phy_stat_track(struct rtw89_dev *rtwdev)
@@ -8775,10 +8845,31 @@ static const struct rtw89_ccx_regs rtw89_ccx_regs_ax = {
 	.nhm_pwr_method_msk = B_NHM_PWDB_METHOD_MSK,
 };
 
+static const u32 rtw89_txinfo_reg_ax[] = {
+	R_TX_INFO_0_0_COMB,
+	R_TX_INFO_0_1_COMB,
+	R_TX_INFO_1_0_COMB,
+	R_TX_INFO_1_1_COMB
+};
+
+static const u32 rtw89_tx_common_ctrl_reg_ax[] = {
+	R_TX_COMMON_CTRL_0_0_COMB,
+	R_TX_COMMON_CTRL_0_1_COMB
+};
+
+static const struct rtw89_reg_def rtw89_txpwr_ax[] = {
+	{.addr = R_PATH0_TXPWR, .mask = B_PATH0_TXPWR},
+	{.addr = R_PATH1_TXPWR, .mask = B_PATH1_TXPWR}
+};
+
 static const struct rtw89_physts_regs rtw89_physts_regs_ax = {
 	.setting_addr = R_PLCP_HISTOGRAM,
 	.dis_trigger_fail_mask = B_STS_DIS_TRIG_BY_FAIL,
 	.dis_trigger_brk_mask = B_STS_DIS_TRIG_BY_BRK,
+	.mac_phy_intf_sel = {R_INTF_R_INTF_RPT_SEL, B_INTF_R_INTF_RPT_SEL},
+	.txpwr = rtw89_txpwr_ax,
+	.tx_info = RTW89_REGS_DEF(rtw89_txinfo_reg_ax),
+	.tx_common_ctrl = RTW89_REGS_DEF(rtw89_tx_common_ctrl_reg_ax),
 };
 
 static const struct rtw89_cfo_regs rtw89_cfo_regs_ax = {

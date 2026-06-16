@@ -135,16 +135,62 @@ static const struct rtw89_ccx_regs rtw89_ccx_regs_be_v1 = {
 	.ifs_total_mask = B_IFS_TOTAL_BE4,
 };
 
+static const u32 rtw89_tx_info_reg_be[] = {
+	R_TX_INFO_0_0_COMB_V1,
+	R_TX_INFO_0_1_COMB_V1,
+	R_TX_INFO_1_0_COMB_V1,
+	R_TX_INFO_1_1_COMB_V1,
+	R_TX_INFO_2_0_COMB_V1,
+	R_TX_INFO_2_1_COMB_V1
+};
+
+static const u32 rtw89_tx_common_ctrl_reg_be[] = {
+	R_TX_COMMON_CTRL_0_0_COMB_V1,
+	R_TX_COMMON_CTRL_0_1_COMB_V1
+};
+
+static const struct rtw89_reg_def rtw89_txpwr_be[] = {
+	{.addr = R_PATH0_TXPWR_V1, .mask = B_PATH0_TXPWR},
+	{.addr = R_PATH1_TXPWR_V1, .mask = B_PATH1_TXPWR}
+};
+
 static const struct rtw89_physts_regs rtw89_physts_regs_be = {
 	.setting_addr = R_PLCP_HISTOGRAM,
 	.dis_trigger_fail_mask = B_STS_DIS_TRIG_BY_FAIL,
 	.dis_trigger_brk_mask = B_STS_DIS_TRIG_BY_BRK,
+	.mac_phy_intf_sel = {R_INTF_R_INTF_RPT_SEL, B_INTF_R_INTF_RPT_SEL},
+	.txpwr = rtw89_txpwr_be,
+	.tx_info = RTW89_REGS_DEF(rtw89_tx_info_reg_be),
+	.tx_common_ctrl = RTW89_REGS_DEF(rtw89_tx_common_ctrl_reg_be),
+};
+
+static const u32 rtw89_tx_info_reg_be_v1[] = {
+	R_TX_INFO_0_0_COMB_BE4,
+	R_TX_INFO_0_1_COMB_BE4,
+	R_TX_INFO_1_0_COMB_BE4,
+	R_TX_INFO_1_1_COMB_BE4,
+	R_TX_INFO_2_0_COMB_BE4,
+	R_TX_INFO_2_1_COMB_BE4
+};
+
+static const u32 rtw89_tx_common_ctrl_reg_be_v1[] = {
+	R_TX_COMMON_CTRL_0_0_COMB_BE4,
+	R_TX_COMMON_CTRL_0_1_COMB_BE4
+};
+
+static const struct rtw89_reg_def rtw89_txpwr_be_v1[] = {
+	{.addr = R_PATH0_TXPWR_BE4, .mask = B_PATH0_TXPWR},
+	{.addr = R_PATH1_TXPWR_BE4, .mask = B_PATH1_TXPWR}
 };
 
 static const struct rtw89_physts_regs rtw89_physts_regs_be_v1 = {
 	.setting_addr = R_PLCP_HISTOGRAM_BE_V1,
 	.dis_trigger_fail_mask = B_STS_DIS_TRIG_BY_FAIL,
 	.dis_trigger_brk_mask = B_STS_DIS_TRIG_BY_BRK,
+	.mac_phy_intf_sel = {R_INTF_R_INTF_RPT_SEL_BE4, B_INTF_R_INTF_RPT_SEL},
+	.txpwr = rtw89_txpwr_be_v1,
+	.tx_info = RTW89_REGS_DEF(rtw89_tx_info_reg_be_v1),
+	.tx_common_ctrl = RTW89_REGS_DEF(rtw89_tx_common_ctrl_reg_be_v1),
 };
 
 static const struct rtw89_cfo_regs rtw89_cfo_regs_be = {

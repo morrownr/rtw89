@@ -3598,6 +3598,7 @@ struct rtw89_ra_report {
 	struct rate_info txrate;
 	u32 bit_rate;
 	u16 hw_rate;
+	u8 retry_ratio;
 	bool might_fallback_legacy;
 };
 
@@ -4285,6 +4286,12 @@ struct rtw89_reg5_def {
 	u32 addr;
 	u32 mask;
 	u32 data;
+};
+
+#define RTW89_REGS_DEF(x) {x, ARRAY_SIZE(x)}
+struct rtw89_regs_def {
+	const u32 *regs;
+	u32 reg_nr;
 };
 
 struct rtw89_reg_imr {
@@ -5704,6 +5711,22 @@ struct rtw89_pmac_stat_info {
 	u32 cnt_sb_search_fail;
 };
 
+struct rtw89_tx_stat_info {
+	u32 info[6];
+	u32 common_ctrl[2];
+	u32 txpwr[2];
+	u8 type;
+	u8 subtype;
+	u8 txcmd;
+	u8 txsc;
+	u8 bw;
+	u16 tmac_txpwr;
+	u8 tx_path_en;
+	u8 path_map;
+	u8 max_mcs;
+	bool stbc;
+};
+
 struct rtw89_agc_gaincode_set {
 	u8 lna_idx;
 	u8 tia_idx;
@@ -6535,6 +6558,7 @@ struct rtw89_dev {
 		struct rtw89_pkt_stat cur_pkt_stat;
 		struct rtw89_pkt_stat last_pkt_stat;
 		struct rtw89_pmac_stat_info pmac_stat;
+		struct rtw89_tx_stat_info tx_stat;
 	} bbs[RTW89_PHY_NUM];
 
 	struct wiphy_delayed_work track_work;

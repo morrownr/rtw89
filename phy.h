@@ -57,6 +57,25 @@
 #define RA_MASK_EHT_4SS_MCS0_11	GENMASK_ULL(62, 60)
 #define RA_MASK_EHT_RATES	GENMASK_ULL(62, 12)
 
+#define TX_STATUS_TYPE GENMASK(3, 0)
+#define TX_STATUS_SUBTYPE GENMASK(7, 4)
+#define TX_STATUS_TXCMD GENMASK(29, 24)
+#define TX_STATUS_TXCMD_V1 GENMASK(13, 8)
+#define TX_STATUS_TXCMD_V2 GENMASK(15, 8)
+#define TX_STATUS_TXSC GENMASK(7, 4)
+#define TX_STATUS_TXSC_V1 GENMASK(27, 24)
+#define TX_STATUS_BW GENMASK(17, 16)
+#define TX_STATUS_BW_V1 GENMASK(6, 4)
+#define TX_STATUS_TMAC_TXPWR GENMASK(26, 18)
+#define TX_STATUS_TMAC_TXPWR_V1 GENMASK(16, 8)
+#define TX_STATUS_TX_PATH_EN GENMASK(15, 12)
+#define TX_STATUS_TX_PATH_EN_V1 GENMASK(7, 4)
+#define TX_STATUS_PATH_MAP GENMASK(23, 16)
+#define TX_STATUS_PATH_MAP_V1 GENMASK(15, 8)
+#define TX_STATUS_MAX_MCS GENMASK(7, 4)
+#define TX_STATUS_MAX_MCS_V1 GENMASK(3, 0)
+#define TX_STATUS_STBC BIT(0)
+
 #define CFO_TRK_ENABLE_TH (2 << 2)
 #define CFO_TRK_STOP_TH_4 (30 << 2)
 #define CFO_TRK_STOP_TH_3 (20 << 2)
@@ -458,6 +477,10 @@ struct rtw89_physts_regs {
 	u32 setting_addr;
 	u32 dis_trigger_fail_mask;
 	u32 dis_trigger_brk_mask;
+	struct rtw89_reg_def mac_phy_intf_sel;
+	const struct rtw89_reg_def *txpwr;
+	struct rtw89_regs_def tx_info;
+	struct rtw89_regs_def tx_common_ctrl;
 };
 
 struct rtw89_cfo_regs {
