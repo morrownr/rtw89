@@ -364,6 +364,11 @@ static void rtw89_ops_configure_filter(struct ieee80211_hw *hw,
 		}
 	}
 
+	if (rtwdev->hw->conf.flags & IEEE80211_CONF_MONITOR)
+		rtwdev->hal.rx_fltr |= B_AX_SNIFFER_MODE;
+	else
+		rtwdev->hal.rx_fltr &= ~B_AX_SNIFFER_MODE;
+
 	rx_fltr = rtwdev->hal.rx_fltr;
 
 	/* mac80211 doesn't configure filter when HW scan, driver need to
