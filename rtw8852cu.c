@@ -39,6 +39,16 @@ static const struct rtw89_driver_info rtw89_8852cu_info = {
 	},
 };
 
+static const struct rtw89_driver_info rtw89_8852cu_valve_info = {
+	.chip = &rtw8852c_chip_info,
+	.variant = NULL,
+	.quirks = NULL,
+	.dev_id_quirks = BIT(RTW89_QUIRK_HW_INFO_SYSFS),
+	.bus = {
+		.usb = &rtw8852c_usb_info,
+	},
+};
+
 static const struct usb_device_id rtw_8852cu_id_table[] = {
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0411, 0x03a6, 0xff, 0xff, 0xff),
 	  .driver_info = (kernel_ulong_t)&rtw89_8852cu_info },
@@ -55,7 +65,7 @@ static const struct usb_device_id rtw_8852cu_id_table[] = {
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x014d, 0xff, 0xff, 0xff),
 	  .driver_info = (kernel_ulong_t)&rtw89_8852cu_info },
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x28de, 0x2432, 0xff, 0xff, 0xff),
-	  .driver_info = (kernel_ulong_t)&rtw89_8852cu_info },
+	  .driver_info = (kernel_ulong_t)&rtw89_8852cu_valve_info },
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x2c4e, 0x0127, 0xff, 0xff, 0xff),
 	  .driver_info = (kernel_ulong_t)&rtw89_8852cu_info },
 	{ USB_DEVICE_AND_INTERFACE_INFO(0x2c7c, 0x8206, 0xff, 0xff, 0xff),

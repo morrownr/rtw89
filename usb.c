@@ -1188,6 +1188,56 @@ static int rtw89_usb_switch_mode(struct rtw89_dev *rtwdev)
 	return rtw89_usb_switch_mode_be(rtwdev);
 }
 
+static ssize_t serial_number_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	struct wiphy *wiphy = container_of(dev, struct wiphy, dev);
+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+	struct rtw89_dev *rtwdev = hw->priv;
+	struct rtw89_efuse *efuse = &rtwdev->efuse;
+
+	return sysfs_emit(buf, "%*phN\n",
+			  (int)sizeof(efuse->sn), efuse->sn);
+}
+static DEVICE_ATTR_RO(serial_number);
+
+static ssize_t uuid_show(struct device *dev,
+			 struct device_attribute *attr, char *buf)
+{
+	struct wiphy *wiphy = container_of(dev, struct wiphy, dev);
+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+	struct rtw89_dev *rtwdev = hw->priv;
+	struct rtw89_efuse *efuse = &rtwdev->efuse;
+
+	return sysfs_emit(buf, "%pUb\n", efuse->uuid);
+}
+static DEVICE_ATTR_RO(uuid);
+
+static struct attribute *rtw89_usb_attrs[] = {
+	&dev_attr_serial_number.attr,
+	&dev_attr_uuid.attr,
+	NULL,
+};
+
+static bool rtw89_usb_group_visible(struct kobject *kobj)
+{
+	struct device *dev = kobj_to_dev(kobj);
+	struct wiphy *wiphy = container_of(dev, struct wiphy, dev);
+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+	struct rtw89_dev *rtwdev = hw->priv;
+
+	return test_bit(RTW89_QUIRK_HW_INFO_SYSFS, rtwdev->quirks);
+}
+
+DEFINE_SIMPLE_SYSFS_GROUP_VISIBLE(rtw89_usb);
+
+static const struct attribute_group rtw89_usb_group = {
+	.name		= "rtw89_usb",
+	.attrs		= rtw89_usb_attrs,
+	.is_visible	= SYSFS_GROUP_VISIBLE(rtw89_usb),
+};
+__ATTRIBUTE_GROUPS(rtw89_usb);
+
 int rtw89_usb_probe(struct usb_interface *intf,
 		    const struct usb_device_id *id)
 {
@@ -1208,6 +1258,8 @@ int rtw89_usb_probe(struct usb_interface *intf,
 	rtwusb = rtw89_usb_priv(rtwdev);
 	rtwusb->rtwdev = rtwdev;
 	rtwusb->info = info->bus.usb;
+
+	rtwdev->hw->wiphy->dev.groups = rtw89_usb_groups;
 
 	rtwdev->hci.ops = &rtw89_usb_ops;
 	rtwdev->hci.type = RTW89_HCI_TYPE_USB;
