@@ -572,7 +572,13 @@ struct rtw89_phy_rfk_log_fmt {
 	const struct rtw89_fw_element_hdr *elm[RTW89_PHY_C2H_RFK_LOG_FUNC_NUM];
 };
 
+enum rtw89_mdpd_onoff {
+	MDPD_ON = 0,
+	MDPD_OFF = 1,
+};
+
 struct rtw89_bb_wrap_data {
+	u8 mdpd_by_dbw[4];
 };
 
 struct rtw89_phy_gen_def {
