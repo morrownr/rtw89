@@ -4793,8 +4793,7 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	info = (const struct rtw89_driver_info *)id->driver_data;
 
 	rtwdev = rtw89_alloc_ieee80211_hw(&pdev->dev,
-					  sizeof(struct rtw89_pci),
-					  info->chip, info->variant);
+					  sizeof(struct rtw89_pci), info);
 	if (!rtwdev) {
 		dev_err(&pdev->dev, "failed to allocate hw\n");
 		return -ENOMEM;

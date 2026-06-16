@@ -7618,9 +7618,11 @@ EXPORT_SYMBOL(rtw89_core_unregister);
 
 struct rtw89_dev *rtw89_alloc_ieee80211_hw(struct device *device,
 					   u32 bus_data_size,
-					   const struct rtw89_chip_info *chip,
-					   const struct rtw89_chip_variant *variant)
+					   const struct rtw89_driver_info *info)
 {
+	const unsigned long *dev_id_quirks = &info->dev_id_quirks;
+	const struct rtw89_chip_variant *variant = info->variant;
+	const struct rtw89_chip_info *chip = info->chip;
 	struct rtw89_fw_info early_fw = {};
 	const struct firmware *firmware;
 	struct ieee80211_hw *hw;
@@ -7692,6 +7694,9 @@ struct rtw89_dev *rtw89_alloc_ieee80211_hw(struct device *device,
 	rtwdev->fw.req.firmware = firmware;
 	rtwdev->fw.fw_format = fw_format;
 	rtwdev->support_mlo = support_mlo;
+
+	bitmap_or(rtwdev->quirks, rtwdev->quirks, dev_id_quirks,
+		  NUM_OF_RTW89_QUIRKS);
 
 	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "probe driver %s chanctx\n",
 		    no_chanctx ? "without" : "with");

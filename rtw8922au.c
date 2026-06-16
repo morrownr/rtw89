@@ -32,6 +32,7 @@ static const struct rtw89_driver_info rtw89_8922au_info = {
 	.chip = &rtw8922a_chip_info,
 	.variant = NULL,
 	.quirks = NULL,
+	.dev_id_quirks = 0,
 	.bus = {
 		.usb = &rtw8922a_usb_info,
 	},

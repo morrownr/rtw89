@@ -1199,8 +1199,7 @@ int rtw89_usb_probe(struct usb_interface *intf,
 	info = (const struct rtw89_driver_info *)id->driver_info;
 
 	rtwdev = rtw89_alloc_ieee80211_hw(&intf->dev,
-					  sizeof(struct rtw89_usb),
-					  info->chip, info->variant);
+					  sizeof(struct rtw89_usb), info);
 	if (!rtwdev) {
 		dev_err(&intf->dev, "failed to allocate hw\n");
 		return -ENOMEM;
