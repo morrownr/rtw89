@@ -1407,17 +1407,17 @@ static void rtw89_phy_config_bb_reg(struct rtw89_dev *rtwdev,
 	u32 addr;
 
 	if (reg->addr == 0xfe) {
-		mdelay(50);
+		rtw89_io_mdelay(rtwdev, 50);
 	} else if (reg->addr == 0xfd) {
-		mdelay(5);
+		rtw89_io_mdelay(rtwdev, 5);
 	} else if (reg->addr == 0xfc) {
-		mdelay(1);
+		rtw89_io_mdelay(rtwdev, 1);
 	} else if (reg->addr == 0xfb) {
-		udelay(50);
+		rtw89_io_udelay(rtwdev, 50);
 	} else if (reg->addr == 0xfa) {
-		udelay(5);
+		rtw89_io_udelay(rtwdev, 5);
 	} else if (reg->addr == 0xf9) {
-		udelay(1);
+		rtw89_io_udelay(rtwdev, 1);
 	} else if (reg->data == BYPASS_CR_DATA) {
 		rtw89_debug(rtwdev, RTW89_DBG_PHY_TRACK, "Bypass CR 0x%x\n", reg->addr);
 	} else {
@@ -1747,17 +1747,17 @@ void rtw89_phy_config_rf_reg(struct rtw89_dev *rtwdev,
 			     void *extra_data)
 {
 	if (reg->addr == 0xfe) {
-		mdelay(50);
+		rtw89_io_mdelay(rtwdev, 50);
 	} else if (reg->addr == 0xfd) {
-		mdelay(5);
+		rtw89_io_mdelay(rtwdev, 5);
 	} else if (reg->addr == 0xfc) {
-		mdelay(1);
+		rtw89_io_mdelay(rtwdev, 1);
 	} else if (reg->addr == 0xfb) {
-		udelay(50);
+		rtw89_io_udelay(rtwdev, 50);
 	} else if (reg->addr == 0xfa) {
-		udelay(5);
+		rtw89_io_udelay(rtwdev, 5);
 	} else if (reg->addr == 0xf9) {
-		udelay(1);
+		rtw89_io_udelay(rtwdev, 1);
 	} else {
 		rtw89_write_rf(rtwdev, rf_path, reg->addr, 0xfffff, reg->data);
 		rtw89_phy_cofig_rf_reg_store(rtwdev, reg, rf_path,
@@ -1770,6 +1770,11 @@ void rtw89_phy_config_rf_reg_v1(struct rtw89_dev *rtwdev,
 				enum rtw89_rf_path rf_path,
 				void *extra_data)
 {
+	if (reg->addr == 0xfe) {
+		rtw89_io_mdelay(rtwdev, 50);
+		return;
+	}
+
 	rtw89_write_rf(rtwdev, rf_path, reg->addr, RFREG_MASK, reg->data);
 
 	if (reg->addr < 0x100)
@@ -1940,10 +1945,15 @@ void rtw89_phy_init_bb_reg(struct rtw89_dev *rtwdev)
 	const struct rtw89_phy_table *bb_gain_table;
 
 	bb_table = elm_info->bb_tbl ? elm_info->bb_tbl : chip->bb_table;
+
+	rtw89_io_pack(rtwdev);
+
 	rtw89_phy_init_reg(rtwdev, bb_table, false, rtw89_phy_config_bb_reg, NULL);
 	if (rtwdev->dbcc_en)
 		rtw89_phy_init_reg(rtwdev, bb_table, false, rtw89_phy_config_bb_reg,
 				   (void *)RTW89_PHY_1);
+
+	rtw89_io_unpack(rtwdev);
 
 	rtw89_chip_init_txpwr_unit(rtwdev);
 
@@ -2075,7 +2085,11 @@ void rtw89_phy_init_rf_reg(struct rtw89_dev *rtwdev, bool noio)
 		else
 			config = rf_table->config ? rf_table->config :
 				 rtw89_phy_config_rf_reg;
+
+		rtw89_io_pack(rtwdev);
 		rtw89_phy_init_reg(rtwdev, rf_table, by_acv, config, (void *)rf_reg_info);
+		rtw89_io_unpack(rtwdev);
+
 		if (rtw89_phy_config_rf_reg_fw(rtwdev, rf_reg_info))
 			rtw89_warn(rtwdev, "rf path %d reg h2c config failed\n",
 				   rf_reg_info->rf_path);
