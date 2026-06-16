@@ -572,12 +572,27 @@ struct rtw89_phy_rfk_log_fmt {
 	const struct rtw89_fw_element_hdr *elm[RTW89_PHY_C2H_RFK_LOG_FUNC_NUM];
 };
 
+enum rtw89_rfsi_ctrl_band {
+	RFSI_CTRL_BAND_5_6GHZ,
+	RFSI_CTRL_BAND_2GHZ,
+
+	RFSI_CTRL_BAND_NUM,
+};
+
 enum rtw89_mdpd_onoff {
 	MDPD_ON = 0,
 	MDPD_OFF = 1,
 };
 
+enum rtw89_oob_dpd_onoff {
+	OOB_DPD_OFF = 0,
+	OOB_DPD_ON = 1,
+};
+
 struct rtw89_bb_wrap_data {
+	struct {
+		u8 oob_dpd_by_cbw[8];
+	} bands[RFSI_CTRL_BAND_NUM];
 	u8 mdpd_by_dbw[4];
 };
 
