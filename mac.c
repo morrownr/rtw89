@@ -2336,6 +2336,8 @@ static int preload_init_set_ax(struct rtw89_dev *rtwdev, u8 mac_idx,
 {
 	u32 reg, max_preld_size, min_rsvd_size;
 
+	rtw89_io_pack(rtwdev);
+
 	max_preld_size = (mac_idx == RTW89_MAC_0 ?
 			  PRELD_B0_ENT_NUM : PRELD_B1_ENT_NUM) * PRELD_AMSDU_SIZE;
 	reg = mac_idx == RTW89_MAC_0 ?
@@ -2348,6 +2350,8 @@ static int preload_init_set_ax(struct rtw89_dev *rtwdev, u8 mac_idx,
 	      R_AX_TXPKTCTL_B0_PRELD_CFG1 : R_AX_TXPKTCTL_B1_PRELD_CFG1;
 	rtw89_write32_mask(rtwdev, reg, B_AX_B0_PRELD_NXT_TXENDWIN_MASK, PRELD_NEXT_WND);
 	rtw89_write32_mask(rtwdev, reg, B_AX_B0_PRELD_NXT_RSVMINSZ_MASK, min_rsvd_size);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2428,10 +2432,14 @@ static int sta_sch_init_ax(struct rtw89_dev *rtwdev)
 		return ret;
 	}
 
+	rtw89_io_pack(rtwdev);
+
 	rtw89_write32_set(rtwdev, R_AX_SS_CTRL, B_AX_SS_WARM_INIT_FLG);
 	rtw89_write32_clr(rtwdev, R_AX_SS_CTRL, B_AX_SS_NONEMPTY_SS2FINFO_EN);
 
 	_patch_ss2f_path(rtwdev);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2444,11 +2452,15 @@ static int mpdu_proc_init_ax(struct rtw89_dev *rtwdev)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	rtw89_write32(rtwdev, R_AX_ACTION_FWD0, TRXCFG_MPDU_PROC_ACT_FRWD);
 	rtw89_write32(rtwdev, R_AX_TF_FWD, TRXCFG_MPDU_PROC_TF_FRWD);
 	rtw89_write32_set(rtwdev, R_AX_MPDU_PROC,
 			  B_AX_APPEND_FCS | B_AX_A_ICV_ERR);
 	rtw89_write32(rtwdev, R_AX_CUT_AMSDU_CTRL, TRXCFG_MPDU_PROC_CUT_CTRL);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2462,6 +2474,8 @@ static int sec_eng_init_ax(struct rtw89_dev *rtwdev)
 	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
 	if (ret)
 		return ret;
+
+	rtw89_io_pack(rtwdev);
 
 	val = rtw89_read32(rtwdev, R_AX_SEC_ENG_CTRL);
 	/* init clock */
@@ -2487,6 +2501,8 @@ static int sec_eng_init_ax(struct rtw89_dev *rtwdev)
 	if (chip->chip_id == RTL8852C)
 		rtw89_write32_mask(rtwdev, R_AX_SEC_DEBUG1,
 				   B_AX_TX_TIMEOUT_SEL_MASK, AX_TX_TO_VAL);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2571,6 +2587,8 @@ static int scheduler_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_PREBKF_CFG_1, mac_idx);
 	if (rtwdev->chip->chip_id == RTL8852C)
 		rtw89_write32_mask(rtwdev, reg, B_AX_SIFS_MACTXEN_T1_MASK,
@@ -2598,6 +2616,8 @@ static int scheduler_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 		rtw89_write32_mask(rtwdev, reg, B_AX_PREBKF_TIME_MASK,
 				   SCH_PREBKF_24US);
 	}
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2667,6 +2687,8 @@ static int rx_fltr_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	for (i = RTW89_MGNT; i <= RTW89_DATA; i++) {
 		ret = rtw89_mac_typ_fltr_opt_ax(rtwdev, i, RTW89_FWD_TO_HOST,
 						mac_idx);
@@ -2682,6 +2704,8 @@ static int rx_fltr_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 		      mac_ftlr);
 	rtw89_write16(rtwdev, rtw89_mac_reg_by_idx(rtwdev, R_AX_PLCP_HDR_FLTR, mac_idx),
 		      plcp_ftlr);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2729,6 +2753,8 @@ static int cca_ctrl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_CCA_CONTROL, mac_idx);
 	val = rtw89_read32(rtwdev, reg);
 	val |= (B_AX_TB_CHK_BASIC_NAV | B_AX_TB_CHK_BTCCA |
@@ -2749,15 +2775,21 @@ static int cca_ctrl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 
 	_patch_dis_resp_chk(rtwdev, mac_idx);
 
+	rtw89_io_unpack(rtwdev);
+
 	return 0;
 }
 
 static int nav_ctrl_init_ax(struct rtw89_dev *rtwdev)
 {
+	rtw89_io_pack(rtwdev);
+
 	rtw89_write32_set(rtwdev, R_AX_WMAC_NAV_CTL, B_AX_WMAC_PLCP_UP_NAV_EN |
 						     B_AX_WMAC_TF_UP_NAV_EN |
 						     B_AX_WMAC_NAV_UPPER_EN);
 	rtw89_write32_mask(rtwdev, R_AX_WMAC_NAV_CTL, B_AX_WMAC_NAV_UPPER_MASK, NAV_25MS);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2770,11 +2802,16 @@ static int spatial_reuse_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
 	if (ret)
 		return ret;
+
+	rtw89_io_pack(rtwdev);
+
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_RX_SR_CTRL, mac_idx);
 	rtw89_write8_clr(rtwdev, reg, B_AX_SR_EN);
 
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_BSSID_SRC_CTRL, mac_idx);
 	rtw89_write8_set(rtwdev, reg, B_AX_PLCP_SRC_EN);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2788,6 +2825,8 @@ static int tmac_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_MAC_LOOPBACK, mac_idx);
 	rtw89_write32_clr(rtwdev, reg, B_AX_MACLBK_EN);
 
@@ -2797,6 +2836,8 @@ static int tmac_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_TXD_FIFO_CTRL, mac_idx);
 	rtw89_write32_mask(rtwdev, reg, B_AX_TXDFIFO_HIGH_MCS_THRE_MASK, TXDFIFO_HIGH_MCS_THRE);
 	rtw89_write32_mask(rtwdev, reg, B_AX_TXDFIFO_LOW_MCS_THRE_MASK, TXDFIFO_LOW_MCS_THRE);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2811,6 +2852,8 @@ static int trxptcl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
 	if (ret)
 		return ret;
+
+	rtw89_io_pack(rtwdev);
 
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_TRXPTCL_RESP_0, mac_idx);
 	val = rtw89_read32(rtwdev, reg);
@@ -2841,6 +2884,8 @@ static int trxptcl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	rtw89_write32_mask(rtwdev, reg, rrsr->ref_rate.mask, rrsr->ref_rate.data);
 	reg = rtw89_mac_reg_by_idx(rtwdev, rrsr->rsc.addr, mac_idx);
 	rtw89_write32_mask(rtwdev, reg, rrsr->rsc.mask, rrsr->rsc.data);
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
@@ -2875,6 +2920,8 @@ static int rmac_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
 	if (ret)
 		return ret;
+
+	rtw89_io_pack(rtwdev);
 
 	if (mac_idx == RTW89_MAC_0)
 		rst_bacam(rtwdev);
@@ -2916,6 +2963,8 @@ static int rmac_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_PLCP_HDR_FLTR, mac_idx);
 	rtw89_write8_clr(rtwdev, reg, B_AX_VHT_SU_SIGB_CRC_CHK);
+
+	rtw89_io_unpack(rtwdev);
 
 	return ret;
 }
@@ -2968,6 +3017,8 @@ static int ptcl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 	if (ret)
 		return ret;
 
+	rtw89_io_pack(rtwdev);
+
 	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE) {
 		reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_SIFS_SETTING, mac_idx);
 		val = rtw89_read32(rtwdev, reg);
@@ -3004,6 +3055,8 @@ static int ptcl_init_ax(struct rtw89_dev *rtwdev, u8 mac_idx)
 		rtw89_write32_mask(rtwdev, reg,
 				   B_AX_AMPDU_MAX_LEN_VHT_MASK, 0x3FF80);
 	}
+
+	rtw89_io_unpack(rtwdev);
 
 	return 0;
 }
