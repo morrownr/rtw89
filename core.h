@@ -167,7 +167,8 @@ static inline u64 roundup_u64(u64 x, u32 y)
 #define DELTA_SWINGIDX_SIZE 30
 
 #define RTW89_RADIOTAP_ROOM_VHT sizeof(struct ieee80211_radiotap_vht)
-#define RTW89_RADIOTAP_ROOM_HE sizeof(struct ieee80211_radiotap_he)
+#define RTW89_RADIOTAP_ROOM_HE (sizeof(struct ieee80211_radiotap_he) + \
+				sizeof(struct ieee80211_radiotap_he_mu))
 #define RTW89_RADIOTAP_ROOM_EHT \
 	(sizeof(struct ieee80211_radiotap_tlv) + \
 	 ALIGN(struct_size((struct ieee80211_radiotap_eht *)0, user_info, 1), 4) + \
@@ -1063,6 +1064,21 @@ enum rtw89_bandwidth {
 	RTW89_CHANNEL_WIDTH_80_80 = 5,
 	RTW89_CHANNEL_WIDTH_5 = 6,
 	RTW89_CHANNEL_WIDTH_10 = 7,
+};
+
+enum rtw89_rx_ppdu_type {
+	RTW89_RX_PPDU_T_LCCK = 0,
+	RTW89_RX_PPDU_T_SCCK = 1,
+	RTW89_RX_PPDU_T_OFDM = 2,
+	RTW89_RX_PPDU_T_HT = 3,
+	RTW89_RX_PPDU_T_HTGF = 4,
+	RTW89_RX_PPDU_T_VHT_SU = 5,
+	RTW89_RX_PPDU_T_VHT_MU = 6,
+	RTW89_RX_PPDU_T_HE_SU = 7,
+	RTW89_RX_PPDU_T_HE_ERSU = 8,
+	RTW89_RX_PPDU_T_HE_MU = 9,
+	RTW89_RX_PPDU_T_HE_TB = 10,
+	RTW89_RX_PPDU_T_UNKNOWN = 15,
 };
 
 enum rtw89_ps_mode {
