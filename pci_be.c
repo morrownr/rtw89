@@ -347,6 +347,7 @@ static void rtw89_pci_pcie_setting_be(struct rtw89_dev *rtwdev)
 
 	rtw89_write32_set(rtwdev, R_BE_RSV_CTRL, B_BE_R_SYM_PRST_CPHY_RST);
 	rtw89_write32_set(rtwdev, R_BE_SYS_PW_CTRL, B_BE_USUS_OFFCAPC_EN);
+	rtw89_write32(rtwdev, R_BE_PCIE_HCI2FW_ISR, 0xFFFFFFFF);
 }
 
 static void rtw89_pci_ser_setting_be(struct rtw89_dev *rtwdev)
@@ -843,6 +844,8 @@ clear_phy_isr:
 			rtw89_write16_set(rtwdev, RAC_DIRECT_OFFESET_L0_G1 +
 						  RAC_ANA41 * RAC_MULT, PHY_ERR_FLAG_EN);
 		}
+
+		rtw89_write32(rtwdev, R_BE_PCIE_HCI2FW_ISR, 0xFFFFFFFF);
 	}
 
 	rtw89_pci_basic_cfg(rtwdev, true);
