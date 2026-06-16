@@ -6698,6 +6698,8 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
 	if (RTW89_CHK_FW_FEATURE_GROUP(WITH_RFK_PRE_NOTIFY, &rtwdev->fw))
 		rtw89_chip_rfk_channel(rtwdev, target);
 
+	rtw89_fw_h2c_tx_history(rtwdev, target->mac_id);
+
 	rtwvif->mlo_mode = RTW89_MLO_MODE_MLSR;
 
 wake_queue:

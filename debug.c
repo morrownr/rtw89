@@ -87,6 +87,7 @@ struct rtw89_debugfs {
 	struct rtw89_debugfs_priv btc_manual;
 	struct rtw89_debugfs_priv fw_log_manual;
 	struct rtw89_debugfs_priv phy_info;
+	struct rtw89_debugfs_priv bb_info;
 	struct rtw89_debugfs_priv stations;
 	struct rtw89_debugfs_priv disable_dm;
 	struct rtw89_debugfs_priv static_pd_th;
@@ -4067,15 +4068,15 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
 }
 
 static int
-rtw89_debug_append_rx_rate(char *buf, size_t bufsz, struct rtw89_pkt_stat *pkt_stat,
-			   enum rtw89_hw_rate first_rate, int len)
+rtw89_debug_append_rate(char *buf, size_t bufsz, const u32 *rate_cnt,
+			int first_rate, int len)
 {
 	char *p = buf, *end = buf + bufsz;
 	int i;
 
 	for (i = 0; i < len; i++)
 		p += scnprintf(p, end - p, "%s%u", i == 0 ? "" : ", ",
-			       pkt_stat->rx_rate_cnt[first_rate + i]);
+			       rate_cnt[first_rate + i]);
 
 	return p - buf;
 }
@@ -4102,6 +4103,17 @@ static const struct rtw89_rx_rate_cnt_info {
 	{FIRST_RATE_GEV1(EHT_NSS2_MCS0), 14, 0, "EHT 2SS:"},
 };
 
+static const struct rtw89_tx_rate_cnt_info {
+	int first_rate;
+	int len;
+	const char *rate_mode;
+} rtw89_tx_rate_cnt_infos[] = {
+	{0, 4, "Legacy:"},
+	{4, 8, "OFDM:"},
+	{12, 14, "MCS 1SS:"},
+	{26, 14, "MCS 2SS:"},
+};
+
 static int rtw89_get_rx_pkt_stat(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb,
 				 char *buf, size_t bufsz)
 {
@@ -4126,12 +4138,13 @@ static int rtw89_get_rx_pkt_stat(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *
 			continue;
 
 		p += scnprintf(p, end - p, "%10s [", info->rate_mode);
-		p += rtw89_debug_append_rx_rate(p, end - p, pkt_stat,
-						first_rate, info->len);
+		p += rtw89_debug_append_rate(p, end - p, pkt_stat->rx_rate_cnt,
+					     first_rate, info->len);
 		if (info->ext) {
 			p += scnprintf(p, end - p, "][");
-			p += rtw89_debug_append_rx_rate(p, end - p, pkt_stat,
-							first_rate + info->len, info->ext);
+			p += rtw89_debug_append_rate(p, end - p, pkt_stat->rx_rate_cnt,
+						     first_rate + info->len,
+						     info->ext);
 		}
 		p += scnprintf(p, end - p, "]\n");
 	}
@@ -4174,6 +4187,87 @@ static ssize_t rtw89_debug_priv_phy_info_get(struct rtw89_dev *rtwdev,
 	p += iter_data.written_sz;
 
 	return p - buf;
+}
+
+static int rtw89_get_bb_stat(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb,
+			     char *buf, size_t bufsz)
+{
+	char *p = buf, *end = buf + bufsz;
+
+	p += scnprintf(p, end - p, "\n[PHY %u]\n", bb->phy_idx);
+
+	p += scnprintf(p, end - p, "== RSSI/RX Rate\n");
+	p += rtw89_get_rx_pkt_stat(rtwdev, bb, p, end - p);
+
+	return p - buf;
+}
+
+static ssize_t
+rtw89_debug_priv_bb_info_get(struct rtw89_dev *rtwdev,
+			     struct rtw89_debugfs_priv *debugfs_priv,
+			     char *buf, size_t bufsz)
+{
+	struct rtw89_bb_stat_cfg *bb_stat = &rtwdev->phy_info.bb_stat_cfg;
+	struct rtw89_traffic_stats *stats = &rtwdev->stats;
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	const struct rtw89_tx_rate_cnt_info *info;
+	struct rtw89_debugfs_iter_data iter_data;
+	char *p = buf, *end = buf + bufsz;
+	struct rtw89_bb_ctx *bb;
+	int i;
+
+	p += scnprintf(p, end - p, "TP TX: %u [%u] Mbps, RX: %u [%u] Mbps\n",
+		       stats->tx_throughput, stats->tx_throughput_raw,
+		       stats->rx_throughput, stats->rx_throughput_raw);
+	p += scnprintf(p, end - p, "Avg packet length: TX=%u, RX=%u\n",
+		       stats->tx_avg_len,
+		       stats->rx_avg_len);
+	p += scnprintf(p, end - p, "TF: %u\n", stats->rx_tf_periodic);
+
+	if (chip->chip_gen != RTW89_CHIP_AX) {
+		p += scnprintf(p, end - p,
+			       "TX count [0x%x]:\n", bb_stat->mac_id);
+
+		for (i = 0; i < ARRAY_SIZE(rtw89_tx_rate_cnt_infos); i++) {
+			info = &rtw89_tx_rate_cnt_infos[i];
+
+			p += scnprintf(p, end - p, "%10s [", info->rate_mode);
+			p += rtw89_debug_append_rate(p, end - p,
+						     rtwdev->phystat.tx_rate_cnt,
+						     info->first_rate, info->len);
+			p += scnprintf(p, end - p, "]\n");
+		}
+	}
+
+	rtw89_for_each_active_bb(rtwdev, bb)
+		p += rtw89_get_bb_stat(rtwdev, bb, p, end - p);
+	p += scnprintf(p, end - p, "\n");
+
+	rtw89_debugfs_iter_data_setup(&iter_data, p, end - p);
+	ieee80211_iterate_stations_atomic(rtwdev->hw, rtw89_sta_info_get_iter, &iter_data);
+	p += iter_data.written_sz;
+
+	return p - buf;
+}
+
+static ssize_t
+rtw89_debug_priv_bb_info_set(struct rtw89_dev *rtwdev,
+			     struct rtw89_debugfs_priv *debugfs_priv,
+			     const char *buf, size_t count)
+{
+	struct rtw89_bb_stat_cfg *bb_stat = &rtwdev->phy_info.bb_stat_cfg;
+	int val;
+
+	lockdep_assert_wiphy(rtwdev->hw->wiphy);
+
+	if (sscanf(buf, "enable %d", &val) == 1)
+		bb_stat->enable = !!val;
+	else if (sscanf(buf, "mac_id %x", &val) == 1)
+		rtw89_fw_h2c_tx_history(rtwdev, val);
+	else
+		return -EINVAL;
+
+	return count;
 }
 
 static int rtw89_dump_addr_cam(struct rtw89_dev *rtwdev,
@@ -5064,6 +5158,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.static_pd_th = rtw89_debug_priv_set_and_get(static_pd_th, RWLOCK),
 	.mlo_mode = rtw89_debug_priv_set_and_get(mlo_mode, RWLOCK),
 	.diag_mac = rtw89_debug_priv_get(diag_mac, RSIZE_16K, RLOCK),
+	.bb_info = rtw89_debug_priv_set_and_get(bb_info, RWLOCK),
 #else
 	.read_rf = rtw89_debug_priv_select_and_get(read_rf),
 	.write_rf = rtw89_debug_priv_set(write_rf),
@@ -5078,6 +5173,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.disable_dm = rtw89_debug_priv_set_and_get(disable_dm),
 	.mlo_mode = rtw89_debug_priv_set_and_get(mlo_mode),
 	.diag_mac = rtw89_debug_priv_get(diag_mac, RSIZE_16K),
+	.bb_info = rtw89_debug_priv_set_and_get(bb_info),
 #endif
 };
 
@@ -5122,6 +5218,7 @@ void rtw89_debugfs_add_sec1(struct rtw89_dev *rtwdev, struct dentry *debugfs_top
 	rtw89_debugfs_add_w(btc_manual);
 	rtw89_debugfs_add_w(fw_log_manual);
 	rtw89_debugfs_add_r(phy_info);
+	rtw89_debugfs_add_rw(bb_info);
 	rtw89_debugfs_add_r(stations);
 	rtw89_debugfs_add_rw(disable_dm);
 	rtw89_debugfs_add_rw(static_pd_th);

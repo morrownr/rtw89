@@ -471,6 +471,28 @@ struct rtw89_h2c_ra_v1 {
 #define RTW89_H2C_RA_V1_W4_RAMASK_UHL16 GENMASK(31, 16)
 #define RTW89_H2C_RA_V1_W5_RAMASK_UHH16 GENMASK(15, 0)
 
+struct rtw89_h2c_ra_tx_history {
+	__le32 w0;
+} __packed;
+
+#define RTW89_H2C_RA_TX_HISTORY_W0_MACID GENMASK(15, 0)
+#define RTW89_H2C_RA_TX_HISTORY_W0_PER_PPDU GENMASK(23, 16)
+
+struct rtw89_h2c_ra_phy_ch_rpt {
+	__le32 w0;
+	__le32 w1;
+	__le32 w2;
+	__le32 w3;
+} __packed;
+
+#define RTW89_H2C_RA_PHY_CH_RPT_W1_RPT_TX_COUNT BIT(10)
+
+struct rtw89_h2c_ra_drv_ctrl_fw {
+	__le32 w0;
+} __packed;
+
+#define RTW89_H2C_RA_DRV_CTRL_FW_W0_RPT_TX_COUNT BIT(13)
+
 static inline void RTW89_SET_FWCMD_SEC_IDX(void *cmd, u32 val)
 {
 	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(7, 0));
@@ -3973,6 +3995,13 @@ struct rtw89_c2h_lps_rpt {
 	 */
 } __packed;
 
+struct rtw89_c2h_ra_tx_history {
+	struct rtw89_c2h_hdr hdr;
+	__le32 ra_tbtt_cnt;
+	__le32 tx_rate_tot_cnt_hist[RTW89_TX_RATE_NR];
+	__le32 tx_cat_cnt[3];
+} __packed;
+
 struct rtw89_c2h_fw_scan_rpt {
 	struct rtw89_c2h_hdr hdr;
 	u8 phy_idx;
@@ -4771,6 +4800,9 @@ enum rtw89_mrc_h2c_func {
 
 #define H2C_CL_OUTSRC_RA		0x1
 #define H2C_FUNC_OUTSRC_RA_MACIDCFG	0x0
+#define H2C_FUNC_OUTSRC_RA_TX_HISTORY	0x9
+#define H2C_FUNC_OUTSRC_RA_PHY_CH_RPT	0xe
+#define H2C_FUNC_OUTSRC_RA_DRV_CTRL_FW	0xf
 
 #define H2C_CL_OUTSRC_DM		0x2
 #define H2C_FUNC_FW_MCC_DIG		0x6
@@ -5351,6 +5383,9 @@ int rtw89_fw_h2c_rssi_offload(struct rtw89_dev *rtwdev,
 			      struct rtw89_rx_phy_ppdu *phy_ppdu);
 int rtw89_fw_h2c_tp_offload(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rtwvif_link);
 int rtw89_fw_h2c_ra(struct rtw89_dev *rtwdev, struct rtw89_ra_info *ra, bool csi);
+int rtw89_fw_h2c_phy_ch_rpt(struct rtw89_dev *rtwdev);
+int rtw89_fw_h2c_tx_history(struct rtw89_dev *rtwdev, u16 mac_id);
+int rtw89_fw_h2c_drv_ctrl_fw(struct rtw89_dev *rtwdev);
 int rtw89_fw_h2c_cxdrv_init(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_init_v7(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev, u8 type);

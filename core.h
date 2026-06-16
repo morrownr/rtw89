@@ -4623,6 +4623,15 @@ struct rtw89_antdiv_info {
 	bool get_stats;
 };
 
+struct rtw89_bb_stat_cfg {
+	bool enable;
+	u16 mac_id;
+};
+
+struct rtw89_phy_info {
+	struct rtw89_bb_stat_cfg bb_stat_cfg;
+};
+
 enum rtw89_chanctx_state {
 	RTW89_CHANCTX_STATE_MCC_START,
 	RTW89_CHANCTX_STATE_MCC_STOP,
@@ -4943,6 +4952,7 @@ enum rtw89_fw_feature {
 	RTW89_FW_FEATURE_SIM_SER_L0L1_BY_HALT_H2C,
 	RTW89_FW_FEATURE_LPS_ML_INFO_V1,
 	RTW89_FW_FEATURE_SER_POST_RECOVER_DMAC,
+	RTW89_FW_FEATURE_TX_HISTORY_V1,
 
 	NUM_OF_RTW89_FW_FEATURES,
 };
@@ -5455,9 +5465,11 @@ struct rtw89_beacon_stat {
 
 DECLARE_EWMA(thermal, 4, 4);
 
+#define RTW89_TX_RATE_NR 40
 struct rtw89_phy_stat {
 	struct ewma_thermal avg_thermal[RF_PATH_MAX];
 	u8 last_thermal_max;
+	u32 tx_rate_cnt[RTW89_TX_RATE_NR];
 	struct rtw89_beacon_stat bcn_stat;
 };
 
@@ -6425,6 +6437,7 @@ struct rtw89_dev {
 	struct rtw89_phy_efuse_gain efuse_gain;
 	struct rtw89_phy_ul_tb_info ul_tb_info;
 	struct rtw89_antdiv_info antdiv;
+	struct rtw89_phy_info phy_info;
 
 	struct rtw89_bb_ctx {
 		enum rtw89_phy_idx phy_idx;

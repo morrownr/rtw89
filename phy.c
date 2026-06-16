@@ -3452,12 +3452,24 @@ rtw89_phy_c2h_ra_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
 					  &ra_data);
 }
 
+static void
+rtw89_phy_c2h_tx_history(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
+{
+	const struct rtw89_c2h_ra_tx_history *history = (const void *)c2h->data;
+	u32 *tx_rate_cnt = rtwdev->phystat.tx_rate_cnt;
+	u32 i;
+
+	for (i = 0; i < RTW89_TX_RATE_NR; i++)
+		tx_rate_cnt[i] = le32_to_cpu(history->tx_rate_tot_cnt_hist[i]);
+}
+
 static
 void (* const rtw89_phy_c2h_ra_handler[])(struct rtw89_dev *rtwdev,
 					  struct sk_buff *c2h, u32 len) = {
 	[RTW89_PHY_C2H_FUNC_STS_RPT] = rtw89_phy_c2h_ra_rpt,
 	[RTW89_PHY_C2H_FUNC_MU_GPTBL_RPT] = NULL,
 	[RTW89_PHY_C2H_FUNC_TXSTS] = NULL,
+	[RTW89_PHY_C2H_FUNC_TX_HISTORY] = rtw89_phy_c2h_tx_history,
 	[RTW89_PHY_C2H_FUNC_ACCELERATE_EN] = rtw89_fw_c2h_dummy_handler,
 };
 
@@ -5905,6 +5917,22 @@ static void rtw89_phy_stat_init(struct rtw89_dev *rtwdev)
 	rtwdev->hal.thermal_prot_lv = 0;
 }
 
+static void rtw89_phy_trigger_tx_count(struct rtw89_dev *rtwdev)
+{
+	if (RTW89_CHK_FW_FEATURE(TX_HISTORY_V1, &rtwdev->fw))
+		rtw89_fw_h2c_phy_ch_rpt(rtwdev);
+	else
+		rtw89_fw_h2c_drv_ctrl_fw(rtwdev);
+}
+
+static void rtw89_phy_stat_update(struct rtw89_dev *rtwdev)
+{
+	if (!rtwdev->phy_info.bb_stat_cfg.enable)
+		return;
+
+	rtw89_phy_trigger_tx_count(rtwdev);
+}
+
 void rtw89_phy_stat_track(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_bb_ctx *bb;
@@ -5912,6 +5940,7 @@ void rtw89_phy_stat_track(struct rtw89_dev *rtwdev)
 	rtw89_phy_stat_thermal_update(rtwdev);
 	rtw89_phy_thermal_protect(rtwdev);
 	rtw89_phy_stat_rssi_update(rtwdev);
+	rtw89_phy_stat_update(rtwdev);
 
 	rtw89_for_each_active_bb(rtwdev, bb) {
 		bb->last_pkt_stat = bb->cur_pkt_stat;

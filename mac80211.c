@@ -730,14 +730,21 @@ static void rtw89_ops_vif_cfg_changed(struct ieee80211_hw *hw,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 	if (changed & BSS_CHANGED_MLD_VALID_LINKS) {
 		struct rtw89_vif_link *cur = rtw89_get_designated_link(rtwvif);
+		u16 mac_id;
 
 		if (RTW89_CHK_FW_FEATURE_GROUP(WITH_RFK_PRE_NOTIFY, &rtwdev->fw))
 			rtw89_chip_rfk_channel(rtwdev, cur);
 
-		if (hweight16(vif->active_links) == 1)
+		if (hweight16(vif->active_links) == 1) {
+			mac_id = cur->mac_id;
 			rtwvif->mlo_mode = RTW89_MLO_MODE_MLSR;
-		else
+		} else {
+			/* Specify for all MAC ID */
+			mac_id = 0xffff;
 			rtwvif->mlo_mode = RTW89_MLO_MODE_EMLSR;
+		}
+
+		rtw89_fw_h2c_tx_history(rtwdev, mac_id);
 	}
 #endif
 }
