@@ -2043,28 +2043,13 @@ static void rtw89_core_rx_process_phy_ppdu_iter(void *data,
 	}
 }
 
-#define VAR_LEN 0xff
-#define VAR_LEN_UNIT 8
 static u16 rtw89_core_get_phy_status_ie_len(struct rtw89_dev *rtwdev,
 					    const struct rtw89_phy_sts_iehdr *iehdr)
 {
-	static const u8 physts_ie_len_tabs[RTW89_CHIP_GEN_NUM][32] = {
-		[RTW89_CHIP_AX] = {
-			16, 32, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
-			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
-			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
-		},
-		[RTW89_CHIP_BE] = {
-			32, 40, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
-			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 88, 56, VAR_LEN,
-			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
-		},
-	};
-	const u8 *physts_ie_len_tab;
+	const struct rtw89_phy_gen_def *phy = rtwdev->chip->phy_def;
+	const u8 *physts_ie_len_tab = phy->physt_ie_len;
 	u16 ie_len;
 	u8 ie;
-
-	physts_ie_len_tab = physts_ie_len_tabs[rtwdev->chip->chip_gen];
 
 	ie = le32_get_bits(iehdr->w0, RTW89_PHY_STS_IEHDR_TYPE);
 	if (physts_ie_len_tab[ie] != VAR_LEN)

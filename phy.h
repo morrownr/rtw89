@@ -154,6 +154,9 @@
 #define EDCCA_UNIT_CONVER 128
 #define EDCCA_PWROFST_DEFAULT 18
 
+#define VAR_LEN 0xff
+#define VAR_LEN_UNIT 8
+
 enum rtw89_phy_c2h_ra_func {
 	RTW89_PHY_C2H_FUNC_STS_RPT,
 	RTW89_PHY_C2H_FUNC_MU_GPTBL_RPT,
@@ -573,6 +576,8 @@ struct rtw89_phy_gen_def {
 	u32 cr_base;
 	u32 physt_bmp_start;
 	u32 physt_bmp_eht;
+	u8 physt_ie_len[32];
+	u8 physt_gen;
 	const struct rtw89_ccx_regs *ccx;
 	const struct rtw89_physts_regs *physts;
 	const struct rtw89_cfo_regs *cfo;
