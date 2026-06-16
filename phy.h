@@ -568,6 +568,16 @@ struct rtw89_txpwr_limit_ru_be {
 	s8 ru106_26[RTW89_RU_SEC_NUM_BE];
 };
 
+#define RTW89_RU484_242_SEC_NUM_BE 4
+#define RTW89_RU996_484_SEC_NUM_BE 2
+#define RTW89_RU996_484_242_SEC_NUM_BE 2
+
+struct rtw89_txpwr_limit_large_mru_be {
+	s8 ru484_242[RTW89_NSS_NUM][RTW89_RU484_242_SEC_NUM_BE];
+	s8 ru996_484[RTW89_NSS_NUM][RTW89_RU996_484_SEC_NUM_BE];
+	s8 ru996_484_242[RTW89_NSS_NUM][RTW89_RU996_484_242_SEC_NUM_BE];
+};
+
 struct rtw89_phy_rfk_log_fmt {
 	const struct rtw89_fw_element_hdr *elm[RTW89_PHY_C2H_RFK_LOG_FUNC_NUM];
 };
