@@ -2978,6 +2978,8 @@ static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
 
 	ether_addr_copy(arp_skb->sender_hw, rtwvif_link->mac_addr);
 	arp_skb->sender_ip = rtwvif->ip_addr;
+	ether_addr_copy(arp_skb->target_hw, rtwvif_link->mac_addr);
+	arp_skb->target_ip = rtwvif->ip_addr;
 
 	return skb;
 }
@@ -9686,7 +9688,7 @@ int rtw89_fw_h2c_keep_alive(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rtw
 
 	if (enable) {
 		ret = rtw89_fw_h2c_add_general_pkt(rtwdev, rtwvif_link,
-						   RTW89_PKT_OFLD_TYPE_NULL_DATA,
+						   RTW89_PKT_OFLD_TYPE_ARP_RSP,
 						   &pkt_id);
 		if (ret)
 			return -EPERM;
