@@ -1007,13 +1007,14 @@ struct rtw89_mac_size_set {
 	const struct rtw89_ple_quota ple_qt27;
 	const struct rtw89_ple_quota ple_qt28;
 	const struct rtw89_ple_quota ple_qt42;
-	const struct rtw89_ple_quota ple_qt42_v2;
 	const struct rtw89_ple_quota ple_qt43;
-	const struct rtw89_ple_quota ple_qt43_v2;
 	const struct rtw89_ple_quota ple_qt44;
+	const struct rtw89_ple_quota ple_qt44_v2;
 	const struct rtw89_ple_quota ple_qt45;
+	const struct rtw89_ple_quota ple_qt45_v2;
 	const struct rtw89_ple_quota ple_qt46;
 	const struct rtw89_ple_quota ple_qt47;
+	const struct rtw89_ple_quota ple_qt47_v2;
 	const struct rtw89_ple_quota ple_qt57;
 	const struct rtw89_ple_quota ple_qt58;
 	const struct rtw89_ple_quota ple_qt59;
@@ -1037,7 +1038,7 @@ struct rtw89_mac_size_set {
 	const struct rtw89_dle_rsvd_size rsvd1_size0;
 	const struct rtw89_dle_rsvd_size rsvd1_size2;
 	const struct rtw89_dle_input dle_input3;
-	const struct rtw89_dle_input dle_input18;
+	const struct rtw89_dle_input dle_input20;
 };
 
 extern const struct rtw89_mac_size_set rtw89_mac_size;

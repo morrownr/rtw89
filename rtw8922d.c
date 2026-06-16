@@ -37,9 +37,7 @@ static const struct rtw89_hfc_ch_cfg rtw8922d_hfc_chcfg_pcie[] = {
 	{0, 601, 0}, /* B0HIQ */
 	{2, 603, 0}, /* B1MGQ */
 	{0, 601, 0}, /* B1HIQ */
-	{0, 0, 0}, /* FWCMDQ */
-	{0, 0, 0}, /* BMC */
-	{0, 0, 0}, /* H2D */
+	{0, 0, 0}, /* GCQ */
 };
 
 static const struct rtw89_hfc_pub_cfg rtw8922d_hfc_pubcfg_pcie = {
@@ -62,20 +60,20 @@ static const struct rtw89_hfc_param_ini rtw8922d_hfc_param_ini_pcie[] = {
 static const struct rtw89_dle_mem rtw8922d_dle_mem_pcie[] = {
 	[RTW89_QTA_SCC] = {RTW89_QTA_SCC, &rtw89_mac_size.wde_size16_v1,
 			   &rtw89_mac_size.ple_size20_v1, &rtw89_mac_size.wde_qt19_v1,
-			   &rtw89_mac_size.wde_qt19_v1, &rtw89_mac_size.ple_qt42_v2,
-			   &rtw89_mac_size.ple_qt43_v2, &rtw89_mac_size.ple_rsvd_qt9,
+			   &rtw89_mac_size.wde_qt19_v1, &rtw89_mac_size.ple_qt44_v2,
+			   &rtw89_mac_size.ple_qt45_v2, &rtw89_mac_size.ple_rsvd_qt9,
 			   &rtw89_mac_size.rsvd0_size6, &rtw89_mac_size.rsvd1_size2,
-			   &rtw89_mac_size.dle_input18},
+			   &rtw89_mac_size.dle_input20},
 	[RTW89_QTA_DBCC] = {RTW89_QTA_DBCC, &rtw89_mac_size.wde_size16_v1,
 			   &rtw89_mac_size.ple_size20_v1, &rtw89_mac_size.wde_qt19_v1,
-			   &rtw89_mac_size.wde_qt19_v1, &rtw89_mac_size.ple_qt42_v2,
-			   &rtw89_mac_size.ple_qt43_v2, &rtw89_mac_size.ple_rsvd_qt9,
+			   &rtw89_mac_size.wde_qt19_v1, &rtw89_mac_size.ple_qt44_v2,
+			   &rtw89_mac_size.ple_qt45_v2, &rtw89_mac_size.ple_rsvd_qt9,
 			   &rtw89_mac_size.rsvd0_size6, &rtw89_mac_size.rsvd1_size2,
-			   &rtw89_mac_size.dle_input18},
+			   &rtw89_mac_size.dle_input20},
 	[RTW89_QTA_DLFW] = {RTW89_QTA_DLFW, &rtw89_mac_size.wde_size18_v1,
 			    &rtw89_mac_size.ple_size22_v1, &rtw89_mac_size.wde_qt3,
 			    &rtw89_mac_size.wde_qt3, &rtw89_mac_size.ple_qt5_v2,
-			    &rtw89_mac_size.ple_qt5_v2, &rtw89_mac_size.ple_rsvd_qt1,
+			    &rtw89_mac_size.ple_qt47_v2, &rtw89_mac_size.ple_rsvd_qt1,
 			    &rtw89_mac_size.rsvd0_size6, &rtw89_mac_size.rsvd1_size2,
 			    &rtw89_mac_size.dle_input3},
 	[RTW89_QTA_INVALID] = {RTW89_QTA_INVALID, NULL, NULL, NULL, NULL, NULL,
