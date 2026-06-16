@@ -2278,6 +2278,13 @@ static int rtw89_core_rx_parse_phy_sts(struct rtw89_dev *rtwdev,
 	while (pos < end) {
 		const struct rtw89_phy_sts_iehdr *iehdr = pos;
 
+		/*
+		 * RTL8922D might reports 8 bytes zeros at end if IE09 presents.
+		 * Check and ignore the zeros.
+		 */
+		if (unlikely(phy_ppdu->ie09 && end - pos == 8 && iehdr->w0 == 0))
+			break;
+
 		ie_len = rtw89_core_get_phy_status_ie_len(rtwdev, iehdr);
 		pos += ie_len;
 		if (pos > end || ie_len == 0) {
