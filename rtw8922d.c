@@ -2172,29 +2172,42 @@ static void rtw8922d_set_digital_pwr_comp(struct rtw89_dev *rtwdev,
 					  enum rtw89_rf_path path,
 					  enum rtw89_phy_idx phy_idx)
 {
-#define DIGITAL_PWR_COMP_REG_NUM 22
+#define DIGITAL_PWR_COMP_BASE_NUM 7
+#define DIGITAL_PWR_COMP_VALS_NUM 15
 	static const u32 pw_comp_cr[2] = {R_RX_PATH0_TBL0_BE4, R_RX_PATH1_TBL0_BE4};
-	const __le32 (*pwr_comp_val)[2][RTW89_TX_COMP_BAND_NR]
-				    [BB_PATH_NUM_8922D][DIGITAL_PWR_COMP_REG_NUM];
+	const struct {
+		struct {
+			__le32 base[DIGITAL_PWR_COMP_BASE_NUM];
+			__le32 vals[DIGITAL_PWR_COMP_VALS_NUM];
+		} sets[2][RTW89_TX_COMP_BAND_NR][BB_PATH_NUM_8922D];
+	} *pwr_comp_v0;
 	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
 	const struct rtw89_fw_element_hdr *txcomp_elm = elm_info->tx_comp;
-	const __le32 *digital_pwr_comp;
+	const __le32 (*comp_base)[DIGITAL_PWR_COMP_BASE_NUM];
+	const __le32 (*comp_vals)[DIGITAL_PWR_COMP_VALS_NUM];
 	u32 addr, val;
 	u32 i;
 
-	if (sizeof(*pwr_comp_val) != le32_to_cpu(txcomp_elm->size)) {
+	if (sizeof(*pwr_comp_v0) == le32_to_cpu(txcomp_elm->size)) {
+		pwr_comp_v0 = (const void *)txcomp_elm->u.common.contents;
+		comp_base = &pwr_comp_v0->sets[nss][chan->tx_comp_band][path].base;
+		comp_vals = &pwr_comp_v0->sets[nss][chan->tx_comp_band][path].vals;
+	} else {
 		rtw89_debug(rtwdev, RTW89_DBG_UNEXP,
 			    "incorrect power comp size %d\n",
 			    le32_to_cpu(txcomp_elm->size));
 		return;
 	}
 
-	pwr_comp_val = (const void *)txcomp_elm->u.common.contents;
-	digital_pwr_comp = (*pwr_comp_val)[nss][chan->tx_comp_band][path];
 	addr = pw_comp_cr[path];
 
-	for (i = 0; i < DIGITAL_PWR_COMP_REG_NUM; i++, addr += 4) {
-		val = le32_to_cpu(digital_pwr_comp[i]);
+	for (i = 0; i < ARRAY_SIZE(*comp_base); i++, addr += 4) {
+		val = le32_to_cpu((*comp_base)[i]);
+		rtw89_phy_write32_idx(rtwdev, addr, MASKDWORD, val, phy_idx);
+	}
+
+	for (i = 0; i < ARRAY_SIZE(*comp_vals); i++, addr += 4) {
+		val = le32_to_cpu((*comp_vals)[i]);
 		rtw89_phy_write32_idx(rtwdev, addr, MASKDWORD, val, phy_idx);
 	}
 }
