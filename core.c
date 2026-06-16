@@ -3761,6 +3761,13 @@ static void rtw89_core_update_radiotap(struct rtw89_dev *rtwdev,
 	if (!(rtwdev->hw->conf.flags & IEEE80211_CONF_MONITOR))
 		return;
 
+	/*
+	 * At transient adding a monitor vif from a station vif, the headroom
+	 * might not include radiotap.
+	 */
+	if (unlikely(skb_headroom(skb) < RTW89_RADIOTAP_ROOM + NET_SKB_PAD))
+		return;
+
 	if (rx_status->encoding == RX_ENC_VHT)
 		rtw89_core_update_radiotap_vht(rtwdev, skb, rx_status, phy_ppdu);
 	else if (rx_status->encoding == RX_ENC_HE)
