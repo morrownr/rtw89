@@ -5691,6 +5691,7 @@ struct rtw89_pmac_stat_info {
 	u32 ofdm_phy_txon;
 	u32 cnt_ofdm_cca;
 	u32 cnt_cck_cca;
+	u32 cnt_cca_all;
 	u32 cnt_cck_spoofing;
 	u32 cnt_ofdm_spoofing;
 	u32 cnt_ampdu_miss;
@@ -5714,6 +5715,7 @@ struct rtw89_pmac_stat_info {
 	u32 cnt_sig_gg;
 	u32 cnt_cck_fail;
 	u32 cnt_ofdm_fail;
+	u32 cnt_fail_all;
 	u32 cnt_lsig_brk_s_th;
 	u32 cnt_lsig_brk_l_th;
 	u32 cnt_parity_fail;
@@ -5737,6 +5739,23 @@ struct rtw89_tx_stat_info {
 	bool stbc;
 };
 
+enum rtw89_diag_bb_type {
+	RTW89_DIAG_BB_HANG,
+	RTW89_DIAG_BB_PD,
+	RTW89_DIAG_BB_NO_RX,
+	RTW89_DIAG_BB_FA,
+	RTW89_DIAG_BB_EDCCA,
+
+	RTW89_DIAG_BB_NR,
+};
+
+struct rtw89_diag_bb {
+	u32 diag_bb_bitmap; /* bitmap of enum rtw89_diag_bb_type */
+	u32 diag_bb_cnt[RTW89_DIAG_BB_NR];
+	u16 consecutive_no_tx_cnt;
+	u16 consecutive_no_rx_cnt;
+};
+
 struct rtw89_agc_gaincode_set {
 	u8 lna_idx;
 	u8 tia_idx;
@@ -5752,6 +5771,7 @@ struct rtw89_dig_info {
 	struct rtw89_agc_gaincode_set cur_gaincode;
 	bool force_gaincode_idx_en;
 	struct rtw89_agc_gaincode_set force_gaincode;
+	enum rtw89_dig_noisy_level noisy_lv;
 	u8 igi_rssi_th[IGI_RSSI_TH_NUM];
 	u16 fa_th[FA_TH_NUM];
 	u8 igi_rssi;
@@ -5761,6 +5781,7 @@ struct rtw89_dig_info {
 	u8 dyn_igi_min;
 	bool dyn_pd_th_en;
 	u8 dyn_pd_th_max;
+	u8 dyn_pd_max_cnt;
 	u8 pd_low_th_ofst;
 	u8 ib_pbk;
 	s8 ib_pkpwr;
@@ -6027,6 +6048,7 @@ struct rtw89_env_monitor_info {
 	u8 nhm_th[RTW89_NHM_RPT_NUM];
 	struct rtw89_nhm_report *nhm_his[RTW89_BAND_NUM];
 	struct list_head nhm_rpt_list;
+	u8 edcca_clm_ratio;
 };
 
 enum rtw89_ser_rcvy_step {
@@ -6569,6 +6591,7 @@ struct rtw89_dev {
 		struct rtw89_pkt_stat last_pkt_stat;
 		struct rtw89_pmac_stat_info pmac_stat;
 		struct rtw89_tx_stat_info tx_stat;
+		struct rtw89_diag_bb diag;
 	} bbs[RTW89_PHY_NUM];
 
 	struct wiphy_delayed_work track_work;

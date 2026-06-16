@@ -471,6 +471,10 @@ struct rtw89_ccx_regs {
 	u32 nhm_en_mask;
 	u32 nhm_method;
 	u32 nhm_pwr_method_msk;
+	u32 edcca_clm_rdy;
+	u32 edcca_clm_rdy_mask;
+	u32 edcca_clm_cnt;
+	u32 edcca_clm_cnt_mask;
 };
 
 struct rtw89_physts_regs {

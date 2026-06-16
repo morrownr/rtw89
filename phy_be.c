@@ -74,6 +74,10 @@ static const struct rtw89_ccx_regs rtw89_ccx_regs_be = {
 	.nhm_en_mask = B_NHM_EN_MSK,
 	.nhm_method = R_NHM_TH9,
 	.nhm_pwr_method_msk = B_NHM_PWDB_METHOD_MSK,
+	.edcca_clm_rdy = R_CLM_EDCCA_RDY_V1,
+	.edcca_clm_rdy_mask = B_CLM_EDCCA_RDY,
+	.edcca_clm_cnt = R_CLM_EDCCA_RESULT_V1,
+	.edcca_clm_cnt_mask = B_CLM_EDCCA_RESULT,
 };
 
 static const struct rtw89_ccx_regs rtw89_ccx_regs_be_v1 = {
@@ -133,6 +137,10 @@ static const struct rtw89_ccx_regs rtw89_ccx_regs_be_v1 = {
 	.ifs_total_addr = R_IFS_TOTAL_BE4,
 	.ifs_cnt_done_mask = B_IFS_CNT_DONE_BE4,
 	.ifs_total_mask = B_IFS_TOTAL_BE4,
+	.edcca_clm_rdy = R_CLM_EDCCA_RDY_BE4,
+	.edcca_clm_rdy_mask = B_CLM_EDCCA_RDY,
+	.edcca_clm_cnt = R_CLM_EDCCA_RESULT_BE4,
+	.edcca_clm_cnt_mask = B_CLM_EDCCA_RESULT,
 };
 
 static const u32 rtw89_tx_info_reg_be[] = {

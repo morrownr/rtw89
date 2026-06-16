@@ -94,6 +94,7 @@ struct rtw89_debugfs {
 	struct rtw89_debugfs_priv mlo_mode;
 	struct rtw89_debugfs_priv beacon_info;
 	struct rtw89_debugfs_priv diag_mac;
+	struct rtw89_debugfs_priv diag_bb;
 };
 
 struct rtw89_debugfs_iter_data {
@@ -5269,6 +5270,46 @@ rtw89_debug_priv_diag_mac_get(struct rtw89_dev *rtwdev,
 	return rtw89_mac_diag_iter_all(rtwdev, buf, bufsz);
 }
 
+static int rtw89_get_diag_bb(struct rtw89_dev *rtwdev,  struct rtw89_bb_ctx *bb,
+			     char *buf, size_t bufsz)
+{
+	struct rtw89_diag_bb *diag = &bb->diag;
+	char *p = buf, *end = buf + bufsz;
+
+	p += scnprintf(p, end - p, "[PHY %u]\n", bb->phy_idx);
+	p += scnprintf(p, end - p, "Diag bitmap = 0x%x\n", diag->diag_bb_bitmap);
+	p += scnprintf(p, end - p,
+		       "Event{Hang, PD MAX, No RX, High FA, High EDCCA Ratio} = ");
+	p += scnprintf(p, end - p, "{%d, %d, %d, %d, %d}\n",
+		       diag->diag_bb_cnt[RTW89_DIAG_BB_HANG],
+		       diag->diag_bb_cnt[RTW89_DIAG_BB_PD],
+		       diag->diag_bb_cnt[RTW89_DIAG_BB_NO_RX],
+		       diag->diag_bb_cnt[RTW89_DIAG_BB_FA],
+		       diag->diag_bb_cnt[RTW89_DIAG_BB_EDCCA]);
+	p += scnprintf(p, end - p,
+		       "consecutive_no_tx_cnt=%d, consecutive_no_rx_cnt=%d\n\n",
+		       diag->consecutive_no_tx_cnt,
+		       diag->consecutive_no_rx_cnt);
+
+	return p - buf;
+}
+
+static ssize_t
+rtw89_debug_priv_diag_bb_get(struct rtw89_dev *rtwdev,
+			     struct rtw89_debugfs_priv *debugfs_priv,
+			     char *buf, size_t bufsz)
+{
+	char *p = buf, *end = buf + bufsz;
+	struct rtw89_bb_ctx *bb;
+
+	lockdep_assert_wiphy(rtwdev->hw->wiphy);
+
+	rtw89_for_each_active_bb(rtwdev, bb)
+		p += rtw89_get_diag_bb(rtwdev, bb, p, end - p);
+
+	return p - buf;
+}
+
 static int rtw89_get_beacon_info(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *bb,
 				 char *buf, size_t bufsz)
 {
@@ -5406,6 +5447,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.mlo_mode = rtw89_debug_priv_set_and_get(mlo_mode, RWLOCK),
 	.diag_mac = rtw89_debug_priv_get(diag_mac, RSIZE_16K, RLOCK),
 	.bb_info = rtw89_debug_priv_set_and_get(bb_info, RWLOCK),
+	.diag_bb = rtw89_debug_priv_get(diag_bb, RSIZE_8K, RLOCK),
 #else
 	.read_rf = rtw89_debug_priv_select_and_get(read_rf),
 	.write_rf = rtw89_debug_priv_set(write_rf),
@@ -5421,6 +5463,7 @@ static const struct rtw89_debugfs rtw89_debugfs_templ = {
 	.mlo_mode = rtw89_debug_priv_set_and_get(mlo_mode),
 	.diag_mac = rtw89_debug_priv_get(diag_mac, RSIZE_16K),
 	.bb_info = rtw89_debug_priv_set_and_get(bb_info),
+	.diag_bb = rtw89_debug_priv_get(diag_bb, RSIZE_8K),
 #endif
 };
 
@@ -5472,6 +5515,7 @@ void rtw89_debugfs_add_sec1(struct rtw89_dev *rtwdev, struct dentry *debugfs_top
 	rtw89_debugfs_add_rw(mlo_mode);
 	rtw89_debugfs_add_r(beacon_info);
 	rtw89_debugfs_add_r(diag_mac);
+	rtw89_debugfs_add_r(diag_bb);
 }
 
 void rtw89_debugfs_init(struct rtw89_dev *rtwdev)
