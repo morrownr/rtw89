@@ -5455,10 +5455,30 @@ rtw89_mac_c2h_rec_ack(struct rtw89_dev *rtwdev, struct sk_buff *skb_c2h, u32 len
 	u8 h2c_class = le32_get_bits(c2h->w2, RTW89_C2H_REV_ACK_W2_CLASS);
 	u8 h2c_func = le32_get_bits(c2h->w2, RTW89_C2H_REV_ACK_W2_FUNC);
 	u8 h2c_seq = le32_get_bits(c2h->w2, RTW89_C2H_REV_ACK_W2_H2C_SEQ);
+	struct rtw89_hw_scan_info *scan_info = &rtwdev->scan_info;
 
 	rtw89_debug(rtwdev, RTW89_DBG_FW,
 		    "C2H rev ack recv, cat: %d, class: %d, func: %d, seq : %d\n",
 		    h2c_cat, h2c_class, h2c_func, h2c_seq);
+
+	if (h2c_cat != H2C_CAT_MAC)
+		return;
+
+	switch (h2c_class) {
+	default:
+		return;
+	case H2C_CL_MAC_FW_OFLD:
+		switch (h2c_func) {
+		default:
+			return;
+		case H2C_FUNC_SCANOFLD:
+		case H2C_FUNC_SCANOFLD_BE:
+			scan_info->seq++;
+			break;
+		}
+
+		return;
+	}
 }
 
 static void
@@ -5466,7 +5486,6 @@ rtw89_mac_c2h_done_ack(struct rtw89_dev *rtwdev, struct sk_buff *skb_c2h, u32 le
 {
 	/* N.B. This will run in interrupt context. */
 	struct rtw89_wait_info *fw_ofld_wait = &rtwdev->mac.fw_ofld_wait;
-	struct rtw89_hw_scan_info *scan_info = &rtwdev->scan_info;
 	struct rtw89_wait_info *ps_wait = &rtwdev->mac.ps_wait;
 	const struct rtw89_c2h_done_ack *c2h =
 		(const struct rtw89_c2h_done_ack *)skb_c2h->data;
@@ -5509,11 +5528,9 @@ rtw89_mac_c2h_done_ack(struct rtw89_dev *rtwdev, struct sk_buff *skb_c2h, u32 le
 			h2c_return &= RTW89_C2H_SCAN_DONE_ACK_RETURN;
 			break;
 		case H2C_FUNC_SCANOFLD:
-			scan_info->seq++;
 			cond = RTW89_SCANOFLD_WAIT_COND_START;
 			break;
 		case H2C_FUNC_SCANOFLD_BE:
-			scan_info->seq++;
 			cond = RTW89_SCANOFLD_BE_WAIT_COND_START;
 			h2c_return &= RTW89_C2H_SCAN_DONE_ACK_RETURN;
 			break;
