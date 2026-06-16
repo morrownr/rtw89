@@ -3200,6 +3200,7 @@ void rtw89_core_update_rx_status_by_ppdu(struct rtw89_dev *rtwdev,
 		rx_status->enc_flags |= u8_encode_bits(1, RX_ENC_FLAG_STBC_MASK);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 19, 0)
 static void rtw89_core_update_radiotap_vht(struct rtw89_dev *rtwdev,
 					   struct sk_buff *skb,
 					   struct ieee80211_rx_status *rx_status,
@@ -3247,6 +3248,7 @@ static void rtw89_core_update_radiotap_vht(struct rtw89_dev *rtwdev,
 #undef WITH_MCS_IS_NOT_KNOWN
 	}
 }
+#endif
 
 static void rtw89_core_update_radiotap_he_su(struct rtw89_dev *rtwdev,
 					     struct sk_buff *skb,
@@ -3768,9 +3770,13 @@ static void rtw89_core_update_radiotap(struct rtw89_dev *rtwdev,
 	if (unlikely(skb_headroom(skb) < RTW89_RADIOTAP_ROOM + NET_SKB_PAD))
 		return;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 19, 0)
 	if (rx_status->encoding == RX_ENC_VHT)
 		rtw89_core_update_radiotap_vht(rtwdev, skb, rx_status, phy_ppdu);
 	else if (rx_status->encoding == RX_ENC_HE)
+#else
+	if (rx_status->encoding == RX_ENC_HE)
+#endif
 		rtw89_core_update_radiotap_he(rtwdev, desc_info, skb, rx_status, phy_ppdu);
 	else if (rx_status->encoding == RX_ENC_EHT)
 		rtw89_core_update_radiotap_eht(rtwdev, skb, rx_status);
