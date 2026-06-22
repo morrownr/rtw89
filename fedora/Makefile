@@ -1,6 +1,8 @@
 # Use bash syntax, mitigates dash's printf on Debian
 SHELL := /usr/bin/bash
 
+VERSION := $(shell grep '^PACKAGE_VERSION=' ../dkms.conf | cut -d'"' -f2)
+
 REQUIRED_PKGS := rpmdevtools git-core kernel-devel-matched
 
 .PHONY: all
@@ -19,10 +21,10 @@ all:
 	commit=$$(git -C .. rev-parse HEAD) && \
 	tmpdir=$$(mktemp -d) && \
 		trap "rm -rf $$tmpdir" EXIT && \
-		git -C .. archive --format=tar --prefix=rtw89-7.1/ HEAD | tar -C "$$tmpdir" -xf - && \
-		sed -i 's|$$(shell git --git-dir=$$(src)/\.git rev-parse HEAD)|'"$$commit"'|' "$$tmpdir/rtw89-7.1/Makefile" && \
-		sed -i '/^CLEAN=/d' "$$tmpdir/rtw89-7.1/dkms.conf" && \
-		rm -rf "$$tmpdir/rtw89-7.1/firmware" "$$tmpdir/rtw89-7.1/hostapd" "$$tmpdir/rtw89-7.1/fedora" && \
-		tar -C "$$tmpdir" -czf ~/rpmbuild/SOURCES/rtw89-7.1.tar.gz rtw89-7.1
-	rpmbuild -ba rtw89-dkms.spec
+		git -C .. archive --format=tar --prefix=rtw89-$(VERSION)/ HEAD | tar -C "$$tmpdir" -xf - && \
+		sed -i 's|$$(shell git --git-dir=$$(src)/\.git rev-parse HEAD)|'"$$commit"'|' "$$tmpdir/rtw89-$(VERSION)/Makefile" && \
+		sed -i '/^CLEAN=/d' "$$tmpdir/rtw89-$(VERSION)/dkms.conf" && \
+		rm -rf "$$tmpdir/rtw89-$(VERSION)/firmware" "$$tmpdir/rtw89-$(VERSION)/hostapd" "$$tmpdir/rtw89-$(VERSION)/fedora" && \
+		tar -C "$$tmpdir" -czf ~/rpmbuild/SOURCES/rtw89-$(VERSION).tar.gz rtw89-$(VERSION)
+	rpmbuild -ba --define "dkms_version $(VERSION)" rtw89-dkms.spec
 	@printf '\nNow run sudo dnf install ~/rpmbuild/RPMS/noarch/rtw89-dkms-*.noarch.rpm\n\n'
