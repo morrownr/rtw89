@@ -1,5 +1,6 @@
 %global dkms_name rtw89
-%global dkms_version 7.1
+# dkms_version is passed via --define from fedora/Makefile (sourced from ../dkms.conf)
+%{!?dkms_version: %global dkms_version 7.2}
 
 Name:           %{dkms_name}-dkms
 Version:        %{dkms_version}
