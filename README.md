@@ -181,6 +181,28 @@ Install `usb-modeswitch` (or usb_modeswitch), a tool that can switch your adapte
       sudo update-initramfs -u -k all
       ```
 
+### Q7. My computer only provides USB 3.x ports. How can I make my USB wireless adapter work in USB 2.0 mode?
+
+   1. Open `/etc/modprobe.d/rtw89.conf` with a text editor.
+
+   2. Change the value of the module parameter `switch_usb_mode` from 'y' to 'n'. Changing this value to 'n' tells the rtw89 driver not to perform USB mode switching, so the USB wireless adapter will work in USB 2.0 mode.
+
+   3. Remove the USB wireless adapter from your computer.
+
+   4. Reboot your computer (or unload the rtw89 driver completely, if you know how).
+
+   5. Plug your USB wireless adapter back into the computer.
+
+   6. Run "lsusb -t" to check what mode the USB wireless adapter is in. 
+
+### Q8. My Realtek PCIe wireless card on a Lenovo or HP laptop is not working well, any solution?
+
+Please try the workaround [here](https://github.com/morrownr/rtw89/issues/98#issuecomment-4619148246)
+
+### Q9. My Realtek PCIe wireless card on an Intel X99 machine doesn't work, how to fix it?
+
+Please apply [this patch](https://github.com/user-attachments/files/29662967/0001-Don-t-enable-36-bit-DMA-address-support-for-Intel-ch.patch) and build/install the patched rtw89 driver.
+
 ## The Main Menu for this site contains a lot of information regarding USB WiFi Adapters
 
 https://github.com/morrownr/USB-WiFi
