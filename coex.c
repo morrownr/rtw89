@@ -4086,7 +4086,7 @@ static void _set_rf_trx_para(struct rtw89_dev *rtwdev)
 		ul_para_num = chip->rf_para_ulink_num_v0;
 		dl_para_num = chip->rf_para_dlink_num_v0;
 	} else {
-		rtw89_warn(rtwdev, "[BTC]%s(), No rf_para for verseion %d\n",
+		rtw89_warn(rtwdev, "[BTC]%s(), No rf_para for version %d\n",
 			   __func__, ver->fcxtrx);
 		goto next;
 	}
