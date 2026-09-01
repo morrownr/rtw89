@@ -3115,11 +3115,14 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
 		skb = rtw89_arp_response_get(rtwdev, rtwvif_link);
 		break;
 	default:
+		ret = -EINVAL;
 		goto err;
 	}
 
-	if (!skb)
+	if (!skb) {
+		ret = -ENOMEM;
 		goto err;
+	}
 
 	ret = rtw89_fw_h2c_add_pkt_offload(rtwdev, &info->id, skb);
 	kfree_skb(skb);
@@ -3133,7 +3136,7 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
 
 err:
 	kfree(info);
-	return -ENOMEM;
+	return ret;
 }
 
 void rtw89_fw_release_general_pkt_list_vif(struct rtw89_dev *rtwdev,
