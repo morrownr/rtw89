@@ -732,6 +732,7 @@ void rtw89_phy_bb_wrap_set_rfsi_bandedge_ch(struct rtw89_dev *rtwdev,
 EXPORT_SYMBOL(rtw89_phy_bb_wrap_set_rfsi_bandedge_ch);
 
 static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
+						       const struct rtw89_chan *chan,
 						       enum rtw89_mac_idx mac_idx)
 {
 	const struct rtw89_bb_wrap_data *d = rtwdev->phy_info.bb_wrap_data;
@@ -740,9 +741,9 @@ static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
 	if (!d || !d->common)
 		return;
 
-	th0 = d->common->qam_th[0];
-	th1 = d->common->qam_th[1];
-	th2 = d->common->qam_th[2];
+	th0 = d->common->bands[chan->rfsi_band].qam_th[0];
+	th1 = d->common->bands[chan->rfsi_band].qam_th[1];
+	th2 = d->common->bands[chan->rfsi_band].qam_th[2];
 
 	/* TH0 */
 	rtw89_write32_idx(rtwdev, R_QAM_TH0_BE4, B_QAM_TH0_0_BE4, th0, mac_idx);
@@ -1222,7 +1223,7 @@ void rtw89_phy_bb_wrap_tx_rfsi_ctrl_init_by_chan(struct rtw89_dev *rtwdev,
 						 const struct rtw89_chan *chan,
 						 u8 mac_idx)
 {
-	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(rtwdev, mac_idx);
+	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(rtwdev, chan, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen2_init(rtwdev, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen3_init(rtwdev, chan, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_scenario_def(rtwdev, chan, mac_idx);

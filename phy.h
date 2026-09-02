@@ -631,8 +631,8 @@ struct rtw89_bb_wrap_common_data {
 		} cim3k;
 		u32 rfsi_ct_opt[2];
 		u8 pb_tb;
+		u8 qam_th[3];
 	} bands[RFSI_CTRL_BAND_NUM];
-	u8 qam_th[3];
 };
 
 struct rtw89_bb_wrap_common_data_gen2 {
