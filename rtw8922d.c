@@ -901,6 +901,9 @@ static int rtw8922d_read_sys(struct rtw89_dev *rtwdev, u8 *log_map)
 	u16 digk;
 	u8 vmin;
 
+	if (!test_bit(RTW89_QUIRK_THERMAL_PROT_VCORE, rtwdev->quirks))
+		return 0;
+
 	digk = log_map[0x200] | log_map[0x201] << 8;
 	hal->thermal_prot_vmax = u16_get_bits(digk, B_BE_PWMTUNE_MASK);
 
