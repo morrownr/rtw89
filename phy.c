@@ -3647,6 +3647,8 @@ static void rtw89_phy_c2h_rfk_rpt_log(struct rtw89_dev *rtwdev,
 			    "[IQK] iqk->fwk_status = %x\n", iqk->fwk_status);
 
 		for (i = 0; i < 2; i++) {
+			struct rtw89_iqk_info *iqk_info = &rtwdev->iqk;
+
 			rtw89_debug(rtwdev, RTW89_DBG_RFK,
 				    "[IQK] ======== Path %x  ========\n", i);
 			rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK] iqk->iqk_band[%d] = %x\n",
@@ -3665,6 +3667,9 @@ static void rtw89_phy_c2h_rfk_rpt_log(struct rtw89_dev *rtwdev,
 				    i, iqk->iqk_tx_fail[i]);
 			rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK] iqk->iqk_rx_fail[%d] = %x\n",
 				    i, iqk->iqk_rx_fail[i]);
+
+			iqk_info->iqk_rx_fail[0][i] = iqk->iqk_rx_fail[i];
+
 			for (j = 0; j < 6; j++)
 				rtw89_debug(rtwdev, RTW89_DBG_RFK,
 					    "[IQK] iqk->rftxgain[%d][%d] = %x\n",
