@@ -772,6 +772,26 @@ static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
 	rtw89_write32_idx(rtwdev, R_QAM_TH2_BE4, B_QAM_TH2_2_BE4, th2, mac_idx);
 	rtw89_write32_idx(rtwdev, R_QAM_TH2_BE4, B_QAM_TH2_5_BE4, th2, mac_idx);
 	rtw89_write32_idx(rtwdev, R_QAM_TH2_BE4, B_QAM_TH2_8_BE4, th2, mac_idx);
+}
+
+static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen2_init(struct rtw89_dev *rtwdev,
+							    enum rtw89_mac_idx mac_idx)
+{
+	const struct rtw89_bb_wrap_data *d = rtwdev->phy_info.bb_wrap_data;
+	const struct rtw89_bb_wrap_common_data_gen2 *common_gen2;
+	u8 th0, th2, th3, th4, th5;
+
+	if (!d || !d->common_gen2)
+		return;
+
+	common_gen2 = d->common_gen2;
+	th0 = common_gen2->qam_th.mdpd_160m;
+	/* th1 (MDPD 320M) has no RTL8922D wrapper register */
+	th2 = common_gen2->qam_th.oob_dpd_20m;
+	th3 = common_gen2->qam_th.oob_dpd_40m;
+	th4 = common_gen2->qam_th.oob_dpd_80m;
+	th5 = common_gen2->qam_th.cim3k;
+
 	/* DPD 160M */
 	rtw89_write32_idx(rtwdev, R_DPD_DBW160_TH0_BE4, B_DPD_DBW160_TH0_0_BE4, th0, mac_idx);
 	rtw89_write32_idx(rtwdev, R_DPD_DBW160_TH0_BE4, B_DPD_DBW160_TH0_1_BE4, th0, mac_idx);
@@ -782,34 +802,34 @@ static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
 	rtw89_write32_idx(rtwdev, R_DPD_DBW160_TH1_BE4, B_DPD_DBW160_TH1_6_BE4, th0, mac_idx);
 	rtw89_write32_idx(rtwdev, R_DPD_DBW160_TH1_BE4, B_DPD_DBW160_TH1_7_BE4, th0, mac_idx);
 	/* DPD 20M */
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_0_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_1_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_2_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_3_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_4_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_5_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_6_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW20_TH1_7_BE4, 0x2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_0_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_1_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_2_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_3_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_4_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_5_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH0_BE4, B_DPD_CBW20_TH0_6_BE4, th2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW20_TH1_7_BE4, th2, mac_idx);
 	/* DPD 40M */
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_0_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_1_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_2_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_3_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_4_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW20_TH0_3_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW20_TH0_4_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW20_TH0_5_BE4, 0x2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_0_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_1_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_2_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_3_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_4_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_5_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_6_BE4, th3, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW40_TH1_7_BE4, th3, mac_idx);
 	/* DPD 80M */
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW80_TH1_0_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_1_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_2_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_3_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_4_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_5_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_6_BE4, 0x2, mac_idx);
-	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_7_BE4, 0x2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH1_BE4, B_DPD_CBW80_TH1_0_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_1_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_2_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_3_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_4_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_5_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_6_BE4, th4, mac_idx);
+	rtw89_write32_idx(rtwdev, R_DPD_CBW_TH2_BE4, B_DPD_CBW80_TH2_7_BE4, th4, mac_idx);
 	/* CIM3K */
-	rtw89_write32_idx(rtwdev, R_COMP_CIM3K_BE4, B_COMP_CIM3K_TH2_BE4, 0x2, mac_idx);
+	rtw89_write32_idx(rtwdev, R_COMP_CIM3K_BE4, B_COMP_CIM3K_TH2_BE4, th5, mac_idx);
 }
 
 static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen3_init(struct rtw89_dev *rtwdev,
@@ -1097,6 +1117,14 @@ static void rtw89_phy_bb_set_cim3k_val(struct rtw89_dev *rtwdev,
 
 	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_SU_FORCE_EN, 1, mac_idx);
 	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_SU_FORCE_VAL, 0, mac_idx);
+
+	if (rtwdev->hal.cid == RTL8922D_CID7025)
+		return;
+
+	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_RU26_FORCE_EN, 1, mac_idx);
+	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_RU26_FORCE_VAL, 0, mac_idx);
+	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_RU52_FORCE_EN, 1, mac_idx);
+	rtw89_write32_idx(rtwdev, R_CIM3K_SU_FORCE, B_CIM3K_RU52_FORCE_VAL, 1, mac_idx);
 }
 
 static void rtw89_phy_bb_set_cck_cfir_filter_val_gen3(struct rtw89_dev *rtwdev,
@@ -1147,6 +1175,7 @@ static void rtw89_phy_bb_wrap_tx_rfsi_ctrl_init(struct rtw89_dev *rtwdev,
 	chan = conf.chans[phy_idx];
 
 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(rtwdev, mac_idx);
+	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen2_init(rtwdev, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen3_init(rtwdev, chan, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_scenario_def(rtwdev, mac_idx);
 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_val(rtwdev, mac_idx);

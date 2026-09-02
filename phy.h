@@ -632,7 +632,18 @@ struct rtw89_bb_wrap_common_data {
 		u32 rfsi_ct_opt[2];
 		u8 pb_tb;
 	} bands[RFSI_CTRL_BAND_NUM];
-	u8 qam_th[6];
+	u8 qam_th[3];
+};
+
+struct rtw89_bb_wrap_common_data_gen2 {
+	struct {
+		u8 mdpd_160m;
+		u8 mdpd_320m;
+		u8 oob_dpd_20m;
+		u8 oob_dpd_40m;
+		u8 oob_dpd_80m;
+		u8 cim3k;
+	} qam_th;
 };
 
 struct rtw89_bb_wrap_common_data_gen3 {
@@ -644,6 +655,7 @@ struct rtw89_bb_wrap_common_data_gen3 {
 
 struct rtw89_bb_wrap_data {
 	const struct rtw89_bb_wrap_common_data *common;
+	const struct rtw89_bb_wrap_common_data_gen2 *common_gen2;
 	const struct rtw89_bb_wrap_common_data_gen3 *common_gen3;
 	struct {
 		u16 qam_comp_th0[MAX_TX_RFSI_CTRL_OPT];
