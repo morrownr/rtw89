@@ -167,7 +167,7 @@ static struct ieee80211_rate rtw89_bitrates[] = {
 
 static const struct ieee80211_iface_limit rtw89_iface_limits[] = {
 	{
-		.max = 1,
+		.max = 2,
 		.types = BIT(NL80211_IFTYPE_STATION),
 	},
 	{
