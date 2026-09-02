@@ -2101,6 +2101,11 @@ struct rtw89_h2c_lps_ml_cmn_info_v1 {
 	struct rtw89_bb_link_info_rx_gain rx_gain[RTW89_BB_PS_LINK_BUF_MAX];
 } __packed;
 
+struct rtw89_h2c_phy_rfe_type {
+	u8 rfe_type;
+	u8 rsvd[3];
+} __packed;
+
 struct rtw89_h2c_trig_cpu_except {
 	__le32 w0;
 } __packed;
@@ -4886,6 +4891,7 @@ enum rtw89_mrc_h2c_func {
 #define H2C_FUNC_FW_MCC_DIG		0x6
 #define H2C_FUNC_FW_LPS_CH_INFO		0xb
 #define H2C_FUNC_FW_LPS_ML_CMN_INFO	0xe
+#define H2C_FUNC_FW_RFE_TYPE		0x1b
 
 #define H2C_CL_OUTSRC_RF_REG_A		0x8
 #define H2C_CL_OUTSRC_RF_REG_B		0x9
@@ -5570,6 +5576,7 @@ int rtw89_fw_h2c_lps_ml_cmn_info_v1(struct rtw89_dev *rtwdev,
 				    struct rtw89_vif *rtwvif);
 int rtw89_fw_h2c_fwips(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rtwvif_link,
 		       bool enable);
+int rtw89_fw_h2c_phy_rfe_type(struct rtw89_dev *rtwdev);
 struct sk_buff *rtw89_fw_h2c_alloc_skb_with_hdr(struct rtw89_dev *rtwdev, u32 len);
 struct sk_buff *rtw89_fw_h2c_alloc_skb_no_hdr(struct rtw89_dev *rtwdev, u32 len);
 int rtw89_fw_msg_reg(struct rtw89_dev *rtwdev,

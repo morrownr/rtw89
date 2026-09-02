@@ -2504,6 +2504,8 @@ static void rtw8922d_bb_sethw(struct rtw89_dev *rtwdev)
 	enum rtw89_phy_idx phy_idx;
 	u32 reg;
 
+	rtw89_fw_h2c_phy_rfe_type(rtwdev);
+
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_BE_PWR_BOOST, RTW89_PHY_0);
 	rtw89_write32_clr(rtwdev, reg, B_BE_PWR_CTRL_SEL);
 	reg = rtw89_mac_reg_by_idx(rtwdev, R_BE_PWR_BOOST, RTW89_PHY_1);
