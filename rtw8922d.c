@@ -2544,7 +2544,8 @@ static void rtw8922d_set_channel_bb(struct rtw89_dev *rtwdev,
 	u8 pri_sb = chan->pri_sb_idx;
 	u32 val;
 
-	rtw89_phy_bb_wrap_set_rfsi_ct_opt(rtwdev, chan->rfsi_band, phy_idx);
+	rtw89_phy_bb_wrap_tx_rfsi_ctrl_init_by_chan(rtwdev, chan, phy_idx);
+
 	rtw8922d_ctrl_ch(rtwdev, chan, phy_idx);
 	rtw8922d_ctrl_bw(rtwdev, pri_sb, chan->band_width, phy_idx);
 	rtw89_phy_bb_wrap_set_rfsi_bandedge_ch(rtwdev, chan, phy_idx);

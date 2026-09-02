@@ -1051,9 +1051,9 @@ static inline void rtw89_phy_bb_wrap_init(struct rtw89_dev *rtwdev)
 		phy->bb_wrap_init(rtwdev);
 }
 
-void rtw89_phy_bb_wrap_set_rfsi_ct_opt(struct rtw89_dev *rtwdev,
-				       enum rtw89_rfsi_ctrl_band ctrl_band,
-				       enum rtw89_phy_idx phy_idx);
+void rtw89_phy_bb_wrap_tx_rfsi_ctrl_init_by_chan(struct rtw89_dev *rtwdev,
+						 const struct rtw89_chan *chan,
+						 u8 mac_idx);
 void rtw89_phy_bb_wrap_set_rfsi_bandedge_ch(struct rtw89_dev *rtwdev,
 					    const struct rtw89_chan *chan,
 					    enum rtw89_phy_idx phy_idx);
