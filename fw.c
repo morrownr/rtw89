@@ -10415,7 +10415,6 @@ static void rtw89_hw_scan_update_link_beacon_noa(struct rtw89_dev *rtwdev,
 
 static void rtw89_hw_scan_update_beacon_noa(struct rtw89_dev *rtwdev, bool scan)
 {
-	const struct rtw89_entity_mgnt *mgnt = &rtwdev->hal.entity_mgnt;
 	const struct rtw89_hw_scan_info *scan_info = &rtwdev->scan_info;
 	const struct rtw89_chip_info *chip = rtwdev->chip;
 	struct rtw89_mac_chinfo_ax *chinfo_ax;
@@ -10455,7 +10454,7 @@ static void rtw89_hw_scan_update_beacon_noa(struct rtw89_dev *rtwdev, bool scan)
 	}
 
 update:
-	list_for_each_entry(rtwvif, &mgnt->active_list, mgnt_entry) {
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif) {
 		unsigned int link_id;
 
 		vif = rtwvif_to_vif(rtwvif);
@@ -10472,7 +10471,6 @@ static void rtw89_hw_scan_set_extra_op_info(struct rtw89_dev *rtwdev,
 					    struct rtw89_vif *scan_rtwvif,
 					    const struct rtw89_chan *scan_op)
 {
-	struct rtw89_entity_mgnt *mgnt = &rtwdev->hal.entity_mgnt;
 	struct rtw89_hw_scan_info *scan_info = &rtwdev->scan_info;
 	struct rtw89_hw_scan_extra_op *ext = &scan_info->extra_op;
 	struct rtw89_vif *tmp;
@@ -10481,7 +10479,7 @@ static void rtw89_hw_scan_set_extra_op_info(struct rtw89_dev *rtwdev,
 	if (!RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD_EXTRA_OP, &rtwdev->fw))
 		return;
 
-	list_for_each_entry(tmp, &mgnt->active_list, mgnt_entry) {
+	rtw89_for_each_active_rtwvif(rtwdev, tmp) {
 		const struct rtw89_chan *tmp_chan;
 		struct rtw89_vif_link *tmp_link;
 

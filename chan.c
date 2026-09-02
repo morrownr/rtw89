@@ -186,7 +186,7 @@ static void rtw89_chan_update_punctured(struct rtw89_dev *rtwdev,
 	struct rtw89_vif *rtwvif;
 	unsigned int link_id;
 
-	rtw89_for_each_rtwvif(rtwdev, rtwvif) {
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif) {
 		rtw89_vif_for_each_link(rtwvif, rtwvif_link, link_id) {
 			if (!rtwvif_link->chanctx_assigned ||
 			    rtwvif_link->chanctx_idx != idx)
@@ -360,10 +360,8 @@ static void rtw89_entity_calculate_weight(struct rtw89_dev *rtwdev,
 			w->active_chanctxs++;
 	}
 
-	rtw89_for_each_rtwvif(rtwdev, rtwvif) {
-		if (rtw89_vif_is_active_role(rtwvif))
-			w->active_roles++;
-	}
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif)
+		w->active_roles++;
 }
 
 static void rtw89_normalize_link_chanctx(struct rtw89_dev *rtwdev,
@@ -559,7 +557,7 @@ static void rtw89_entity_recalc_mgnt_roles(struct rtw89_dev *rtwdev)
 	 * which uses RTW89_CHANCTX_0 to put at position 0 and its designated
 	 * link take RTW89_CHANCTX_0. (normalizing)
 	 */
-	list_for_each_entry(role, &mgnt->active_list, mgnt_entry) {
+	rtw89_for_each_active_rtwvif(rtwdev, role) {
 		for (i = 0; i < role->links_inst_valid_num; i++) {
 			link = rtw89_vif_get_link_inst(role, i);
 			if (!link || !link->chanctx_assigned)
@@ -576,7 +574,7 @@ static void rtw89_entity_recalc_mgnt_roles(struct rtw89_dev *rtwdev)
 	}
 
 fill:
-	list_for_each_entry(role, &mgnt->active_list, mgnt_entry) {
+	rtw89_for_each_active_rtwvif(rtwdev, role) {
 		if (unlikely(pos >= RTW89_MAX_INTERFACE_NUM)) {
 			rtw89_warn(rtwdev,
 				   "%s: active roles are over max iface num\n",
@@ -3341,7 +3339,7 @@ static void rtw89_swap_chanctx(struct rtw89_dev *rtwdev,
 
 	swap(hal->chanctx[idx1], hal->chanctx[idx2]);
 
-	rtw89_for_each_rtwvif(rtwdev, rtwvif)
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif)
 		__rtw89_swap_chanctx(rtwvif, idx1, idx2);
 
 	cur = atomic_read(&hal->roc_chanctx_idx);

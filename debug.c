@@ -5518,12 +5518,11 @@ rtw89_debug_priv_diag_rf_get(struct rtw89_dev *rtwdev,
 
 static void rtw89_dbg_diag_rf_set_rfk(struct rtw89_dev *rtwdev)
 {
-	struct rtw89_entity_mgnt *mgnt = &rtwdev->hal.entity_mgnt;
 	struct rtw89_vif_link *rtwvif_link;
 	struct rtw89_vif *rtwvif;
 	unsigned int link_id;
 
-	list_for_each_entry(rtwvif, &mgnt->active_list, mgnt_entry)
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif)
 		rtw89_vif_for_each_link(rtwvif, rtwvif_link, link_id)
 			rtw89_chip_rfk_channel(rtwdev, rtwvif_link);
 }
