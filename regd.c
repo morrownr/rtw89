@@ -1093,7 +1093,7 @@ static bool __rtw89_reg_6ghz_power_recalc(struct rtw89_dev *rtwdev)
 	int count = 0;
 	u8 index;
 
-	rtw89_for_each_rtwvif(rtwdev, rtwvif) {
+	rtw89_for_each_active_rtwvif(rtwdev, rtwvif) {
 		rtw89_vif_for_each_link(rtwvif, rtwvif_link, link_id) {
 			chan = rtw89_chan_get(rtwdev, rtwvif_link->chanctx_idx);
 			if (chan->band_type != RTW89_BAND_6G)
