@@ -533,7 +533,7 @@ static void rtw89_entity_recalc_mlo_dbcc_mode(struct rtw89_dev *rtwdev)
 	mode = rtw89_entity_sel_mlo_dbcc_mode(rtwdev, active_hws);
 	rtwdev->mlo_dbcc_mode = mode;
 
-	rtw89_debug(rtwdev, RTW89_DBG_STATE, "recalc mlo dbcc mode to %d\n", mode);
+	rtw89_debug(rtwdev, RTW89_DBG_STATE, "recalc mlo dbcc mode to 0x%x\n", mode);
 }
 
 static void rtw89_entity_recalc_mgnt_roles(struct rtw89_dev *rtwdev)

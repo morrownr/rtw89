@@ -2471,14 +2471,15 @@ static int rtw8922d_ctrl_mlo(struct rtw89_dev *rtwdev, enum rtw89_mlo_dbcc_mode 
 		rtw89_write32_mask(rtwdev, reg1, B_BBWRAP_ELMSR_EN_BE4, 0);
 	} else if (mode == MLO_0_PLUS_2_1RF) {
 		rtw89_phy_write32_mask(rtwdev, R_SYS_DBCC_BE4,
-				       B_SYS_DBCC_24G_BAND_SEL_BE4, RTW89_PHY_0);
+				       B_SYS_DBCC_24G_BAND_SEL_BE4, RTW89_PHY_1);
 		rtw89_write32_mask(rtwdev, reg0, B_BBWRAP_ELMSR_EN_BE4, 0);
 		rtw89_write32_mask(rtwdev, reg1, B_BBWRAP_ELMSR_EN_BE4, 0);
 	} else if ((mode == MLO_1_PLUS_1_1RF) || (mode == DBCC_LEGACY)) {
 		struct rtw89_entity_conf conf;
 
 		rtw89_entity_get_conf(rtwdev, &conf);
-		cck_phy_idx = conf.chans[1]->band_type == RTW89_BAND_2G ?
+		cck_phy_idx = conf.chans[0]->band_type != RTW89_BAND_2G &&
+			      conf.chans[1]->band_type == RTW89_BAND_2G ?
 			      RTW89_PHY_1 : RTW89_PHY_0;
 
 		rtw89_phy_write32_mask(rtwdev, R_SYS_DBCC_BE4,
