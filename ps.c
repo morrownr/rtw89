@@ -363,12 +363,7 @@ void rtw89_recalc_lps(struct rtw89_dev *rtwdev)
 {
 	struct ieee80211_vif *vif, *found_vif = NULL;
 	struct rtw89_vif *rtwvif;
-	enum rtw89_entity_mode mode;
 	int count = 0;
-
-	mode = rtw89_get_entity_mode(rtwdev);
-	if (mode == RTW89_ENTITY_MODE_MCC)
-		goto disable_lps;
 
 	rtw89_for_each_rtwvif(rtwdev, rtwvif) {
 		vif = rtwvif_to_vif(rtwvif);
@@ -387,7 +382,6 @@ void rtw89_recalc_lps(struct rtw89_dev *rtwdev)
 		return;
 	}
 
-disable_lps:
 	rtw89_leave_lps(rtwdev);
 	rtwdev->lps_enabled = false;
 }

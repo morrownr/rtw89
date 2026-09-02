@@ -3236,6 +3236,9 @@ void rtw89_chanctx_pause(struct rtw89_dev *rtwdev,
 
 	lockdep_assert_wiphy(rtwdev->hw->wiphy);
 
+	if (test_bit(RTW89_FLAG_LEISURE_PS, rtwdev->flags))
+		rtw89_warn(rtwdev, "LPS isn't off when pausing chanctx\n");
+
 	if (hal->entity_pause)
 		return;
 
@@ -3251,6 +3254,15 @@ void rtw89_chanctx_pause(struct rtw89_dev *rtwdev,
 	}
 
 	hal->entity_pause = true;
+}
+
+bool rtw89_chanctx_paused(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_hal *hal = &rtwdev->hal;
+
+	lockdep_assert_wiphy(rtwdev->hw->wiphy);
+
+	return hal->entity_pause;
 }
 
 static void rtw89_chanctx_proceed_cb(struct rtw89_dev *rtwdev,
