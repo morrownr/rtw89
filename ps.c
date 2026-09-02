@@ -367,6 +367,8 @@ void rtw89_recalc_lps(struct rtw89_dev *rtwdev)
 
 	rtw89_for_each_rtwvif(rtwdev, rtwvif) {
 		vif = rtwvif_to_vif(rtwvif);
+		if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+			continue;
 
 		if (vif->type != NL80211_IFTYPE_STATION) {
 			count = 0;

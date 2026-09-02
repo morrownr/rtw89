@@ -6520,7 +6520,7 @@ enum rtw89_entity_mode {
 	RTW89_ENTITY_MODE_UNHANDLED = -ESRCH,
 };
 
-#define RTW89_MAX_INTERFACE_NUM 2
+#define RTW89_MAX_INTERFACE_NUM 3
 
 /* only valid when running with chanctx_ops */
 struct rtw89_entity_mgnt {
