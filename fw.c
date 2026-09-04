@@ -322,7 +322,7 @@ static int __parse_formatted_mssc(struct rtw89_dev *rtwdev,
 		if (mss_hdr->defen)
 			rmp_tbl_size += FWDL_MSS_POOL_DEFKEYSETS_SIZE;
 	} else {
-		rtw89_err(rtwdev, "[ERR] MSS Key Pool Remap Table Format Unsupport:%X\n",
+		rtw89_err(rtwdev, "[ERR] MSS Key Pool Remap Table Format Unsupported:%X\n",
 			  mss_hdr->rmpfmt);
 		return -EINVAL;
 	}
@@ -11356,7 +11356,7 @@ int rtw89_fw_h2c_wow_request_aoac(struct rtw89_dev *rtwdev)
 
 	skb_put(skb, len);
 
-	/* This H2C only nofity firmware to generate AOAC report C2H,
+	/* This H2C only notify firmware to generate AOAC report C2H,
 	 * no need any parameter.
 	 */
 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,

@@ -2078,7 +2078,7 @@ struct rtw89_btc_wl_role_info_bpos {
 	u16 adhoc: 1;
 	u16 adhoc_master: 1;
 	u16 mesh: 1;
-	u16 moniter: 1;
+	u16 monitor: 1;
 	u16 p2p_device: 1;
 	u16 p2p_gc: 1;
 	u16 p2p_go: 1;
@@ -4099,7 +4099,7 @@ struct rtw89_btc_fddr_cell {
 struct rtw89_btc_fddr_result {
 	u8 wl_rx_limit;
 	u8 wl_rx_limit_step[6]; /* record search process */
-	u8 search_cnt; /* the rx-limit serach count */
+	u8 search_cnt; /* the rx-limit search count */
 	u32 wl_tp;
 	u32 wl_tp_step[6]; /* record search process */
 };

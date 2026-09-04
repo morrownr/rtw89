@@ -541,7 +541,7 @@ static void __rtw89_phy_ra_update_sta(struct rtw89_dev *rtwdev,
 		ra->upd_bw_nss_mask = 1;
 
 	rtw89_debug(rtwdev, RTW89_DBG_RA,
-		    "ra updat: macid = %d, bw = %d, nss = %d, gi = %d %d",
+		    "ra update: macid = %d, bw = %d, nss = %d, gi = %d %d",
 		    ra->macid,
 		    ra->bw_cap,
 		    ra->ss_num,
@@ -691,7 +691,7 @@ rs_11ax:
 					  0, true))
 			goto out;
 
-	/* lagacy cannot be empty for nl80211_parse_tx_bitrate_mask, and
+	/* legacy cannot be empty for nl80211_parse_tx_bitrate_mask, and
 	 * require at least one basic rate for ieee80211_set_bitrate_mask,
 	 * so the decision just depends on if all bitrates are set or not.
 	 */
