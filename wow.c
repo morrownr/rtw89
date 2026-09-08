@@ -473,10 +473,8 @@ static void rtw89_wow_construct_key_info(struct rtw89_dev *rtwdev)
 	struct ieee80211_vif *wow_vif = rtwvif_link_to_vif(rtwvif_link);
 	bool err = false;
 
-	rcu_read_lock();
-	ieee80211_iter_keys_rcu(rtwdev->hw, wow_vif,
-				rtw89_wow_get_key_info_iter, &err);
-	rcu_read_unlock();
+	ieee80211_iter_keys(rtwdev->hw, wow_vif,
+			    rtw89_wow_get_key_info_iter, &err);
 
 	if (err) {
 		rtw89_wow_key_clear(rtwdev);
@@ -704,10 +702,8 @@ static void rtw89_wow_update_key_info(struct rtw89_dev *rtwdev, bool rx_ready)
 	struct ieee80211_bss_conf *bss_conf;
 	struct ieee80211_key_conf *key;
 
-	rcu_read_lock();
-	ieee80211_iter_keys_rcu(rtwdev->hw, wow_vif,
-				rtw89_wow_set_key_info_iter, &data);
-	rcu_read_unlock();
+	ieee80211_iter_keys(rtwdev->hw, wow_vif,
+			    rtw89_wow_set_key_info_iter, &data);
 
 	if (data.error) {
 		rtw89_debug(rtwdev, RTW89_DBG_WOW, "%s error\n", __func__);
