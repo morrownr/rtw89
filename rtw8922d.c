@@ -3712,7 +3712,7 @@ static const struct rtw89_chip_ops rtw8922d_chip_ops = {
 	.h2c_punctured_cmac_tbl	= rtw89_fw_h2c_punctured_cmac_tbl_be,
 	.h2c_default_dmac_tbl	= rtw89_fw_h2c_default_dmac_tbl_v3,
 	.h2c_update_beacon	= rtw89_fw_h2c_update_beacon_be,
-	.h2c_ba_cam		= rtw89_fw_h2c_ba_cam_v1,
+	.h2c_ba_cam		= rtw89_fw_h2c_ba_cam_g7,
 	.h2c_wow_cam_update	= rtw89_fw_h2c_wow_cam_update_v1,
 
 	.btc_set_rfe		= rtw8922d_btc_set_rfe,
@@ -3807,7 +3807,7 @@ const struct rtw89_chip_info rtw8922d_chip_info = {
 	.scam_num		= 32,
 	.bacam_num		= 24,
 	.bacam_dynamic_num	= 8,
-	.bacam_ver		= RTW89_BACAM_V1,
+	.bacam_ver		= RTW89_BACAM_G7,
 	.addrcam_ver		= 1,
 	.ppdu_max_usr		= 16,
 	.sec_ctrl_efuse_size	= 4,

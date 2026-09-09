@@ -4092,7 +4092,8 @@ static int rtw89_mac_feat_init(struct rtw89_dev *rtwdev)
 	const struct rtw89_chip_info *chip = rtwdev->chip;
 	u8 users, offset;
 
-	if (chip->bacam_ver != RTW89_BACAM_V1)
+	if (!(chip->bacam_ver == RTW89_BACAM_V1 ||
+	      chip->bacam_ver == RTW89_BACAM_G7))
 		return 0;
 
 	offset = 0;

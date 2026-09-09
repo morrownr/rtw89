@@ -384,6 +384,7 @@ enum rtw89_cv {
 enum rtw89_bacam_ver {
 	RTW89_BACAM_V0,
 	RTW89_BACAM_V1,
+	RTW89_BACAM_G7,
 
 	RTW89_BACAM_V0_EXT = 99,
 };

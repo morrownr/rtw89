@@ -1956,6 +1956,23 @@ struct rtw89_h2c_ba_cam_v1 {
 #define RTW89_H2C_BA_CAM_V1_W1_MLD_EN BIT(10)
 #define RTW89_H2C_BA_CAM_V1_W1_ENTRY_IDX_MASK GENMASK(31, 24)
 
+struct rtw89_h2c_ba_cam_g7 {
+	__le32 w0;
+	__le32 w1;
+} __packed;
+
+#define RTW89_H2C_BA_CAM_G7_W0_VALID BIT(0)
+#define RTW89_H2C_BA_CAM_G7_W0_INIT_REQ	BIT(1)
+#define RTW89_H2C_BA_CAM_G7_W0_TID_MASK	GENMASK(7, 4)
+#define RTW89_H2C_BA_CAM_G7_W0_STD_ENTRY_EN BIT(8)
+#define RTW89_H2C_BA_CAM_G7_W0_BAND_SEL	BIT(9)
+#define RTW89_H2C_BA_CAM_G7_W0_MLD_EN BIT(10)
+#define RTW89_H2C_BA_CAM_G7_W0_BMAP_SIZE_MASK GENMASK(19, 16)
+#define RTW89_H2C_BA_CAM_G7_W0_SSN_MASK	GENMASK(31, 20)
+#define RTW89_H2C_BA_CAM_G7_W1_UID_VALUE_MASK GENMASK(7, 0)
+#define RTW89_H2C_BA_CAM_G7_W1_MACID_MASK GENMASK(17, 8)
+#define RTW89_H2C_BA_CAM_G7_W1_ENTRY_IDX_MASK GENMASK(31, 24)
+
 struct rtw89_h2c_ba_cam_init {
 	__le32 w0;
 } __packed;
@@ -5583,6 +5600,10 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev,
 			struct rtw89_sta_link *rtwsta_link,
 			bool valid, struct ieee80211_ampdu_params *params);
 int rtw89_fw_h2c_ba_cam_v1(struct rtw89_dev *rtwdev,
+			   struct rtw89_vif_link *rtwvif_link,
+			   struct rtw89_sta_link *rtwsta_link,
+			   bool valid, struct ieee80211_ampdu_params *params);
+int rtw89_fw_h2c_ba_cam_g7(struct rtw89_dev *rtwdev,
 			   struct rtw89_vif_link *rtwvif_link,
 			   struct rtw89_sta_link *rtwsta_link,
 			   bool valid, struct ieee80211_ampdu_params *params);
