@@ -3294,6 +3294,17 @@ static void rtw89_phy_set_txpwr_limit_ru_ax(struct rtw89_dev *rtwdev,
 	}
 }
 
+static int get_max_agg_wait(struct ieee80211_link_sta *link_sta, u16 amsdu_len)
+{
+	struct ieee80211_sta *sta = link_sta->sta;
+	int max_agg_wait = amsdu_len / 1500 - 1;
+
+	if (sta->max_amsdu_subframes)
+		max_agg_wait = min(max_agg_wait, sta->max_amsdu_subframes - 1);
+
+	return max_agg_wait;
+}
+
 struct rtw89_phy_iter_ra_data {
 	struct rtw89_dev *rtwdev;
 	struct sk_buff *c2h;
@@ -3418,7 +3429,7 @@ static void __rtw89_phy_c2h_ra_rpt_iter(struct rtw89_sta_link *rtwsta_link,
 		*changed = true;
 	}
 
-	rtwsta_link->max_agg_wait = link_sta->agg.max_rc_amsdu_len / 1500 - 1;
+	rtwsta_link->max_agg_wait = get_max_agg_wait(link_sta, amsdu_len);
 }
 
 static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
