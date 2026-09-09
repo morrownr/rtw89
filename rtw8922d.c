@@ -271,7 +271,7 @@ static const struct rtw89_edcca_regs rtw8922d_edcca_regs = {
 		.rpt_sel_mask		= B_EDCCA_RPT_SEL_BE4_MSK,
 	}, {
 		.rpt_a			= R_EDCCA_RPT_A_BE4_C1,
-		.rpt_b			= R_EDCCA_RPT_A_BE4_C1,
+		.rpt_b			= R_EDCCA_RPT_B_BE4_C1,
 		.rpt_sel		= R_EDCCA_RPT_SEL_BE4_C1,
 		.rpt_sel_mask		= B_EDCCA_RPT_SEL_BE4_MSK,
 	}},
