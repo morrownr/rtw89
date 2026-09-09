@@ -945,6 +945,14 @@ static int rtw8852a_ctrl_sco_cck(struct rtw89_dev *rtwdev, u8 central_ch,
 		rtw89_warn(rtwdev, "Invalid BW:%d for CCK\n", bw);
 		return -EINVAL;
 	}
+
+	if (unlikely(ch_element >= 14)) {
+		rtw89_warn(rtwdev,
+			   "Invalid ch_element:%u where central_ch %u primary_ch %u\n",
+			   ch_element, central_ch, primary_ch);
+		return -EINVAL;
+	}
+
 	rtw89_phy_write32_mask(rtwdev, R_RXSCOBC, B_RXSCOBC_TH,
 			       rtw8852a_sco_barker_threshold[ch_element]);
 	rtw89_phy_write32_mask(rtwdev, R_RXSCOCCK, B_RXSCOCCK_TH,
