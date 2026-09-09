@@ -12712,9 +12712,9 @@ static int rtw89_fw_cmd_ofld_pack(struct rtw89_dev *rtwdev)
 	return 0;
 }
 
-static void rtw89_fw_cmd_ofld_flush(struct rtw89_dev *rtwdev)
+static void rtw89_fw_cmd_ofld_flush(struct rtw89_dev *rtwdev,
+				    struct rtw89_fw_cmd_ofld_info *info)
 {
-	struct rtw89_fw_cmd_ofld_info *info = rtwdev->fw_cmd_ofld_info;
 	struct sk_buff *skb;
 	int ret;
 	u32 len;
@@ -12723,7 +12723,7 @@ static void rtw89_fw_cmd_ofld_flush(struct rtw89_dev *rtwdev)
 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
 	if (!skb) {
 		rtw89_err(rtwdev, "alloc skb fail\n");
-		return;
+		goto out;
 	}
 
 	skb_put_data(skb, info->cmds, len);
@@ -12738,12 +12738,13 @@ static void rtw89_fw_cmd_ofld_flush(struct rtw89_dev *rtwdev)
 	if (ret) {
 		rtw89_err(rtwdev, "failed to send cmd ofld\n");
 		dev_kfree_skb_any(skb);
-		return;
+		goto out;
 	}
 
 	if (info->accu_delay)
 		fsleep(info->accu_delay);
 
+out:
 	info->cnt = 0;
 	info->accu_delay = 0;
 }
@@ -12763,7 +12764,7 @@ static int rtw89_fw_cmd_ofld_unpack(struct rtw89_dev *rtwdev)
 	if (info->cnt == 0)
 		return 0;
 
-	rtw89_fw_cmd_ofld_flush(rtwdev);
+	rtw89_fw_cmd_ofld_flush(rtwdev, info);
 
 	return 0;
 }
@@ -12790,7 +12791,7 @@ static int rtw89_fw_cmd_ofld_enqueue(struct rtw89_dev *rtwdev,
 		return -EFAULT;
 
 	if (info->cnt >= ARRAY_SIZE(info->cmds))
-		rtw89_fw_cmd_ofld_flush(rtwdev);
+		rtw89_fw_cmd_ofld_flush(rtwdev, info);
 
 	h2c = &info->cmds[info->cnt++];
 
