@@ -1152,7 +1152,7 @@ static int rtw8922a_ctrl_sco_cck(struct rtw89_dev *rtwdev,
 {
 	u8 ch_element;
 
-	if (primary_ch >= 14)
+	if (primary_ch > 14 || unlikely(primary_ch == 0))
 		return -EINVAL;
 
 	ch_element = primary_ch - 1;
