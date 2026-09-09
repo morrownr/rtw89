@@ -416,6 +416,8 @@ enum rtw89_txq_flags {
 	RTW89_TXQ_F_AMPDU		= 0,
 	RTW89_TXQ_F_BLOCK_BA		= 1,
 	RTW89_TXQ_F_FORBID_BA		= 2,
+
+	NUM_OF_RTW89_TXQ_FLAGS,
 };
 
 enum rtw89_net_type {
@@ -1487,8 +1489,9 @@ struct rtw89_core_tx_request {
 
 struct rtw89_txq {
 	struct list_head list;
-	unsigned long flags;
 	int wait_cnt;
+
+	DECLARE_BITMAP(flags, NUM_OF_RTW89_TXQ_FLAGS);
 };
 
 struct rtw89_mac_ax_gnt {

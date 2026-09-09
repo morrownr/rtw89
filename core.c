@@ -4665,7 +4665,7 @@ static void rtw89_core_ba_work(struct work_struct *work)
 				    "failed to setup BA session for %pM:%2d: %d\n",
 				    sta->addr, tid, ret);
 			if (ret == -EINVAL)
-				set_bit(RTW89_TXQ_F_BLOCK_BA, &rtwtxq->flags);
+				set_bit(RTW89_TXQ_F_BLOCK_BA, rtwtxq->flags);
 		}
 skip_ba_work:
 		list_del_init(&rtwtxq->list);
@@ -4698,7 +4698,7 @@ void rtw89_core_free_sta_pending_forbid_ba(struct rtw89_dev *rtwdev,
 		struct ieee80211_txq *txq = rtw89_txq_to_txq(rtwtxq);
 
 		if (sta == txq->sta) {
-			clear_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags);
+			clear_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags);
 			list_del_init(&rtwtxq->list);
 		}
 	}
@@ -4725,12 +4725,12 @@ static void rtw89_core_stop_tx_ba_session(struct rtw89_dev *rtwdev,
 	if (unlikely(!rtwsta) || unlikely(rtwsta->disassoc))
 		return;
 
-	if (!test_bit(RTW89_TXQ_F_AMPDU, &rtwtxq->flags) ||
-	    test_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags))
+	if (!test_bit(RTW89_TXQ_F_AMPDU, rtwtxq->flags) ||
+	    test_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags))
 		return;
 
 	spin_lock_bh(&rtwdev->ba_lock);
-	if (!test_and_set_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags))
+	if (!test_and_set_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags))
 		list_add_tail(&rtwtxq->list, &rtwdev->forbid_ba_list);
 	spin_unlock_bh(&rtwdev->ba_lock);
 
@@ -4749,7 +4749,7 @@ static void rtw89_core_txq_check_agg(struct rtw89_dev *rtwdev,
 	struct ieee80211_sta *sta = txq->sta;
 	struct rtw89_sta *rtwsta = sta_to_rtwsta_safe(sta);
 
-	if (test_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags))
+	if (test_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags))
 		return;
 
 	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
@@ -4760,10 +4760,10 @@ static void rtw89_core_txq_check_agg(struct rtw89_dev *rtwdev,
 	if (unlikely(!sta))
 		return;
 
-	if (unlikely(test_bit(RTW89_TXQ_F_BLOCK_BA, &rtwtxq->flags)))
+	if (unlikely(test_bit(RTW89_TXQ_F_BLOCK_BA, rtwtxq->flags)))
 		return;
 
-	if (test_bit(RTW89_TXQ_F_AMPDU, &rtwtxq->flags)) {
+	if (test_bit(RTW89_TXQ_F_AMPDU, rtwtxq->flags)) {
 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_AMPDU;
 		return;
 	}
@@ -4941,7 +4941,7 @@ static void rtw89_forbid_ba_work(struct work_struct *w)
 
 	spin_lock_bh(&rtwdev->ba_lock);
 	list_for_each_entry_safe(rtwtxq, tmp, &rtwdev->forbid_ba_list, list) {
-		clear_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags);
+		clear_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags);
 		list_del_init(&rtwtxq->list);
 	}
 	spin_unlock_bh(&rtwdev->ba_lock);
@@ -6085,13 +6085,13 @@ static void _rtw89_core_set_tid_config(struct rtw89_dev *rtwdev,
 
 		if (mask & BIT(NL80211_TID_CONFIG_ATTR_AMPDU_CTRL)) {
 			if (tid_conf->ampdu == NL80211_TID_CONFIG_ENABLE) {
-				clear_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags);
+				clear_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags);
 			} else {
-				if (test_bit(RTW89_TXQ_F_AMPDU, &rtwtxq->flags))
+				if (test_bit(RTW89_TXQ_F_AMPDU, rtwtxq->flags))
 					ieee80211_stop_tx_ba_session(sta, txq->tid);
 				spin_lock_bh(&rtwdev->ba_lock);
 				list_del_init(&rtwtxq->list);
-				set_bit(RTW89_TXQ_F_FORBID_BA, &rtwtxq->flags);
+				set_bit(RTW89_TXQ_F_FORBID_BA, rtwtxq->flags);
 				spin_unlock_bh(&rtwdev->ba_lock);
 			}
 		}
