@@ -2579,7 +2579,6 @@ static void rtw89_core_cancel_6ghz_probe_tx(struct rtw89_dev *rtwdev,
 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
 	struct list_head *pkt_list = rtwdev->scan_info.pkt_list;
 	struct rtw89_pktofld_info *info;
-	const u8 *ies = mgmt->u.beacon.variable, *ssid_ie;
 	bool queue_work = false;
 
 	if (rx_status->band != NL80211_BAND_6GHZ)
@@ -2590,19 +2589,8 @@ static void rtw89_core_cancel_6ghz_probe_tx(struct rtw89_dev *rtwdev,
 		return;
 	}
 
-	ssid_ie = cfg80211_find_ie(WLAN_EID_SSID, ies, skb->len);
-
 	list_for_each_entry(info, &pkt_list[NL80211_BAND_6GHZ], list) {
 		if (ether_addr_equal(info->bssid, mgmt->bssid)) {
-			info->cancel = true;
-			queue_work = true;
-			continue;
-		}
-
-		if (!ssid_ie || ssid_ie[1] != info->ssid_len || info->ssid_len == 0)
-			continue;
-
-		if (memcmp(&ssid_ie[2], info->ssid, info->ssid_len) == 0) {
 			info->cancel = true;
 			queue_work = true;
 		}
