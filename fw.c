@@ -983,6 +983,7 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 109, 1, SCAN_OFFLOAD_BE_V1),
 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 113, 0, RFK_TXIQK_V0),
 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 113, 2, SCAN_OFFLOAD_BE_V2),
+	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 119, 0, LPS_ML_INFO_V1_EXTRA),
 };
 
 static void rtw89_fw_iterate_feature_cfg(struct rtw89_fw_info *fw,
@@ -3510,25 +3511,58 @@ void rtw89_bb_lps_cmn_info_rx_gain_fill(struct rtw89_dev *rtwdev,
 	}
 }
 
+static void
+rtw89_fw_h2c_lps_ml_cmn_info_v1_extra_fill(struct rtw89_dev *rtwdev,
+					   struct rtw89_vif *rtwvif,
+					   struct rtw89_h2c_lps_ml_cmn_info_v1_extra *h2c)
+{
+	u8 regd = rtw89_regd_get(rtwdev, RTW89_BAND_2G);
+	struct ieee80211_bss_conf *bss_conf;
+	struct rtw89_vif_link *rtwvif_link;
+	unsigned int link_id;
+
+	static_assert(sizeof(*h2c) % 4 == 0);
+
+	h2c->regu_mode_on_24g = regd == RTW89_FCC ? RTW89_BB_REGULATION_FCC :
+						    RTW89_BB_REGULATION_CE;
+
+	rtw89_vif_for_each_link(rtwvif, rtwvif_link, link_id) {
+		u8 phy_idx = rtwvif_link->phy_idx;
+
+		rcu_read_lock();
+		bss_conf = rtw89_vif_rcu_dereference_link(rtwvif_link, true);
+		h2c->bss_color[phy_idx] = bss_conf->he_bss_color.color;
+		rcu_read_unlock();
+	}
+}
+
 int rtw89_fw_h2c_lps_ml_cmn_info_v1(struct rtw89_dev *rtwdev,
 				    struct rtw89_vif *rtwvif)
 {
 	static const u8 bcn_bw_ofst[] = {0, 0, 0, 3, 6, 9, 0, 12};
+	struct rtw89_h2c_lps_ml_cmn_info_v1_extra *h2c_extra;
 	const struct rtw89_chip_info *chip = rtwdev->chip;
 	struct rtw89_efuse *efuse = &rtwdev->efuse;
 	struct rtw89_h2c_lps_ml_cmn_info_v1 *h2c;
 	struct rtw89_vif_link *rtwvif_link;
 	const struct rtw89_chan *chan;
 	struct rtw89_bb_ctx *bb;
-	u32 len = sizeof(*h2c);
 	unsigned int link_id;
 	struct sk_buff *skb;
 	u8 beacon_bw_ofst;
+	bool has_extra;
 	u32 done;
+	u32 len;
 	int ret;
 
 	if (chip->chip_gen != RTW89_CHIP_BE)
 		return 0;
+
+	has_extra = RTW89_CHK_FW_FEATURE(LPS_ML_INFO_V1_EXTRA, &rtwdev->fw);
+	if (has_extra)
+		len = sizeof(*h2c_extra);
+	else
+		len = sizeof(*h2c);
 
 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
 	if (!skb) {
@@ -3538,7 +3572,13 @@ int rtw89_fw_h2c_lps_ml_cmn_info_v1(struct rtw89_dev *rtwdev,
 	skb_put(skb, len);
 	h2c = (struct rtw89_h2c_lps_ml_cmn_info_v1 *)skb->data;
 
-	h2c->fmt_id = 0x20;
+	if (has_extra) {
+		h2c_extra = container_of(h2c, typeof(*h2c_extra), v1);
+		h2c->fmt_id = RTW89_H2C_LPS_ML_CMN_INFO_FMT_ID_V1_EXTRA;
+		rtw89_fw_h2c_lps_ml_cmn_info_v1_extra_fill(rtwdev, rtwvif, h2c_extra);
+	} else {
+		h2c->fmt_id = RTW89_H2C_LPS_ML_CMN_INFO_FMT_ID_V1;
+	}
 
 	h2c->mlo_dbcc_mode = cpu_to_le32(rtwdev->mlo_dbcc_mode);
 	h2c->rfe_type = efuse->rfe_type;

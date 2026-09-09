@@ -2091,6 +2091,16 @@ struct rtw89_bb_link_info_rx_gain {
 	u8 wb_g_elna[RTW89_BB_PS_LINK_RX_GAIN_TAB_MAX][BB_GT2_G_ELNA_NUM];
 } __packed;
 
+enum rtw89_bb_regulation_mode {
+	RTW89_BB_REGULATION_FCC = 0,
+	RTW89_BB_REGULATION_CE = 1,
+};
+
+enum rtw89_h2c_lps_ml_cmn_info_fmt_id {
+	RTW89_H2C_LPS_ML_CMN_INFO_FMT_ID_V1 = 0x20,
+	RTW89_H2C_LPS_ML_CMN_INFO_FMT_ID_V1_EXTRA = 0x21,
+};
+
 struct rtw89_h2c_lps_ml_cmn_info_v1 {
 	u8 fmt_id;
 	u8 rfe_type;
@@ -2104,6 +2114,13 @@ struct rtw89_h2c_lps_ml_cmn_info_v1 {
 	u8 band[RTW89_BB_PS_LINK_BUF_MAX];
 	u8 dup_bcn_ofst[RTW89_BB_PS_LINK_BUF_MAX];
 	struct rtw89_bb_link_info_rx_gain rx_gain[RTW89_BB_PS_LINK_BUF_MAX];
+} __packed;
+
+struct rtw89_h2c_lps_ml_cmn_info_v1_extra {
+	struct rtw89_h2c_lps_ml_cmn_info_v1 v1;
+	u8 regu_mode_on_24g;
+	u8 bss_color[RTW89_BB_PS_LINK_BUF_MAX];
+	u8 rsvd[2];
 } __packed;
 
 struct rtw89_h2c_phy_rfe_type {
