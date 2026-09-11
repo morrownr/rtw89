@@ -4770,6 +4770,49 @@ static const struct rtw89_hci_ops rtw89_pci_ops = {
 	.rst_bdram	= rtw89_pci_reset_bdram,
 };
 
+static void rtw89_pci_d3cold_quirks(struct rtw89_dev *rtwdev, struct pci_dev *pdev)
+{
+	static const struct dmi_system_id d3cold_quirks[] = {
+		{
+			.ident = "ASUS EXPERTBOOK B3406CMA",
+			.matches = {
+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
+				DMI_MATCH(DMI_BOARD_NAME, "B3406CMA"),
+			},
+		},
+		{
+			.ident = "ASUS EXPERTBOOK B3606CMA",
+			.matches = {
+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
+				DMI_MATCH(DMI_BOARD_NAME, "B3606CMA"),
+			},
+		},
+		{
+			.ident = "ASUS EXPERTBOOK P3406CMA",
+			.matches = {
+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
+				DMI_MATCH(DMI_BOARD_NAME, "P3406CMA"),
+			},
+		},
+		{
+			.ident = "ASUS EXPERTBOOK P3606CMA",
+			.matches = {
+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
+				DMI_MATCH(DMI_BOARD_NAME, "P3606CMA"),
+			},
+		},
+		{},
+	};
+	const struct dmi_system_id *match;
+
+	match = dmi_first_match(d3cold_quirks);
+	if (!match)
+		return;
+
+	rtw89_debug(rtwdev, RTW89_DBG_STATE, "Disable D3Cold on %s\n", match->ident);
+	pci_d3cold_disable(pdev);
+}
+
 int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 {
 	struct rtw89_dev *rtwdev;
@@ -4795,6 +4838,7 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	rtwdev->hci.rpwm_addr = pci_info->rpwm_addr;
 	rtwdev->hci.cpwm_addr = pci_info->cpwm_addr;
 
+	rtw89_pci_d3cold_quirks(rtwdev, pdev);
 	rtw89_check_quirks(rtwdev, info->quirks);
 	rtw89_check_pci_ssid_quirks(rtwdev, pdev, pci_info->ssid_quirks);
 
