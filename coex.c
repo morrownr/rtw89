@@ -3859,7 +3859,7 @@ static void _set_bt_tx_power(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
 	u8 buf[2] = {};
 	u8 len = sizeof(*buf);
 
-	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0 || !rf_band)
+	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0)
 		return;
 
 	if (bt->rf_para.tx_pwr_freerun == level)
