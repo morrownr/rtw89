@@ -4564,6 +4564,7 @@ struct rtw89_btc_ver {
 	u8 fcxmlo;
 	u8 bt_desired;
 	u8 fcxtrx;
+	u8 fcxtxpwr;
 };
 
 struct rtw89_btc_btf_fwinfo {

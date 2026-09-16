@@ -7496,7 +7496,7 @@ fail:
 	return ret;
 }
 
-int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type)
+int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type, u8 ver)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
 	struct rtw89_btc_dm *dm = &btc->dm;
@@ -7508,14 +7508,14 @@ int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type)
 
 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
 	if (!skb) {
-		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_ctrl\n");
+		rtw89_err(rtwdev, "failed to alloc skb for h2c cxtxpwr\n");
 		return -ENOMEM;
 	}
 	skb_put(skb, len);
 	h2c = (struct rtw89_h2c_cxtxpwr_v9 *)skb->data;
 
 	h2c->hdr.type = type;
-	h2c->hdr.ver = 9;
+	h2c->hdr.ver = ver;
 	h2c->hdr.len = sizeof(*h2c) - H2C_LEN_CXDRVHDR_V7;
 	if (dm->wl_tx_pwr_phy_map == BIT(RTW89_PHY_1))
 		h2c->pwr = rp.wl_tx_power[RTW89_PHY_1] & 0xff;
