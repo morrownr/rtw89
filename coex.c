@@ -4051,8 +4051,8 @@ static void _set_bt_corx_table(struct rtw89_dev *rtwdev, bool en)
 	struct rtw89_btc_cx *cx = &btc->cx;
 	struct rtw89_btc_bt_info *bt = &cx->bt0;
 	struct rtw89_btc_dm *dm = &btc->dm;
-	u8 is_24g, is_56g, i;
-	u32 scbd_bit;
+	bool is_24g, is_56g, en_24g, en_56g;
+	u8 i;
 
 	/*
 	 * true: bt use Hi-LNA rx gain table (f/e/3/2) in -3x~-9xdBm for co-rx
@@ -4063,7 +4063,6 @@ static void _set_bt_corx_table(struct rtw89_dev *rtwdev, bool en)
 		return;
 
 	for (i = BTC_BT_1ST; i <= BTC_BT_2ND; i++) {
-		scbd_bit = 0;
 		if (i == BTC_BT_2ND) {
 			if (!(rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT))
 				continue;
@@ -4074,14 +4073,22 @@ static void _set_bt_corx_table(struct rtw89_dev *rtwdev, bool en)
 			  dm->corx_map[BTC_RF_S1][i]) & BIT(RTW89_BAND_2G);
 		is_56g = (dm->corx_map[BTC_RF_S0][i] ||
 			  dm->corx_map[BTC_RF_S1][i]) & BIT(RTW89_BAND_5G);
-		if (is_24g)
-			scbd_bit |= BTC_WSCB_BT_HILNA;
-		if (is_56g)
-			scbd_bit |= BTC_WSCB_BT_HILNA_56G;
 
-		if ((is_24g && (en != (!!bt->hi_lna_rx))) ||
-		    (is_56g && (en != (!!bt->hi_lna_rx_6g))))
-			_write_scbd(rtwdev, i, scbd_bit, en);
+		/*
+		 * Request Hi-LNA only when that band is co-rx and enabled.
+		 * Evaluate each band bit independently against the BT-mirrored
+		 * state so the request can still be cleared once a CO-RX band
+		 * disappears (e.g. 2.4 GHz disconnect), avoiding a latched
+		 * Hi-LNA request.
+		 */
+		en_24g = is_24g && en;
+		en_56g = is_56g && en;
+
+		if (en_24g != (!!bt->hi_lna_rx))
+			_write_scbd(rtwdev, i, BTC_WSCB_BT_HILNA, en_24g);
+
+		if (en_56g != (!!bt->hi_lna_rx_6g))
+			_write_scbd(rtwdev, i, BTC_WSCB_BT_HILNA_56G, en_56g);
 	}
 }
 
