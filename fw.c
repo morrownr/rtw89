@@ -2626,23 +2626,28 @@ fail:
 }
 EXPORT_SYMBOL(rtw89_fw_h2c_default_dmac_tbl_v3);
 
-int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev,
-			struct rtw89_vif_link *rtwvif_link,
-			struct rtw89_sta_link *rtwsta_link,
+int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
 			bool valid, struct ieee80211_ampdu_params *params)
 {
 	const struct rtw89_chip_info *chip = rtwdev->chip;
+	struct rtw89_vif_link *rtwvif_link;
+	struct rtw89_sta_link *rtwsta_link;
 	struct rtw89_h2c_ba_cam *h2c;
-	u8 macid = rtwsta_link->mac_id;
 	u32 len = sizeof(*h2c);
 	struct sk_buff *skb;
 	u8 entry_idx;
+	u8 macid;
 	int ret;
 
+	rtwsta_link = rtw89_get_designated_link(rtwsta);
+	rtwvif_link = rtwsta_link->rtwvif_link;
+
+	macid = rtwsta_link->mac_id;
+
 	ret = valid ?
-	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx) :
-	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx);
 	if (ret) {
 		/* it still works even if we don't have static BA CAM, because
@@ -2761,24 +2766,33 @@ void rtw89_fw_h2c_init_dynamic_ba_cam_v0_ext(struct rtw89_dev *rtwdev)
 	}
 }
 
-int rtw89_fw_h2c_ba_cam_v1(struct rtw89_dev *rtwdev,
-			   struct rtw89_vif_link *rtwvif_link,
-			   struct rtw89_sta_link *rtwsta_link,
+int rtw89_fw_h2c_ba_cam_v1(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
 			   bool valid, struct ieee80211_ampdu_params *params)
 {
 	const struct rtw89_chip_info *chip = rtwdev->chip;
+	struct rtw89_vif_link *rtwvif_link;
+	struct rtw89_sta_link *rtwsta_link;
 	struct rtw89_h2c_ba_cam_v1 *h2c;
-	u8 macid = rtwsta_link->mac_id;
+	struct ieee80211_vif *vif;
 	u32 len = sizeof(*h2c);
 	struct sk_buff *skb;
 	u8 entry_idx;
 	u8 bmap_size;
+	bool is_mld;
+	u8 macid;
 	int ret;
 
+	rtwsta_link = rtw89_get_designated_link(rtwsta);
+	rtwvif_link = rtwsta_link->rtwvif_link;
+	vif = rtwvif_link_to_vif(rtwvif_link);
+
+	macid = rtwsta_link->mac_id;
+	is_mld = ieee80211_vif_is_mld(vif);
+
 	ret = valid ?
-	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx) :
-	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx);
 	if (ret) {
 		/* it still works even if we don't have static BA CAM, because
@@ -2817,6 +2831,7 @@ int rtw89_fw_h2c_ba_cam_v1(struct rtw89_dev *rtwdev,
 	entry_idx += chip->bacam_dynamic_num; /* std entry right after dynamic ones */
 	h2c->w1 = le32_encode_bits(entry_idx, RTW89_H2C_BA_CAM_V1_W1_ENTRY_IDX_MASK) |
 		  le32_encode_bits(1, RTW89_H2C_BA_CAM_V1_W1_STD_ENTRY_EN) |
+		  le32_encode_bits(is_mld, RTW89_H2C_BA_CAM_V1_W1_MLD_EN) |
 		  le32_encode_bits(!!rtwvif_link->mac_idx,
 				   RTW89_H2C_BA_CAM_V1_W1_BAND_SEL);
 
@@ -2840,24 +2855,33 @@ fail:
 }
 EXPORT_SYMBOL(rtw89_fw_h2c_ba_cam_v1);
 
-int rtw89_fw_h2c_ba_cam_g7(struct rtw89_dev *rtwdev,
-			   struct rtw89_vif_link *rtwvif_link,
-			   struct rtw89_sta_link *rtwsta_link,
+int rtw89_fw_h2c_ba_cam_g7(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
 			   bool valid, struct ieee80211_ampdu_params *params)
 {
 	const struct rtw89_chip_info *chip = rtwdev->chip;
+	struct rtw89_vif_link *rtwvif_link;
+	struct rtw89_sta_link *rtwsta_link;
 	struct rtw89_h2c_ba_cam_g7 *h2c;
-	u16 macid = rtwsta_link->mac_id;
+	struct ieee80211_vif *vif;
 	u32 len = sizeof(*h2c);
 	struct sk_buff *skb;
 	u8 entry_idx;
 	u8 bmap_size;
+	bool is_mld;
+	u16 macid;
 	int ret;
 
+	rtwsta_link = rtw89_get_designated_link(rtwsta);
+	rtwvif_link = rtwsta_link->rtwvif_link;
+	vif = rtwvif_link_to_vif(rtwvif_link);
+
+	macid = rtwsta_link->mac_id;
+	is_mld = ieee80211_vif_is_mld(vif);
+
 	ret = valid ?
-	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx) :
-	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta_link, params->tid,
+	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta, params->tid,
 					      &entry_idx);
 	if (ret) {
 		/*
@@ -2891,6 +2915,7 @@ int rtw89_fw_h2c_ba_cam_g7(struct rtw89_dev *rtwdev,
 		  le32_encode_bits(1, RTW89_H2C_BA_CAM_G7_W0_INIT_REQ) |
 		  le32_encode_bits(params->tid, RTW89_H2C_BA_CAM_G7_W0_TID_MASK) |
 		  le32_encode_bits(1, RTW89_H2C_BA_CAM_G7_W0_STD_ENTRY_EN) |
+		  le32_encode_bits(is_mld, RTW89_H2C_BA_CAM_G7_W0_MLD_EN) |
 		  le32_encode_bits(!!rtwvif_link->mac_idx,
 				   RTW89_H2C_BA_CAM_G7_W0_BAND_SEL) |
 		  le32_encode_bits(bmap_size, RTW89_H2C_BA_CAM_G7_W0_BMAP_SIZE_MASK) |

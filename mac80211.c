@@ -527,6 +527,8 @@ static int __rtw89_ops_sta_add(struct rtw89_dev *rtwdev,
 	INIT_LIST_HEAD(&rtwsta->dlink_pool);
 
 	skb_queue_head_init(&rtwsta->roc_queue);
+
+	INIT_LIST_HEAD(&rtwsta->ba_cam_list);
 	bitmap_zero(rtwsta->pairwise_sec_cam_map, RTW89_MAX_SEC_CAM_NUM);
 
 	rtwsta_link = rtw89_sta_set_link(rtwsta, sta->deflink.link_id);

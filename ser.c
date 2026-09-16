@@ -331,6 +331,8 @@ static void ser_sta_deinit_cam_iter(void *data, struct ieee80211_sta *sta)
 	if (rtwvif != target_rtwvif)
 		return;
 
+	INIT_LIST_HEAD(&rtwsta->ba_cam_list);
+
 	rtw89_sta_for_each_link(rtwsta, rtwsta_link, link_id) {
 		rtwvif_link = rtwsta_link->rtwvif_link;
 
@@ -338,8 +340,6 @@ static void ser_sta_deinit_cam_iter(void *data, struct ieee80211_sta *sta)
 			rtw89_cam_deinit_addr_cam(rtwdev, &rtwsta_link->addr_cam);
 		if (sta->tdls)
 			rtw89_cam_deinit_bssid_cam(rtwdev, &rtwsta_link->bssid_cam);
-
-		INIT_LIST_HEAD(&rtwsta_link->ba_cam_list);
 	}
 }
 
