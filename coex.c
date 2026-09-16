@@ -2050,7 +2050,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v4.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v4.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le32_to_cpu(prpt->v4.bt_cnt[BTC_BCNT_HI_TX]);
@@ -2082,7 +2082,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v5.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v5.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le16_to_cpu(prpt->v5.bt_cnt[BTC_BCNT_HI_TX]);
@@ -2109,7 +2109,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v105.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v105.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le16_to_cpu(prpt->v105.bt_cnt[BTC_BCNT_HI_TX_V105]);
@@ -2135,7 +2135,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v7.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v7.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le16_to_cpu(prpt->v7.bt_cnt[BTC_BCNT_HI_TX_V105]);
@@ -2167,7 +2167,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v8.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v8.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le16_to_cpu(prpt->v8.bt_cnt[BTC_BCNT_HI_TX_V105]);
@@ -2212,7 +2212,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
 				memcpy(&dm->gnt_val[i], &prpt->v9.gnt_val[i],
-				       sizeof(dm->gnt_val[i]));
+				       sizeof(prpt->v9.gnt_val[i]));
 
 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
 				le16_to_cpu(prpt->v9.bt_cnt[BTC_BCNT_HI_TX_V105]);
