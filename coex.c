@@ -1102,6 +1102,10 @@ static int _send_fw_cmd(struct rtw89_dev *rtwdev, u8 h2c_class, u8 h2c_func,
 			    "[BTC], %s():Buffer H2C-MACRO cnt=%d/bt%d-func=%s/len=%d\n",
 			    __func__, btc->hbuf_cnt, bid,
 			    id_to_h2c(h2c_func_mask), len);
+
+		h2c_func = SET_H2C_MACRO;
+		buf = btc->hbuf;
+		len = btc->hbuf_len;
 	}
 
 	ret = rtw89_fw_h2c_raw_with_hdr(rtwdev, h2c_class, h2c_func, buf, len,
@@ -1110,6 +1114,9 @@ static int _send_fw_cmd(struct rtw89_dev *rtwdev, u8 h2c_class, u8 h2c_func,
 		pfwinfo->cnt_h2c_fail++;
 	else
 		pfwinfo->cnt_h2c++;
+
+	if (h2c_func == SET_H2C_MACRO)
+		_reset_h2c_macro(btc);
 
 	return ret;
 }
