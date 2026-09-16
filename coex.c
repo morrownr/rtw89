@@ -517,6 +517,7 @@ enum btc_b2w_scoreboard {
 	BTC_BSCB_BT_CONNECT_56G = BIT(17),
 	BTC_BSCB_BT_LNAB0_56G = BIT(18),
 	BTC_BSCB_BT_LNAB1_56G = BIT(19),
+	BTC_BSCB_HID_ACT = BIT(23),
 	BTC_BSCB_BT_15DOT4 = BIT(24),
 	BTC_BSCB_BT_PROTECT = BIT(27),
 	BTC_BSCB_PAN_ACT = BIT(28),
@@ -7955,6 +7956,7 @@ static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid)
 		bt_2g->a2dp_desc.exist = !!(val & BTC_BSCB_A2DP_ACT);
 		bt_2g->pan_desc.exist = !!(val & BTC_BSCB_PAN_ACT);
 		bt_2g->hfp_desc.exist = !!(val & BTC_BSCB_HFP_ACT);
+		bt_2g->hid_desc.exist = !!(val & BTC_BSCB_HID_ACT);
 
 		bt->lna_constrain = 4 + !!(val & BTC_BSCB_BT_LNAB0) +
 				    !!(val & BTC_BSCB_BT_LNAB1) * 2;
