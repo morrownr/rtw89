@@ -1317,14 +1317,19 @@ static void _get_reg_status(struct rtw89_dev *rtwdev, u8 type, u8 *val)
 #define BTC_CHK_WLSLOT_DRIFT_MAX 15
 #define BTC_CHK_BTSLOT_DRIFT_MAX 15
 #define BTC_CHK_HANG_MAX 3
+#define BTC_NULLTX_CHK_PERIOD 100
+#define BTC_NULLTX_FAIL_TH 8
 
 static void _chk_btc_err(struct rtw89_dev *rtwdev, u8 type, u32 cnt)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
+	union rtw89_btc_fbtc_cynullsta_info *ns = &btc->fwinfo.rpt_fbtc_nullsta.finfo;
 	struct rtw89_btc_cx *cx = &btc->cx;
 	struct rtw89_btc_bt_info *bt = &cx->bt0;
 	struct rtw89_btc_wl_info *wl = &cx->wl;
 	struct rtw89_btc_dm *dm = &btc->dm;
+	const struct rtw89_btc_ver *ver = btc->ver;
+	u32 tx_cnt, late, ok;
 
 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
 		    "[BTC], %s(): type:%d cnt:%d\n",
@@ -1513,6 +1518,37 @@ static void _chk_btc_err(struct rtw89_dev *rtwdev, u8 type, u32 cnt)
 			dm->error.map.w2b_scbd_no_sync = true;
 		else
 			dm->error.map.w2b_scbd_no_sync = false;
+		break;
+	case BTC_DCNT_NULL_TX_FAIL:
+		if (dm->fddt_train)
+			break;
+
+		if (ver->fcxnullsta == 7) {
+			ok = le32_to_cpu(ns->v7.result[1][1]);
+			late = le32_to_cpu(ns->v7.result[1][2]);
+			tx_cnt = le32_to_cpu(ns->v7.result[1][4]);
+		} else if (ver->fcxnullsta == 2) {
+			ok = le32_to_cpu(ns->v2.result[1][1]);
+			late = le32_to_cpu(ns->v2.result[1][2]);
+			tx_cnt = le32_to_cpu(ns->v2.result[1][4]);
+		} else if (ver->fcxnullsta == 1) {
+			ok = le32_to_cpu(ns->v1.result[1][1]);
+			late = le32_to_cpu(ns->v1.result[1][2]);
+			tx_cnt = 0;
+		} else {
+			break;
+		}
+
+		if (tx_cnt < BTC_NULLTX_CHK_PERIOD)
+			break;
+
+		if (late * BTC_NULLTX_FAIL_TH > ok)
+			dm->cnt_dm[BTC_DCNT_NULL_TX_FAIL]++;
+		else
+			dm->cnt_dm[BTC_DCNT_NULL_TX_FAIL] = 0;
+
+		dm->error.map.null1_tx_late =
+			dm->cnt_dm[BTC_DCNT_NULL_TX_FAIL] >= BTC_CHK_HANG_MAX;
 		break;
 	}
 }
@@ -2683,6 +2719,9 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 		} else {
 			goto err;
 		}
+		break;
+	case BTC_RPT_TYPE_NULLSTA:
+		_chk_btc_err(rtwdev, BTC_DCNT_NULL_TX_FAIL, 0);
 		break;
 	case BTC_RPT_TYPE_MREG:
 		if (ver->fcxmreg == 7)
