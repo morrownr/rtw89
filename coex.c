@@ -1604,6 +1604,69 @@ static void _chk_btc_err(struct rtw89_dev *rtwdev, u8 type, u32 cnt)
 	}
 }
 
+static void _update_bt_afh_conflict(struct rtw89_dev *rtwdev,
+				    struct rtw89_btc_bt_info *bt,
+				    u8 map_type)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
+	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+	struct rtw89_btc_dm *dm = &btc->dm;
+	struct rtw89_btc_bt_link_info *b = &bt->link_info;
+	struct rtw89_btc_bt_leaudio_desc *leaudio = &b->leaudio_desc;
+	u8 hw_band = wl->role_info.pta_req_band;
+	u32 cnt, cnt_ch, cnt_le, cnt_ch_le;
+	u8 i, omap, xmap, afh_en;
+
+	if (map_type & RPT_BT_AFH_SEQ_LEGACY) {
+		bt->bcnt[BTC_BCNT_AFH_UPDATE]++;
+		bt->bcnt[BTC_BCNT_AFH_CONFLICT] = 0;
+		dm->error.map.bt_afh_conflict = 0;
+	}
+
+	afh_en = wl->afh_info[hw_band][RTW89_BAND_2G].en;
+
+	for (i = 0; i < 12; i++) {
+		if (!(map_type & RPT_BT_AFH_SEQ_LEGACY) ||
+		    !b->status.map.connect)
+			break;
+
+		omap = b->afh_map[i];
+		xmap = omap & wl->ch_map[i];
+		cnt_ch = hweight8(omap);
+		cnt = afh_en ? hweight8(xmap) : 0;
+
+		if (i == 11) {
+			bt->bcnt[BTC_BCNT_AFH_CHN] = cnt_ch;
+			bt->bcnt[BTC_BCNT_AFH_CONFLICT] = cnt;
+			dm->error.map.bt_afh_conflict = !!cnt;
+		}
+	}
+
+	if (map_type & RPT_BT_AFH_SEQ_LE) {
+		bt->bcnt[BTC_BCNT_AFH_LE_UPDATE]++;
+		bt->bcnt[BTC_BCNT_AFH_LE_CONFLICT] = 0;
+		dm->error.map.bt_leafh_conflict = 0;
+	}
+
+	for (i = 0; i < 5; i++) {
+		if (!(map_type & RPT_BT_AFH_SEQ_LE) ||
+		    (!b->status.map.ble_connect &&
+		     !leaudio->bis_exist && !leaudio->cis_exist))
+			break;
+
+		omap = b->afh_map_le[i];
+		xmap = omap & wl->ch_map_le[i];
+		cnt_ch_le = hweight8(omap);
+		cnt_le = afh_en ? hweight8(xmap) : 0;
+
+		if (i == 4) {
+			bt->bcnt[BTC_BCNT_AFH_LE_CHN] = cnt_ch_le;
+			bt->bcnt[BTC_BCNT_AFH_LE_CONFLICT] = cnt_le;
+			dm->error.map.bt_leafh_conflict = !!cnt_le;
+		}
+	}
+}
+
 static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
@@ -1704,6 +1767,7 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 				memcpy(&bt_linfo->afh_map_le[0], pafh_v2->afh_le_a, 4);
 				memcpy(&bt_linfo->afh_map_le[4], pafh_v2->afh_le_b, 1);
 			}
+			_update_bt_afh_conflict(rtwdev, bt, pafh_v2->map_type);
 		} else if (ver->fcxbtafh == 7) {
 			pafh_v7 = (struct rtw89_btc_fbtc_btafh_v7 *)pfinfo;
 			if (pafh_v7->map_type & RPT_BT_AFH_SEQ_LEGACY) {
@@ -1715,6 +1779,7 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 				memcpy(&bt_linfo->afh_map_le[0], pafh_v7->afh_le_a, 4);
 				memcpy(&bt_linfo->afh_map_le[4], pafh_v7->afh_le_b, 1);
 			}
+			_update_bt_afh_conflict(rtwdev, bt, pafh_v7->map_type);
 		} else if (ver->fcxbtafh == 8) {
 			struct rtw89_btc_fbtc_btafh_v8 *pafh_v8 =
 				(struct rtw89_btc_fbtc_btafh_v8 *)pfinfo;
@@ -1731,6 +1796,7 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 				memcpy(&tbt_linfo->afh_map_le[0], pafh_v8->afh_le_a, 4);
 				memcpy(&tbt_linfo->afh_map_le[4], pafh_v8->afh_le_b, 1);
 			}
+			_update_bt_afh_conflict(rtwdev, tbt, pafh_v8->map_type);
 		} else if (ver->fcxbtafh == 1) {
 			pafh_v1 = (struct rtw89_btc_fbtc_btafh *)pfinfo;
 			memcpy(&bt_linfo->afh_map[0], pafh_v1->afh_l, 4);
