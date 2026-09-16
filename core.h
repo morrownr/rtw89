@@ -4014,8 +4014,8 @@ struct rtw89_btc_trx_info {
 
 	u8 cn; /* condition_num */
 	s8 nhm;
-	u8 bt_profile;
-	u8 rsvd2;
+	u8 bt0_profile;
+	u8 bt1_profile;
 
 	u16 tx_rate;
 	u16 rx_rate;

@@ -7261,8 +7261,8 @@ int rtw89_fw_h2c_cxdrv_trx_v7(struct rtw89_dev *rtwdev, u8 type)
 	h2c->v7_u8.zb_rx_gain = trx->zb_rx_gain[BTC_BT_1ST];
 	h2c->v7_u8.cn = trx->cn;
 	h2c->v7_u8.nhm = trx->nhm;
-	h2c->v7_u8.bt_profile = trx->bt_profile;
-	h2c->v7_u8.rsvd2 = trx->rsvd2;
+	h2c->v7_u8.bt0_profile = trx->bt0_profile;
+	h2c->v7_u8.bt1_profile = trx->bt1_profile;
 	h2c->v7_le.tx_rate = cpu_to_le16(trx->tx_rate);
 	h2c->v7_le.rx_rate = cpu_to_le16(trx->rx_rate);
 	h2c->v7_le.tx_tp = cpu_to_le32(trx->tx_tp);
@@ -7328,8 +7328,8 @@ int rtw89_fw_h2c_cxdrv_trx_v9(struct rtw89_dev *rtwdev, u8 type)
 	}
 	h2c->v9_u8.cn = trx->cn;
 	h2c->v9_u8.nhm = trx->nhm;
-	h2c->v9_u8.bt_profile = trx->bt_profile;
-	h2c->v9_u8.rsvd2 = trx->rsvd2;
+	h2c->v9_u8.bt0_profile = trx->bt0_profile;
+	h2c->v9_u8.bt1_profile = trx->bt1_profile;
 	h2c->v9_le.tx_rate = cpu_to_le16(trx->tx_rate);
 	h2c->v9_le.rx_rate = cpu_to_le16(trx->rx_rate);
 	h2c->v9_le.tx_tp = cpu_to_le32(trx->tx_tp);
@@ -7386,8 +7386,8 @@ int rtw89_fw_h2c_cxdrv_trx_v107(struct rtw89_dev *rtwdev, u8 type)
 	h2c->v107_u8.bt_rx_gain = trx->bt_rx_gain[BTC_BT_1ST];
 	h2c->v107_u8.cn = trx->cn;
 	h2c->v107_u8.nhm = trx->nhm;
-	h2c->v107_u8.bt_profile = trx->bt_profile;
-	h2c->v107_u8.rsvd2 = trx->rsvd2;
+	h2c->v107_u8.bt0_profile = trx->bt0_profile;
+	h2c->v107_u8.bt1_profile = trx->bt1_profile;
 	h2c->v7_le.tx_rate = cpu_to_le16(trx->tx_rate);
 	h2c->v7_le.rx_rate = cpu_to_le16(trx->rx_rate);
 	h2c->v7_le.tx_tp = cpu_to_le32(trx->tx_tp);

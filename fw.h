@@ -2553,8 +2553,8 @@ struct rtw89_btc_trx_info_u8 {
 
 	u8 cn; /* condition_num */
 	s8 nhm;
-	u8 bt_profile;
-	u8 rsvd2;
+	u8 bt0_profile;
+	u8 bt1_profile;
 } __packed;
 
 struct rtw89_btc_trx_info_v7_u8 {
@@ -2572,8 +2572,8 @@ struct rtw89_btc_trx_info_v7_u8 {
 
 	u8 cn;
 	s8 nhm;
-	u8 bt_profile;
-	u8 rsvd2;
+	u8 bt0_profile;
+	u8 bt1_profile;
 } __packed;
 
 struct rtw89_btc_trx_info_v107_u8 {
@@ -2589,8 +2589,8 @@ struct rtw89_btc_trx_info_v107_u8 {
 
 	u8 cn;
 	s8 nhm;
-	u8 bt_profile;
-	u8 rsvd2;
+	u8 bt0_profile;
+	u8 bt1_profile;
 } __packed;
 
 struct rtw89_btc_trx_info_le {

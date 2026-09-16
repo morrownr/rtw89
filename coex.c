@@ -9129,7 +9129,12 @@ static void _update_bt_info(struct rtw89_dev *rtwdev, u8 bid, u8 *buf, u32 len)
 	a2dp->exist = btinfo.lb2.a2dp;
 	pan->exist = btinfo.lb2.pan;
 	_update_bt_link_cnt(rtwdev, bt, is_bt_56g);
-	btc->dm.trx_info.bt_profile = u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
+	if (bid == BTC_BT_1ST)
+		btc->dm.trx_info.bt0_profile =
+			u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
+	else
+		btc->dm.trx_info.bt1_profile =
+			u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
 
 	/* parse raw info low-Byte3 */
 	btinfo.val = raw_info[BTC_BTINFO_L3];
