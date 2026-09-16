@@ -7454,6 +7454,8 @@ static void _update_wl_mlo_info(struct rtw89_dev *rtwdev, u8 hw_band)
 			wl_rinfo->pta_req_band = RTW89_MAC_0;
 			wl_rinfo->dbcc_2g_phy = RTW89_PHY_0;
 		}
+
+		wl_rinfo->dbcc_en = 1; /* two HW-band both active */
 		break;
 	}
 
