@@ -1324,11 +1324,15 @@ static void _chk_btc_err(struct rtw89_dev *rtwdev, u8 type, u32 cnt)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
 	union rtw89_btc_fbtc_cynullsta_info *ns = &btc->fwinfo.rpt_fbtc_nullsta.finfo;
+	union rtw89_btc_fbtc_cysta_info *pcysta = &btc->fwinfo.rpt_fbtc_cysta.finfo;
 	struct rtw89_btc_cx *cx = &btc->cx;
 	struct rtw89_btc_bt_info *bt = &cx->bt0;
+	struct rtw89_btc_bt_a2dp_desc *a2dp = &bt->link_info.a2dp_desc;
 	struct rtw89_btc_wl_info *wl = &cx->wl;
 	struct rtw89_btc_dm *dm = &btc->dm;
 	const struct rtw89_btc_ver *ver = btc->ver;
+	u32 empty_streak = 0, empty_streak_max = 0;
+	u32 slot_pair, c_begin, c_end, cycle, s_id;
 	u32 tx_cnt, late, ok;
 
 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
@@ -1484,6 +1488,53 @@ static void _chk_btc_err(struct rtw89_dev *rtwdev, u8 type, u32 cnt)
 		else
 			dm->error.map.bt_slot_drift = false;
 
+		break;
+	case BTC_DCNT_BT_SLOT_FLOOD:
+		if (!btc->fwinfo.rpt_fbtc_cysta.cinfo.valid ||
+		    dm->cnt_dm[BTC_DCNT_CYCLE] == cnt)
+			break;
+
+		if (cnt < BTC_CYCLE_SLOT_MAX ||
+		    (dm->tdma_now.type != CXTDMA_AUTO &&
+		     dm->tdma_now.type != CXTDMA_AUTO2 &&
+		     dm->tdma_now.ext_ctrl != CXECTL_EXT)) {
+			dm->error.map.bt_slot_flood = false;
+			dm->cnt_dm[BTC_DCNT_BT_SLOT_FLOOD] = 0;
+			a2dp->no_empty_streak_2s = 0;
+			a2dp->no_empty_streak_max = 0;
+			break;
+		}
+
+		/* 1 cycle = 1 wl-slot + 1 bt-slot */
+		slot_pair = BTC_CYCLE_SLOT_MAX / 2;
+		if (cnt - dm->cnt_dm[BTC_DCNT_CYCLE] > slot_pair)
+			c_begin = cnt - slot_pair + 1;
+		else
+			c_begin = dm->cnt_dm[BTC_DCNT_CYCLE] + 1;
+
+		c_end = cnt;
+		for (cycle = c_begin; cycle <= c_end; cycle++) {
+			s_id = ((cycle - 1) % slot_pair) * 2;
+			if (le16_to_cpu(pcysta->v7.slot_step_time[s_id]) >=
+			    dm->bt_slot_flood)
+				dm->cnt_dm[BTC_DCNT_BT_SLOT_FLOOD]++;
+			/* calculate no-A2DP-empty streak count */
+			if (pcysta->v7.a2dp_trx[s_id].empty_cnt == 0 &&
+			    pcysta->v7.a2dp_trx[s_id + 1].empty_cnt == 0) {
+				empty_streak++;
+				if (empty_streak > empty_streak_max)
+					empty_streak_max = empty_streak;
+			} else {
+				empty_streak = 0;
+			}
+		}
+
+		a2dp->no_empty_streak_2s = empty_streak_max;
+		if (a2dp->no_empty_streak_2s > a2dp->no_empty_streak_max)
+			a2dp->no_empty_streak_max = a2dp->no_empty_streak_2s;
+
+		dm->error.map.bt_slot_flood =
+			!!dm->cnt_dm[BTC_DCNT_BT_SLOT_FLOOD];
 		break;
 	case BTC_DCNT_WL_STA_NTFY:
 		cnt = dm->cnt_notify[BTC_NCNT_WL_STA] -
