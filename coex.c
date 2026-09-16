@@ -2719,7 +2719,7 @@ static void _append_tdma(struct rtw89_dev *rtwdev)
 		tlv->len = sizeof(*v);
 		*v = dm->tdma;
 		btc->policy_len += BTC_TLV_HDR_LEN + sizeof(*v);
-	} else if (ver->fcxtdma == 7 || ver->fcxtdma == 4) {
+	} else if (ver->fcxtdma == 4 || ver->fcxtdma == 7 || ver->fcxtdma == 8) {
 		tlv_v7 = (struct rtw89_btc_btf_tlv_v7 *)&btc->policy[len];
 		tlv_v7->len = sizeof(dm->tdma);
 		tlv_v7->ver = ver->fcxtdma;
@@ -6639,6 +6639,8 @@ static void _set_fw_report_map(struct rtw89_dev *rtwdev)
 		return;
 	}
 
+	rpt_map |= rtw89_btc_fw_rpt_ver(rtwdev, RPT_EN_TDMA);
+	rpt_map |= rtw89_btc_fw_rpt_ver(rtwdev, RPT_EN_CYCLE);
 	rpt_map |= rtw89_btc_fw_rpt_ver(rtwdev, RPT_EN_MREG);
 
 	bitmap = rtw89_btc_fw_rpt_ver(rtwdev, RPT_EN_BT_SCAN_INFO);
