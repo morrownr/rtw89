@@ -1591,11 +1591,10 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 		} else if (ver->fcxbtscan == 8) {
 			struct rtw89_btc_fbtc_btscan_v8 *pscan_v8 =
 				(struct rtw89_btc_fbtc_btscan_v8 *)pfinfo;
-			struct rtw89_btc_bt_info *tbt =
-				pscan_v8->bt_id ? &btc->cx.bt1 : &btc->cx.bt0;
 
+			bt = pscan_v8->bt_id ? &btc->cx.bt1 : &btc->cx.bt0;
 			for (i = 0; i < CXSCAN_MAX; i++) {
-				tbt->scan_info_v2[i] = pscan_v8->para[i];
+				bt->scan_info_v2[i] = pscan_v8->para[i];
 				if ((pscan_v8->type & BIT(i)) &&
 				    pscan_v8->para[i].win == 0 &&
 				    pscan_v8->para[i].intvl == 0)
@@ -1653,6 +1652,10 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
 		break;
 	case BTC_RPT_TYPE_BT_DEVICE:
 		pdev = (struct rtw89_btc_fbtc_btdevinfo *)pfinfo;
+		if (ver->fcxbtdevinfo == 8) {
+			bt = pdev->rsvd ? &btc->cx.bt1 : &btc->cx.bt0;
+			a2dp = &bt->link_info.a2dp_desc;
+		}
 		a2dp->device_name = le32_to_cpu(pdev->dev_name);
 		a2dp->vendor_id = le16_to_cpu(pdev->vendor_id);
 		a2dp->flush_time = le32_to_cpu(pdev->flush_time);
