@@ -203,6 +203,19 @@ Please try the workaround [here](https://github.com/morrownr/rtw89/issues/98#iss
 
 Please apply [this patch](https://github.com/user-attachments/files/29662967/0001-Don-t-enable-36-bit-DMA-address-support-for-Intel-ch.patch) and build/install the patched rtw89 driver.
 
+### Q10. My Wi-Fi 7 card is connected to a Wi-Fi 7 (MLO) router but is very slow and the link speed is stuck around 100-300 Mb/s, why?
+
+   With an MLO connection the driver keeps only one link active at a time (MLSR). The upstream driver moves the active link to the 2.4 GHz band whenever the beacon RSSI is at or below -53 dBm and only returns to 5/6 GHz at -38 dBm or better, so at normal distances the card ends up on the 2.4 GHz 20 MHz link. You can confirm this with `iw dev <interface> info`: the only link showing a `channel` line is the 2.4 GHz one, and `iw dev <interface> link` reports a 20 MHz TX bitrate.
+
+   This driver exposes the two thresholds as module parameters of `rtw89_core_git` and uses -80 / -65 dBm by default:
+
+   ```
+   options rtw89_core_git mlsr_goto_2ghz_rssi=-80
+   options rtw89_core_git mlsr_exit_2ghz_rssi=-65
+   ```
+
+   They are set in `/etc/modprobe.d/rtw89.conf` and can also be changed at runtime in `/sys/module/rtw89_core_git/parameters/`. Keep a gap of about 15 dB between the two values to avoid switching back and forth, because the 2.4 GHz link usually reads several dB stronger than the 5 GHz one. Set `mlsr_goto_2ghz_rssi=-128` to never fall back to 2.4 GHz.
+
 ## The Main Menu for this site contains a lot of information regarding USB WiFi Adapters
 
 https://github.com/morrownr/USB-WiFi
