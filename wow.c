@@ -668,10 +668,18 @@ static struct ieee80211_key_conf *rtw89_wow_gtk_rekey(struct rtw89_dev *rtwdev,
 	if (ieee80211_vif_is_mld(wow_vif))
 		key = ieee80211_gtk_rekey_add(wow_vif, keyidx, gtk,
 					      cipher_info->len,
-					      rtwvif_link->link_id);
+					      rtwvif_link->link_id
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 4, 0)
+					      , false
+#endif
+					      );
 	else
 		key = ieee80211_gtk_rekey_add(wow_vif, keyidx, gtk,
-					      cipher_info->len, -1);
+					      cipher_info->len, -1
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 4, 0)
+					      , false
+#endif
+					      );
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
 	if (ieee80211_vif_is_mld(wow_vif))
 		key = ieee80211_gtk_rekey_add(wow_vif, rekey_conf, rtwvif_link->link_id);
