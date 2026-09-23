@@ -546,6 +546,9 @@ static int rtw89_wow_get_aoac_rpt_reg(struct rtw89_dev *rtwdev)
 	aoac_rpt->key_idx =
 		u32_get_bits(c2h_info.u.c2hreg[0], RTW89_C2HREG_AOAC_RPT_1_W0_KEY_IDX);
 	key_idx = aoac_rpt->key_idx;
+	if (key_idx >= ARRAY_SIZE(aoac_rpt->gtk_rx_iv))
+		return -EINVAL;
+
 	aoac_rpt->gtk_rx_iv[key_idx][0] =
 		u32_get_bits(c2h_info.u.c2hreg[1], RTW89_C2HREG_AOAC_RPT_1_W1_IV_0);
 	aoac_rpt->gtk_rx_iv[key_idx][1] =
