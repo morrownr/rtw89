@@ -1010,7 +1010,7 @@ static void _run_coex(struct rtw89_dev *rtwdev,
 		      enum btc_reason_and_action reason);
 static void _write_scbd(struct rtw89_dev *rtwdev, u8 bid, u32 val, bool state);
 static u8 _sned_h2c_w2bscbd(struct rtw89_dev *rtwdev, bool force_exec, u8 bid);
-static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid);
+static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid, bool is_c2h);
 static const char *id_to_h2c(u32 id);
 
 static void _reset_h2c_macro(struct rtw89_btc *btc)
@@ -3902,7 +3902,7 @@ void btc_fw_event(struct rtw89_dev *rtwdev, u8 evt_id, void *data, u32 len)
 				    "[BTC], %s() bt%d:c2h->0x%08x, rb->0x%08x\n",
 				    __func__, i, bt->scbd_c2h, bt->scbd_rb);
 			bt->scbd_c2h = bt->scbd_rb;
-			_update_bt_scbd(rtwdev, i);
+			_update_bt_scbd(rtwdev, i, true);
 			btc->dm.scbd_b2w_update = false;
 		}
 	}
@@ -8116,7 +8116,21 @@ static void _update_bt_ctrl_lps(struct rtw89_dev *rtwdev)
 	}
 }
 
-static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid)
+static u32 _read_scbd(struct rtw89_dev *rtwdev, u8 id)
+{
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	u32 val;
+
+	if (!chip->scbd)
+		return 0;
+
+	val = rtw89_read32(rtwdev, chip->btc_sb.n[id].get);
+	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+		    "[BTC], read scbd bt%d: 0x%08x\n", id, val);
+	return val;
+}
+
+static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid, bool is_c2h)
 {
 	struct rtw89_btc_bt_link_info *bt_2g, *bt_56g;
 	struct rtw89_btc *btc = &rtwdev->btc;
@@ -8149,7 +8163,7 @@ static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid)
 		if (!(rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT) && id == BTC_BT_2ND)
 			break;
 
-		val = bt->scbd_c2h;
+		val = is_c2h ? bt->scbd_c2h : _read_scbd(rtwdev, id);
 
 		if (val == 0xffffffff) {
 			rtw89_debug(rtwdev, RTW89_DBG_BTC,
@@ -8785,8 +8799,8 @@ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
 
 	_update_run_ctrl_info(rtwdev);
 
-	if (reason == BTC_RSN_NTFY_INIT || reason == BTC_RSN_NTFY_RADIO_STATE)
-		_update_bt_scbd(rtwdev, false);
+	if (reason == BTC_RSN_NTFY_RADIO_STATE)
+		_update_bt_scbd(rtwdev, BTC_ALL_BT, false);
 
 	dm->freerun = false;
 	dm->cnt_dm[BTC_DCNT_RUN]++;
@@ -10131,7 +10145,7 @@ void rtw89_btc_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
 			    "[BTC], handle C2H BT%d SCBD with data 0x%08x\n",
 			    bid, bt->scbd_c2h);
-		_update_bt_scbd(rtwdev, bid);
+		_update_bt_scbd(rtwdev, bid, true);
 		_run_coex(rtwdev, BTC_RSN_UPDATE_BT_SCBD);
 		break;
 	case BTF_EVNT_BT_PSD:
