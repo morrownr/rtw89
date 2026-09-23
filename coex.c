@@ -1866,6 +1866,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 	u32 cnt_leak_slot, bt_slot_real, bt_slot_set, cnt_rx_imr;
 	u8 i, j, val = 0, val1, val2;
 	u32 *bt_cnt, start_idx;
+	const u8 *rpt_fver;
 
 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
 		    "[BTC], %s(): index:%d\n",
@@ -2180,6 +2181,21 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
 
 	memcpy(pfinfo, rpt_content, pcinfo->req_len);
 	pcinfo->valid = 1;
+
+	/*
+	 * fver is the leading field of every report struct. A mismatch
+	 * vs the driver-selected version means ver_defs needs a fix, so
+	 * flag it for debug but keep processing the length-valid report.
+	 */
+	rpt_fver = pfinfo;
+	pcinfo->rsp_fver = rpt_fver[0];
+	if (pcinfo->rsp_fver != pcinfo->req_fver) {
+		pfwinfo->fver_mismch |= BIT(rpt_type);
+		rtw89_debug(rtwdev, RTW89_DBG_BTC,
+			    "[BTC], %s(): %d rsp_fver:%d!=req_fver:%d\n",
+			    __func__, rpt_type, pcinfo->rsp_fver,
+			    pcinfo->req_fver);
+	}
 
 	switch (rpt_type) {
 	case BTC_RPT_TYPE_CTRL:
