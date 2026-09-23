@@ -7478,6 +7478,7 @@ void rtw89_core_rfkill_poll(struct rtw89_dev *rtwdev, bool force)
 
 int rtw89_chip_info_setup(struct rtw89_dev *rtwdev)
 {
+	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
 	struct rtw89_efuse *efuse = &rtwdev->efuse;
 	struct rtw89_hal *hal = &rtwdev->hal;
 	int ret;
@@ -7529,6 +7530,9 @@ int rtw89_chip_info_setup(struct rtw89_dev *rtwdev)
 		   hal->cid, hal->cv, hal->aid, hal->acv, efuse->rfe_type);
 
 out:
+	if (fw_req->free_after_probe)
+		__rtw89_unload_firmware(rtwdev);
+
 	rtw89_mac_pwr_off(rtwdev);
 
 	return ret;

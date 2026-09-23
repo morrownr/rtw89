@@ -2226,20 +2226,26 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
 	kfree(elm_info->rfk_log_fmt);
 }
 
+void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_fw_info *fw = &rtwdev->fw;
+
+	release_firmware(fw->req.firmware);
+
+	/*
+	 * Directly call this to free firmware early in normal flow. Assign
+	 * NULL back in case rtw89_free_ieee80211_hw() or tw89_core_deinit()
+	 * try to release the same one again in error handling paths.
+	 */
+	fw->req.firmware = NULL;
+}
+
 void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_fw_info *fw = &rtwdev->fw;
 
 	cancel_work_sync(&rtwdev->load_firmware_work);
-
-	if (fw->req.firmware) {
-		release_firmware(fw->req.firmware);
-
-		/* assign NULL back in case rtw89_free_ieee80211_hw()
-		 * try to release the same one again.
-		 */
-		fw->req.firmware = NULL;
-	}
+	__rtw89_unload_firmware(rtwdev);
 
 	kfree(fw->log.fmts);
 	rtw89_unload_firmware_elements(rtwdev);

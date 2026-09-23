@@ -5419,6 +5419,7 @@ rtw89_early_fw_feature_recognize(struct device *device,
 int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
 		      bool include_bb);
 void rtw89_load_firmware_work(struct work_struct *work);
+void __rtw89_unload_firmware(struct rtw89_dev *rtwdev);
 void rtw89_unload_firmware(struct rtw89_dev *rtwdev);
 int rtw89_wait_firmware_completion(struct rtw89_dev *rtwdev);
 int rtw89_fw_log_prepare(struct rtw89_dev *rtwdev);
