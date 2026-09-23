@@ -3180,6 +3180,19 @@ struct rtw89_btc_fbtc_rpt_ctrl_v11 {
 	__le32 scbd_b2w[2];
 } __packed;
 
+struct rtw89_btc_fbtc_rpt_ctrl_v205 {
+	u8 fver;
+	u8 rsvd;
+	u8 build_time[RTW89_BTC_TIME_DATE_FMT];
+	u8 build_date[RTW89_BTC_TIME_DATE_FMT];
+	__le16 rsvd1;
+	struct rtw89_btc_fbtc_rpt_ctrl_info rpt_info;
+	struct rtw89_btc_fbtc_rpt_ctrl_wl_fw_info wl_fw_info;
+	struct rtw89_btc_fbtc_rpt_ctrl_bt_mailbox bt_mbx_info;
+	__le32 bt_cnt[BTC_BCNT_STA_MAX];
+	u8 gnt_val[RTW89_PHY_NUM][4];
+} __packed;
+
 union rtw89_btc_fbtc_rpt_ctrl_ver_info {
 	struct rtw89_btc_fbtc_rpt_ctrl_v1 v1;
 	struct rtw89_btc_fbtc_rpt_ctrl_v4 v4;
@@ -3189,6 +3202,7 @@ union rtw89_btc_fbtc_rpt_ctrl_ver_info {
 	struct rtw89_btc_fbtc_rpt_ctrl_v8 v8;
 	struct rtw89_btc_fbtc_rpt_ctrl_v9 v9;
 	struct rtw89_btc_fbtc_rpt_ctrl_v11 v11;
+	struct rtw89_btc_fbtc_rpt_ctrl_v205 v205;
 };
 
 enum rtw89_fbtc_ext_ctrl_type {
