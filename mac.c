@@ -5906,6 +5906,13 @@ rtw89_mac_c2h_wow_aoac_rpt(struct rtw89_dev *rtwdev, struct sk_buff *skb, u32 le
 		(const struct rtw89_c2h_wow_aoac_report *)skb->data;
 	struct rtw89_completion_data data = {};
 
+	if (skb->len < sizeof(*c2h)) {
+		rtw89_warn(rtwdev, "wow: aoac rpt skb len %u is too short\n",
+			   skb->len);
+		data.err = true;
+		goto out;
+	}
+
 	aoac_rpt->rpt_ver = c2h->rpt_ver;
 	aoac_rpt->sec_type = c2h->sec_type;
 	aoac_rpt->key_idx = c2h->key_idx;
@@ -5922,6 +5929,7 @@ rtw89_mac_c2h_wow_aoac_rpt(struct rtw89_dev *rtwdev, struct sk_buff *skb, u32 le
 	aoac_rpt->igtk_ipn = le64_to_cpu(c2h->igtk_ipn);
 	memcpy(aoac_rpt->igtk, c2h->igtk, sizeof(aoac_rpt->igtk));
 
+out:
 	rtw89_complete_cond(wait, RTW89_WOW_WAIT_COND_AOAC, &data);
 }
 
