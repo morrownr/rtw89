@@ -5482,6 +5482,8 @@ struct rtw89_reg_imr {
 #define RTW89_GEN_MODULE_FWNAME(basename, maxformat) \
 	basename RTW89_GEN_MODULE_FWNAME_FMT(maxformat) ".bin"
 
+#define RTW89_FWNAME_BOARD_ELM "rtw89/board_elm.bin"
+
 struct rtw89_fw_def {
 	const char *fw_basename;
 	u8 fw_format_max;
@@ -6073,7 +6075,18 @@ struct rtw89_chip_variant {
 	const struct rtw89_qta_def *qta_def_override;
 };
 
+/* @pid can have extra suffix to describe the variant if necessary */
+#define RTW89_BOARD_ID(vid, pid) \
+	RTW89_BOARD_ID_##vid##_##pid
+
+enum rtw89_board_id {
+	RTW89_BOARD_ID(0000, 0000) = 0, /* reserve 0 for non-variant */
+
+	NUM_OF_RTW89_BOARD_IDS,
+};
+
 struct rtw89_board_variant {
+	enum rtw89_board_id id;
 	const struct rtw89_led_desc *led_desc;
 };
 
@@ -6274,6 +6287,7 @@ struct rtw89_fw_suit {
 
 struct rtw89_fw_req_info {
 	const struct firmware *firmware;
+	const struct firmware *board_elm;
 	struct completion completion;
 	bool free_after_probe;
 };

@@ -7844,6 +7844,7 @@ void rtw89_free_ieee80211_hw(struct rtw89_dev *rtwdev)
 }
 EXPORT_SYMBOL(rtw89_free_ieee80211_hw);
 
+MODULE_FIRMWARE(RTW89_FWNAME_BOARD_ELM);
 MODULE_AUTHOR("Realtek Corporation");
 MODULE_DESCRIPTION("Realtek 802.11ax wireless core module");
 MODULE_LICENSE("Dual BSD/GPL");

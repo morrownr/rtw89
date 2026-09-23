@@ -1678,29 +1678,16 @@ static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
 	},
 };
 
-int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
+static int __rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev,
+					 const struct firmware *firmware,
+					 u32 offset, u32 skipped_elements,
+					 u32 *unrecognized_elements)
 {
-	struct rtw89_fw_info *fw_info = &rtwdev->fw;
-	const struct firmware *firmware = fw_info->req.firmware;
-	const struct rtw89_chip_info *chip = rtwdev->chip;
-	u32 unrecognized_elements = chip->needed_fw_elms;
 	const struct rtw89_fw_element_handler *handler;
 	const struct rtw89_fw_element_hdr *hdr;
-	bool transition;
 	u32 elm_size;
 	u32 elem_id;
-	u32 offset;
 	int ret;
-
-	BUILD_BUG_ON(sizeof(chip->needed_fw_elms) * 8 < RTW89_FW_ELEMENT_ID_NUM);
-
-	transition = !!((chip->needed_fw_elms & BIT(__RTW89_FW_ELEMENT_ID_INTL_TRANSITION)));
-	unrecognized_elements &= ~BIT(__RTW89_FW_ELEMENT_ID_INTL_TRANSITION);
-
-	offset = rtw89_mfw_get_size(rtwdev);
-	offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
-	if (offset == 0)
-		return -EINVAL;
 
 	while (offset + sizeof(*hdr) < firmware->size) {
 		hdr = (const struct rtw89_fw_element_hdr *)(firmware->data + offset);
@@ -1713,6 +1700,8 @@ int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
 
 		elem_id = le32_to_cpu(hdr->id);
 		if (elem_id >= ARRAY_SIZE(__fw_element_handlers))
+			goto next;
+		if (skipped_elements & BIT(elem_id))
 			goto next;
 
 		handler = &__fw_element_handlers[elem_id];
@@ -1729,11 +1718,104 @@ int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
 			rtw89_info(rtwdev, "Firmware element %s version: %4ph\n",
 				   handler->name, hdr->ver);
 
-		unrecognized_elements &= ~BIT(elem_id);
+		*unrecognized_elements &= ~BIT(elem_id);
 next:
 		offset += sizeof(*hdr) + elm_size;
 		offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
 	}
+
+	return 0;
+}
+
+static int rtw89_board_elm_seek(const struct firmware *board_elm,
+				enum rtw89_board_id board_id,
+				struct firmware *pseudo_fw)
+{
+	const struct rtw89_board_elm_hdr *hdr;
+	const struct rtw89_board_elm_ent *ent;
+	u32 ofst;
+	u32 size;
+	u16 num;
+
+	if (board_elm->size < sizeof(*hdr))
+		return -EINVAL;
+
+	hdr = (const struct rtw89_board_elm_hdr *)board_elm->data;
+	if (hdr->sig != RTW89_BOARD_ELM_SIG)
+		return -EINVAL;
+
+	BUILD_BUG_ON(U16_MAX < NUM_OF_RTW89_BOARD_IDS);
+
+	num = le16_to_cpu(hdr->num);
+	if (unlikely(board_elm->size < struct_size(hdr, ents, num)))
+		return -EFAULT;
+	if (num <= board_id)
+		return -ENOENT;
+
+	ent = &hdr->ents[board_id];
+
+	ofst = le32_to_cpu(ent->ofst);
+	size = le32_to_cpu(ent->size);
+
+	if (unlikely(board_elm->size < ofst + size))
+		return -EFAULT;
+
+	memset(pseudo_fw, 0, sizeof(*pseudo_fw));
+
+	pseudo_fw->data = (const void *)board_elm->data + ofst;
+	pseudo_fw->size = size;
+
+	return 0;
+}
+
+int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
+{
+	const struct rtw89_board_variant *board = rtwdev->board;
+	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
+	const struct firmware *firmware = fw_req->firmware;
+	const struct rtw89_chip_info *chip = rtwdev->chip;
+	u32 unrecognized_elements = chip->needed_fw_elms;
+	u32 skipped_elements = 0;
+	bool transition;
+	u32 offset;
+	int ret;
+
+	BUILD_BUG_ON(sizeof(chip->needed_fw_elms) * 8 < RTW89_FW_ELEMENT_ID_NUM);
+	BUILD_BUG_ON(!__same_type(unrecognized_elements, chip->needed_fw_elms));
+	BUILD_BUG_ON(!__same_type(skipped_elements, chip->needed_fw_elms));
+
+	transition = !!((chip->needed_fw_elms & BIT(__RTW89_FW_ELEMENT_ID_INTL_TRANSITION)));
+	unrecognized_elements &= ~BIT(__RTW89_FW_ELEMENT_ID_INTL_TRANSITION);
+
+	if (fw_req->board_elm) {
+		struct firmware pseudo_fw;
+
+		ret = rtw89_board_elm_seek(fw_req->board_elm, board->id, &pseudo_fw);
+		if (ret)
+			goto mfw;
+
+		ret = __rtw89_fw_recognize_elements(rtwdev, &pseudo_fw, 0, 0,
+						    &unrecognized_elements);
+		if (ret)
+			goto mfw;
+
+		skipped_elements = chip->needed_fw_elms & ~unrecognized_elements;
+
+		rtw89_debug(rtwdev, RTW89_DBG_FW, "apply elements 0x08%x from %s\n",
+			    skipped_elements, RTW89_FWNAME_BOARD_ELM);
+	}
+
+mfw:
+	offset = rtw89_mfw_get_size(rtwdev);
+	offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
+	if (offset == 0)
+		return -EINVAL;
+
+	ret = __rtw89_fw_recognize_elements(rtwdev, firmware, offset,
+					    skipped_elements,
+					    &unrecognized_elements);
+	if (ret)
+		return ret;
 
 	if (unrecognized_elements) {
 		if (transition) {
@@ -2191,6 +2273,7 @@ static int rtw89_load_firmware_req(struct rtw89_dev *rtwdev,
 				   struct rtw89_fw_req_info *req,
 				   const char *fw_name, bool nowarn)
 {
+	const struct rtw89_board_variant *board = rtwdev->board;
 	int ret = 0;
 
 	if (req->firmware) {
@@ -2205,6 +2288,9 @@ static int rtw89_load_firmware_req(struct rtw89_dev *rtwdev,
 		ret = request_firmware(&req->firmware, fw_name, rtwdev->dev);
 
 out:
+	if (board && board->id)
+		firmware_request_nowarn(&req->board_elm, RTW89_FWNAME_BOARD_ELM, rtwdev->dev);
+
 	req->free_after_probe = req->firmware && req->firmware->size > 0x200000;
 	complete_all(&req->completion);
 
@@ -2262,6 +2348,7 @@ void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 	struct rtw89_fw_info *fw = &rtwdev->fw;
 
 	release_firmware(fw->req.firmware);
+	release_firmware(fw->req.board_elm);
 
 	/*
 	 * Directly call this to free firmware early in normal flow. Assign
@@ -2269,6 +2356,7 @@ void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 	 * try to release the same one again in error handling paths.
 	 */
 	fw->req.firmware = NULL;
+	fw->req.board_elm = NULL;
 }
 
 void rtw89_unload_firmware(struct rtw89_dev *rtwdev)

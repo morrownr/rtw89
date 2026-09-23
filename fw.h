@@ -4394,6 +4394,7 @@ struct rtw89_h2c_ofld {
 #define RTW89_H2C_OFLD_W0_RX_TP GENMASK(27, 18)
 
 #define RTW89_MFW_SIG	0xFF
+#define RTW89_BOARD_ELM_SIG 0xFE
 
 struct rtw89_mfw_info {
 	u8 cv;
@@ -4417,6 +4418,19 @@ struct rtw89_mfw_hdr {
 	} ver;
 	u8 rsvd1[8];
 	struct rtw89_mfw_info info[];
+} __packed;
+
+struct rtw89_board_elm_ent {
+	u8 rsvd[8];
+	__le32 ofst; /* offset from beginning of rtw89_board_elm_hdr */
+	__le32 size;
+} __packed;
+
+struct rtw89_board_elm_hdr {
+	u8 sig; /* RTW89_BOARD_ELM_SIG */
+	u8 rsvd[13];
+	__le16 num;
+	struct rtw89_board_elm_ent ents[] __counted_by_le(num);
 } __packed;
 
 struct rtw89_fw_logsuit_hdr {
