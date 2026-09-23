@@ -8307,36 +8307,44 @@ struct rtw89_tx_skb_data *RTW89_TX_SKB_CB(struct sk_buff *skb)
 	return (struct rtw89_tx_skb_data *)info->driver_data;
 }
 
+static inline int rtw89_raw_io_pack(struct rtw89_dev *rtwdev)
+{
+	return 0;
+}
+
+static inline int rtw89_raw_io_unpack(struct rtw89_dev *rtwdev)
+{
+	return 0;
+}
+
+static inline void rtw89_raw_io_udelay(struct rtw89_dev *rtwdev, u32 us)
+{
+	udelay(us);
+}
+
+static inline void rtw89_raw_io_mdelay(struct rtw89_dev *rtwdev, u32 ms)
+{
+	mdelay(ms);
+}
+
 static inline int rtw89_io_pack(struct rtw89_dev *rtwdev)
 {
-	if (rtwdev->io->pack)
-		return rtwdev->io->pack(rtwdev);
-
-	return 0;
+	return rtwdev->io->pack(rtwdev);
 }
 
 static inline int rtw89_io_unpack(struct rtw89_dev *rtwdev)
 {
-	if (rtwdev->io->unpack)
-		return rtwdev->io->unpack(rtwdev);
-
-	return 0;
+	return rtwdev->io->unpack(rtwdev);
 }
 
 static inline void rtw89_io_udelay(struct rtw89_dev *rtwdev, u32 us)
 {
-	if (rtwdev->io->do_udelay)
-		rtwdev->io->do_udelay(rtwdev, us);
-	else
-		udelay(us);
+	rtwdev->io->do_udelay(rtwdev, us);
 }
 
 static inline void rtw89_io_mdelay(struct rtw89_dev *rtwdev, u32 ms)
 {
-	if (rtwdev->io->do_mdelay)
-		rtwdev->io->do_mdelay(rtwdev, ms);
-	else
-		mdelay(ms);
+	rtwdev->io->do_mdelay(rtwdev, ms);
 }
 
 static inline u8 rtw89_read8(struct rtw89_dev *rtwdev, u32 addr)

@@ -13155,8 +13155,10 @@ static int rtw89_fw_cmd_ofld_enqueue(struct rtw89_dev *rtwdev,
 }
 
 static const struct rtw89_io_ops rtw89_raw_io = {
-	.pack = NULL,
-	.unpack = NULL,
+	.pack = rtw89_raw_io_pack,
+	.unpack = rtw89_raw_io_unpack,
+	.do_udelay = rtw89_raw_io_udelay,
+	.do_mdelay = rtw89_raw_io_mdelay,
 	.write8 = rtw89_raw_write8,
 	.write16 = rtw89_raw_write16,
 	.write32 = rtw89_raw_write32,
@@ -13335,7 +13337,7 @@ static void rtw89_fw_cmd_ofld_udelay(struct rtw89_dev *rtwdev, u32 us)
 
 	ret = rtw89_fw_cmd_ofld_enqueue(rtwdev, &cmd);
 	if (ret)
-		udelay(us);
+		rtw89_raw_io.do_udelay(rtwdev, us);
 }
 
 static void rtw89_fw_cmd_ofld_mdelay(struct rtw89_dev *rtwdev, u32 ms)
@@ -13349,7 +13351,7 @@ static void rtw89_fw_cmd_ofld_mdelay(struct rtw89_dev *rtwdev, u32 ms)
 
 	ret = rtw89_fw_cmd_ofld_enqueue(rtwdev, &cmd);
 	if (ret)
-		mdelay(ms);
+		rtw89_raw_io.do_mdelay(rtwdev, ms);
 }
 
 static const struct rtw89_io_ops rtw89_fw_cmd_ofld_io = {
