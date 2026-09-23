@@ -3281,8 +3281,12 @@ struct rtw89_h2c_cmd_ofld {
 #define RTW89_H2C_CMD_OFLD_W1_BASE_OFFSET GENMASK(31, 16)
 #define RTW89_H2C_CMD_OFLD_W2_VALUE GENMASK(31, 0)
 #define RTW89_H2C_CMD_OFLD_W3_MASK GENMASK(31, 0)
-#define RTW89_W8_MASK_OF_ALIGNED_ADDR(offset) (0xff << (((offset) & 0x3) << 3))
-#define RTW89_W16_MASK_OF_ALIGNED_ADDR(offset) (0xffff << (((offset) & 0x2) * 8))
+#define RTW89_W8_SHIFT_OF_ALIGNED_ADDR(offset) (((offset) & 0x3) << 3)
+#define RTW89_W16_SHIFT_OF_ALIGNED_ADDR(offset) (((offset) & 0x2) << 3)
+#define RTW89_W8_MASK_OF_ALIGNED_ADDR(offset) \
+	(0xff << RTW89_W8_SHIFT_OF_ALIGNED_ADDR(offset))
+#define RTW89_W16_MASK_OF_ALIGNED_ADDR(offset) \
+	(0xffff << RTW89_W16_SHIFT_OF_ALIGNED_ADDR(offset))
 
 #define RTW89_FW_CMD_OFLD_NR 125
 struct rtw89_fw_cmd_ofld_info {

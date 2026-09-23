@@ -7797,6 +7797,18 @@ struct rtw89_io_ops {
 	void (*phy_write32)(struct rtw89_dev *rtwdev, u32 addr, u32 data);
 	void (*write_rf)(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
 			 u32 addr, u32 mask, u32 data);
+	void (*write8_set)(struct rtw89_dev *rtwdev, u32 addr, u8 bit);
+	void (*write16_set)(struct rtw89_dev *rtwdev, u32 addr, u16 bit);
+	void (*write32_set)(struct rtw89_dev *rtwdev, u32 addr, u32 bit);
+	void (*write8_clr)(struct rtw89_dev *rtwdev, u32 addr, u8 bit);
+	void (*write16_clr)(struct rtw89_dev *rtwdev, u32 addr, u16 bit);
+	void (*write32_clr)(struct rtw89_dev *rtwdev, u32 addr, u32 bit);
+	void (*write8_mask)(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			    u8 data);
+	void (*write16_mask)(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			     u16 data);
+	void (*write32_mask)(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			     u32 data);
 };
 
 struct rtw89_dev {
@@ -8393,57 +8405,93 @@ static inline void rtw89_write32(struct rtw89_dev *rtwdev, u32 addr, u32 data)
 }
 
 static inline void
-rtw89_write8_set(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
+rtw89_raw_write8_set(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
 {
 	u8 val;
 
 	val = rtw89_read8(rtwdev, addr);
-	rtw89_write8(rtwdev, addr, val | bit);
+	rtw89_raw_write8(rtwdev, addr, val | bit);
+}
+
+static inline void
+rtw89_raw_write16_set(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
+{
+	u16 val;
+
+	val = rtw89_read16(rtwdev, addr);
+	rtw89_raw_write16(rtwdev, addr, val | bit);
+}
+
+static inline void
+rtw89_raw_write32_set(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
+{
+	u32 val;
+
+	val = rtw89_read32(rtwdev, addr);
+	rtw89_raw_write32(rtwdev, addr, val | bit);
+}
+
+static inline void
+rtw89_write8_set(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
+{
+	rtwdev->io->write8_set(rtwdev, addr, bit);
 }
 
 static inline void
 rtw89_write16_set(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
 {
-	u16 val;
-
-	val = rtw89_read16(rtwdev, addr);
-	rtw89_write16(rtwdev, addr, val | bit);
+	rtwdev->io->write16_set(rtwdev, addr, bit);
 }
 
 static inline void
 rtw89_write32_set(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
 {
+	rtwdev->io->write32_set(rtwdev, addr, bit);
+}
+
+static inline void
+rtw89_raw_write8_clr(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
+{
+	u8 val;
+
+	val = rtw89_read8(rtwdev, addr);
+	rtw89_raw_write8(rtwdev, addr, val & ~bit);
+}
+
+static inline void
+rtw89_raw_write16_clr(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
+{
+	u16 val;
+
+	val = rtw89_read16(rtwdev, addr);
+	rtw89_raw_write16(rtwdev, addr, val & ~bit);
+}
+
+static inline void
+rtw89_raw_write32_clr(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
+{
 	u32 val;
 
 	val = rtw89_read32(rtwdev, addr);
-	rtw89_write32(rtwdev, addr, val | bit);
+	rtw89_raw_write32(rtwdev, addr, val & ~bit);
 }
 
 static inline void
 rtw89_write8_clr(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
 {
-	u8 val;
-
-	val = rtw89_read8(rtwdev, addr);
-	rtw89_write8(rtwdev, addr, val & ~bit);
+	rtwdev->io->write8_clr(rtwdev, addr, bit);
 }
 
 static inline void
 rtw89_write16_clr(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
 {
-	u16 val;
-
-	val = rtw89_read16(rtwdev, addr);
-	rtw89_write16(rtwdev, addr, val & ~bit);
+	rtwdev->io->write16_clr(rtwdev, addr, bit);
 }
 
 static inline void
 rtw89_write32_clr(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
 {
-	u32 val;
-
-	val = rtw89_read32(rtwdev, addr);
-	rtw89_write32(rtwdev, addr, val & ~bit);
+	rtwdev->io->write32_clr(rtwdev, addr, bit);
 }
 
 static inline u32
@@ -8486,45 +8534,65 @@ rtw89_read8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask)
 }
 
 static inline void
+rtw89_raw_write8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u8 data)
+{
+	u8 orig, set;
+
+	orig = rtw89_read8(rtwdev, addr);
+	set = (orig & ~mask) | (data & mask);
+	rtw89_raw_write8(rtwdev, addr, set);
+}
+
+static inline void
+rtw89_raw_write16_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u16 data)
+{
+	u16 orig, set;
+
+	orig = rtw89_read16(rtwdev, addr);
+	set = (orig & ~mask) | (data & mask);
+	rtw89_raw_write16(rtwdev, addr, set);
+}
+
+static inline void
+rtw89_raw_write32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u32 data)
+{
+	u32 orig, set;
+
+	orig = rtw89_read32(rtwdev, addr);
+	set = (orig & ~mask) | (data & mask);
+	rtw89_raw_write32(rtwdev, addr, set);
+}
+
+static inline void
 rtw89_write32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u32 data)
 {
 	u32 shift = __ffs(mask);
-	u32 orig;
-	u32 set;
 
 	WARN(addr & 0x3, "should be 4-byte aligned, addr = 0x%08x\n", addr);
 
-	orig = rtw89_read32(rtwdev, addr);
-	set = (orig & ~mask) | ((data << shift) & mask);
-	rtw89_write32(rtwdev, addr, set);
+	rtwdev->io->write32_mask(rtwdev, addr, mask, (data << shift) & mask);
 }
 
 static inline void
 rtw89_write16_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u16 data)
 {
 	u32 shift;
-	u16 orig, set;
 
 	mask &= 0xffff;
 	shift = __ffs(mask);
 
-	orig = rtw89_read16(rtwdev, addr);
-	set = (orig & ~mask) | ((data << shift) & mask);
-	rtw89_write16(rtwdev, addr, set);
+	rtwdev->io->write16_mask(rtwdev, addr, mask, (data << shift) & mask);
 }
 
 static inline void
 rtw89_write8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u8 data)
 {
 	u32 shift;
-	u8 orig, set;
 
 	mask &= 0xff;
 	shift = __ffs(mask);
 
-	orig = rtw89_read8(rtwdev, addr);
-	set = (orig & ~mask) | ((data << shift) & mask);
-	rtw89_write8(rtwdev, addr, set);
+	rtwdev->io->write8_mask(rtwdev, addr, mask, (data << shift) & mask);
 }
 
 static inline u32

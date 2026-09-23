@@ -2710,14 +2710,14 @@ static void rtw8852c_btc_init_cfg(struct rtw89_dev *rtwdev)
 		.direction = RTW89_MAC_AX_COEX_INNER,
 	};
 
+	rtw89_io_pack(rtwdev);
+
 	/* PTA init  */
 	rtw89_mac_coex_init_v1(rtwdev, &coex_params);
 
 	/* set WL Tx response = Hi-Pri */
 	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_TX_RESP, true);
 	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_BEACON, true);
-
-	rtw89_io_pack(rtwdev);
 
 	/* set rf gnt debug off */
 	rtw89_write_rf(rtwdev, RF_PATH_A, RR_WLSEL, RFREG_MASK, 0x0);

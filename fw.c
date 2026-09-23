@@ -13162,6 +13162,15 @@ static const struct rtw89_io_ops rtw89_raw_io = {
 	.write8 = rtw89_raw_write8,
 	.write16 = rtw89_raw_write16,
 	.write32 = rtw89_raw_write32,
+	.write8_set = rtw89_raw_write8_set,
+	.write16_set = rtw89_raw_write16_set,
+	.write32_set = rtw89_raw_write32_set,
+	.write8_clr = rtw89_raw_write8_clr,
+	.write16_clr = rtw89_raw_write16_clr,
+	.write32_clr = rtw89_raw_write32_clr,
+	.write8_mask = rtw89_raw_write8_mask,
+	.write16_mask = rtw89_raw_write16_mask,
+	.write32_mask = rtw89_raw_write32_mask,
 	.phy_write8 = rtw89_raw_phy_write8,
 	.phy_write16 = rtw89_raw_phy_write16,
 	.phy_write32 = rtw89_raw_phy_write32,
@@ -13270,6 +13279,100 @@ void rtw89_fw_cmd_ofld_write32(struct rtw89_dev *rtwdev, u32 addr, u32 data)
 		rtw89_raw_io.write32(rtwdev, addr, data);
 }
 
+static void
+rtw89_fw_cmd_ofld_write8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			      u8 data)
+{
+	u32 dword_mask = RTW89_W8_MASK_OF_ALIGNED_ADDR(addr);
+	u32 shift = RTW89_W8_SHIFT_OF_ALIGNED_ADDR(addr);
+	struct rtw89_fw_cmd_ofld_arg cmd = {
+		.src = RTW89_FW_CMD_OFLD_SRC_MAC,
+		.type = RTW89_FW_CMD_OFLD_WRITE,
+		.offset = ALIGN_DOWN(addr, 4),
+		.mask = (mask << shift) & dword_mask,
+		.value = (data << shift) & dword_mask,
+	};
+	int ret;
+
+	ret = rtw89_fw_cmd_ofld_enqueue(rtwdev, &cmd);
+	if (ret)
+		rtw89_raw_io.write8_mask(rtwdev, addr, mask, data);
+}
+
+static void
+rtw89_fw_cmd_ofld_write16_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			       u16 data)
+{
+	u32 dword_mask = RTW89_W16_MASK_OF_ALIGNED_ADDR(addr);
+	u32 shift = RTW89_W16_SHIFT_OF_ALIGNED_ADDR(addr);
+	struct rtw89_fw_cmd_ofld_arg cmd = {
+		.src = RTW89_FW_CMD_OFLD_SRC_MAC,
+		.type = RTW89_FW_CMD_OFLD_WRITE,
+		.offset = ALIGN_DOWN(addr, 4),
+		.mask = (mask << shift) & dword_mask,
+		.value = (data << shift) & dword_mask,
+	};
+	int ret;
+
+	ret = rtw89_fw_cmd_ofld_enqueue(rtwdev, &cmd);
+	if (ret)
+		rtw89_raw_io.write16_mask(rtwdev, addr, mask, data);
+}
+
+static void
+rtw89_fw_cmd_ofld_write32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
+			       u32 data)
+{
+	struct rtw89_fw_cmd_ofld_arg cmd = {
+		.src = RTW89_FW_CMD_OFLD_SRC_MAC,
+		.type = RTW89_FW_CMD_OFLD_WRITE,
+		.offset = addr,
+		.mask = mask,
+		.value = data,
+	};
+	int ret;
+
+	ret = rtw89_fw_cmd_ofld_enqueue(rtwdev, &cmd);
+	if (ret)
+		rtw89_raw_io.write32_mask(rtwdev, addr, mask, data);
+}
+
+static void
+rtw89_fw_cmd_ofld_write8_set(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
+{
+	rtw89_fw_cmd_ofld_write8_mask(rtwdev, addr, bit, bit);
+}
+
+static void
+rtw89_fw_cmd_ofld_write16_set(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
+{
+	rtw89_fw_cmd_ofld_write16_mask(rtwdev, addr, bit, bit);
+}
+
+static void
+rtw89_fw_cmd_ofld_write32_set(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
+{
+	rtw89_fw_cmd_ofld_write32_mask(rtwdev, addr, bit, bit);
+}
+
+static void
+rtw89_fw_cmd_ofld_write8_clr(struct rtw89_dev *rtwdev, u32 addr, u8 bit)
+{
+	rtw89_fw_cmd_ofld_write8_mask(rtwdev, addr, bit, 0);
+}
+
+static void
+rtw89_fw_cmd_ofld_write16_clr(struct rtw89_dev *rtwdev, u32 addr, u16 bit)
+{
+	rtw89_fw_cmd_ofld_write16_mask(rtwdev, addr, bit, 0);
+}
+
+static void
+rtw89_fw_cmd_ofld_write32_clr(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
+{
+	rtw89_fw_cmd_ofld_write32_mask(rtwdev, addr, bit, 0);
+}
+
 static void rtw89_fw_cmd_ofld_write_rf_ddv(struct rtw89_dev *rtwdev,
 					   struct rtw89_fw_cmd_ofld_arg *cmd,
 					   enum rtw89_rf_path rf_path, u32 addr, u32 mask,
@@ -13366,6 +13469,15 @@ static const struct rtw89_io_ops rtw89_fw_cmd_ofld_io = {
 	.phy_write16 = rtw89_fw_cmd_ofld_phy_write16,
 	.phy_write32 = rtw89_fw_cmd_ofld_phy_write32,
 	.write_rf = rtw89_fw_cmd_ofld_write_rf,
+	.write8_set = rtw89_fw_cmd_ofld_write8_set,
+	.write16_set = rtw89_fw_cmd_ofld_write16_set,
+	.write32_set = rtw89_fw_cmd_ofld_write32_set,
+	.write8_clr = rtw89_fw_cmd_ofld_write8_clr,
+	.write16_clr = rtw89_fw_cmd_ofld_write16_clr,
+	.write32_clr = rtw89_fw_cmd_ofld_write32_clr,
+	.write8_mask = rtw89_fw_cmd_ofld_write8_mask,
+	.write16_mask = rtw89_fw_cmd_ofld_write16_mask,
+	.write32_mask = rtw89_fw_cmd_ofld_write32_mask,
 };
 
 const struct rtw89_io_ops *
