@@ -6081,6 +6081,7 @@ struct rtw89_chip_variant {
 
 enum rtw89_board_id {
 	RTW89_BOARD_ID(0000, 0000) = 0, /* reserve 0 for non-variant */
+	RTW89_BOARD_ID(28de, 2432) = 1,
 
 	NUM_OF_RTW89_BOARD_IDS,
 };

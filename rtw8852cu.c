@@ -89,6 +89,7 @@ static const struct rtw89_led_desc rtw8852cu_valve_led_desc = {
 };
 
 static const struct rtw89_board_variant rtw89_8852cu_valve_board = {
+	.id = RTW89_BOARD_ID(28de, 2432),
 	.led_desc = &rtw8852cu_valve_led_desc,
 };
 
