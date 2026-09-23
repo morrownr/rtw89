@@ -6239,6 +6239,7 @@ enum rtw89_fw_feature {
 struct rtw89_fw_suit {
 	enum rtw89_fw_type type;
 	const u8 *data;
+	struct list_head list;
 	u32 size;
 	u8 major_ver;
 	u8 minor_ver;
@@ -6329,6 +6330,8 @@ struct rtw89_fw_info {
 	struct rtw89_fw_log log;
 	struct rtw89_fw_elm_info elm_info;
 	struct rtw89_fw_secure sec;
+
+	struct list_head dup_data_list;
 
 	DECLARE_BITMAP(feature_map, NUM_OF_RTW89_FW_FEATURES);
 };

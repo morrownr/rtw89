@@ -3,6 +3,7 @@
  */
 
 #include <linux/if_arp.h>
+#include <linux/vmalloc.h>
 #include "cam.h"
 #include "chan.h"
 #include "coex.h"
@@ -138,15 +139,23 @@ int rtw89_fw_check_rdy(struct rtw89_dev *rtwdev, enum rtw89_fwdl_check_type type
 }
 
 static const void *__rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
-						 const void *src, size_t len)
+						 const void *src, size_t len,
+						 bool is_fw_suit)
 {
 	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
-	const void *dup;
+	void *dup;
 
 	if (!fw_req->free_after_probe)
 		return src;
 
-	dup = devm_kmemdup(rtwdev->dev, src, len, GFP_KERNEL);
+	if (is_fw_suit) {
+		dup = vmalloc(len);
+		if (dup)
+			memcpy(dup, src, len);
+	} else {
+		dup = devm_kmemdup(rtwdev->dev, src, len, GFP_KERNEL);
+	}
+
 	if (!dup) {
 		/* If failed to memdup, fallback to point to firmware->data. */
 		fw_req->free_after_probe = false;
@@ -161,7 +170,22 @@ static const void *rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
 {
 	size_t len = sizeof(*elm) + le32_to_cpu(elm->size);
 
-	return __rtw89_fw_elem_dup_if_needed(rtwdev, elm, len);
+	return __rtw89_fw_elem_dup_if_needed(rtwdev, elm, len, false);
+}
+
+static const void *rtw89_fw_suit_data_dup_if_needed(struct rtw89_dev *rtwdev,
+						    struct rtw89_fw_suit *fw_suit,
+						    const void *src)
+{
+	struct rtw89_fw_info *fw = &rtwdev->fw;
+	const void *dup;
+
+	dup = __rtw89_fw_elem_dup_if_needed(rtwdev, src, fw_suit->size, true);
+
+	if (dup != src)
+		list_add_tail(&fw_suit->list, &fw->dup_data_list);
+
+	return dup;
 }
 
 static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
@@ -680,8 +704,7 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
 		if (type != RTW89_FW_NORMAL)
 			return -EINVAL;
 		fw_suit->size = mfw_len;
-		fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw,
-							      fw_suit->size);
+		fw_suit->data = rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, mfw);
 		return 0;
 	}
 
@@ -725,8 +748,7 @@ found:
 	}
 
 	fw_suit->size = mfw_info_size;
-	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw_info_ptr,
-						      fw_suit->size);
+	fw_suit->data = rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, mfw_info_ptr);
 
 	return 0;
 }
@@ -866,8 +888,8 @@ int __rtw89_fw_recognize_from_elm(struct rtw89_dev *rtwdev,
 		return 1; /* ignore this element (a firmware is taken already) */
 
 	fw_suit->size = le32_to_cpu(elm->size);
-	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, elm->u.bbmcu.contents,
-						      fw_suit->size);
+	fw_suit->data =
+		rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, elm->u.bbmcu.contents);
 
 	return rtw89_fw_update_ver(rtwdev, type, fw_suit);
 }
@@ -2226,6 +2248,15 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
 	kfree(elm_info->rfk_log_fmt);
 }
 
+static void rtw89_unload_firmware_dup_data(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_fw_info *fw = &rtwdev->fw;
+	struct rtw89_fw_suit *fw_suit;
+
+	list_for_each_entry(fw_suit, &fw->dup_data_list, list)
+		vfree(fw_suit->data);
+}
+
 void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_fw_info *fw = &rtwdev->fw;
@@ -2249,6 +2280,7 @@ void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 
 	kfree(fw->log.fmts);
 	rtw89_unload_firmware_elements(rtwdev);
+	rtw89_unload_firmware_dup_data(rtwdev);
 }
 
 static u32 rtw89_fw_log_get_fmt_idx(struct rtw89_dev *rtwdev, u32 fmt_id)
