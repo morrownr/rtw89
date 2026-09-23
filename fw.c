@@ -137,6 +137,33 @@ int rtw89_fw_check_rdy(struct rtw89_dev *rtwdev, enum rtw89_fwdl_check_type type
 	return 0;
 }
 
+static const void *__rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
+						 const void *src, size_t len)
+{
+	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
+	const void *dup;
+
+	if (!fw_req->free_after_probe)
+		return src;
+
+	dup = devm_kmemdup(rtwdev->dev, src, len, GFP_KERNEL);
+	if (!dup) {
+		/* If failed to memdup, fallback to point to firmware->data. */
+		fw_req->free_after_probe = false;
+		return src;
+	}
+
+	return dup;
+}
+
+static const void *rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
+					       const struct rtw89_fw_element_hdr *elm)
+{
+	size_t len = sizeof(*elm) + le32_to_cpu(elm->size);
+
+	return __rtw89_fw_elem_dup_if_needed(rtwdev, elm, len);
+}
+
 static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
 				  struct rtw89_fw_bin_info *info)
 {
@@ -641,6 +668,8 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
 	const struct rtw89_mfw_hdr *mfw_hdr;
 	const u8 *mfw = firmware->data;
 	u32 mfw_len = firmware->size;
+	const u8 *mfw_info_ptr;
+	u32 mfw_info_size;
 	int ret;
 	int i;
 
@@ -650,8 +679,9 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
 		/* legacy firmware support normal type only */
 		if (type != RTW89_FW_NORMAL)
 			return -EINVAL;
-		fw_suit->data = mfw;
 		fw_suit->size = mfw_len;
+		fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw,
+							      fw_suit->size);
 		return 0;
 	}
 
@@ -686,13 +716,17 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
 	return -ENOENT;
 
 found:
-	fw_suit->data = mfw + le32_to_cpu(mfw_info->shift);
-	fw_suit->size = le32_to_cpu(mfw_info->size);
+	mfw_info_ptr = mfw + le32_to_cpu(mfw_info->shift);
+	mfw_info_size = le32_to_cpu(mfw_info->size);
 
-	if (fw_suit->data + fw_suit->size > mfw + mfw_len) {
+	if (mfw_info_ptr + mfw_info_size > mfw + mfw_len) {
 		rtw89_err(rtwdev, "fw_suit %d out of address\n", type);
 		return -EFAULT;
 	}
+
+	fw_suit->size = mfw_info_size;
+	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw_info_ptr,
+						      fw_suit->size);
 
 	return 0;
 }
@@ -831,8 +865,9 @@ int __rtw89_fw_recognize_from_elm(struct rtw89_dev *rtwdev,
 	if (fw_suit->data)
 		return 1; /* ignore this element (a firmware is taken already) */
 
-	fw_suit->data = elm->u.bbmcu.contents;
 	fw_suit->size = le32_to_cpu(elm->size);
+	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, elm->u.bbmcu.contents,
+						      fw_suit->size);
 
 	return rtw89_fw_update_ver(rtwdev, type, fw_suit);
 }
@@ -1264,7 +1299,12 @@ setup:
 	conf->rfe_type = txpwr_elm->rfe_type;
 	conf->ent_sz = txpwr_elm->ent_sz;
 	conf->num_ents = le32_to_cpu(txpwr_elm->num_ents);
+	/*
+	 * The conf->data is used by rtw89_core_setup_rfe_parms() to do format
+	 * conversion before releasing firmware. No need to duplicate.
+	 */
 	conf->data = txpwr_elm->content;
+
 	return 0;
 }
 
@@ -1275,6 +1315,7 @@ int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
 {
 	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
 	const struct rtw89_chip_info *chip = rtwdev->chip;
+	const struct rtw89_fw_element_hdr *elm_dup;
 	struct rtw89_hal *hal = &rtwdev->hal;
 	u16 aid = le16_to_cpu(elm->aid);
 	u32 needed_bitmap = 0;
@@ -1309,6 +1350,8 @@ int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
 	if (!elm_info->txpwr_trk)
 		return -ENOMEM;
 
+	elm_dup = rtw89_fw_elem_dup_if_needed(rtwdev, elm);
+
 	for (type = 0; bitmap; type++, bitmap >>= 1) {
 		if (!(bitmap & BIT(0)))
 			continue;
@@ -1325,10 +1368,10 @@ int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
 		else
 			break;
 
-		elm_info->txpwr_trk->delta[type] = &elm->u.txpwr_trk.contents[offset];
+		elm_info->txpwr_trk->delta[type] = &elm_dup->u.txpwr_trk.contents[offset];
 
 		offset += subband;
-		if (offset * DELTA_SWINGIDX_SIZE > le32_to_cpu(elm->size))
+		if (offset * DELTA_SWINGIDX_SIZE > le32_to_cpu(elm_dup->size))
 			goto err;
 	}
 
@@ -1367,7 +1410,7 @@ allocated:
 	if (rfk_id >= RTW89_PHY_C2H_RFK_LOG_FUNC_NUM)
 		return 1;
 
-	elm_info->rfk_log_fmt->elm[rfk_id] = elm;
+	elm_info->rfk_log_fmt->elm[rfk_id] = rtw89_fw_elem_dup_if_needed(rtwdev, elm);
 
 	return 0;
 }
@@ -1474,7 +1517,7 @@ int rtw89_build_afe_pwr_seq_from_elm(struct rtw89_dev *rtwdev,
 {
 	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
 
-	elm_info->afe = elm;
+	elm_info->afe = rtw89_fw_elem_dup_if_needed(rtwdev, elm);
 
 	return 0;
 }
@@ -1486,7 +1529,7 @@ int rtw89_recognize_diag_mac_from_elm(struct rtw89_dev *rtwdev,
 {
 	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
 
-	elm_info->diag_mac = elm;
+	elm_info->diag_mac = rtw89_fw_elem_dup_if_needed(rtwdev, elm);
 
 	return 0;
 }
@@ -1512,7 +1555,7 @@ int rtw89_build_tx_comp_from_elm(struct rtw89_dev *rtwdev,
 	else if (elm_info->tx_comp)
 		return 1; /* ignore if an element is existing */
 
-	elm_info->tx_comp = elm;
+	elm_info->tx_comp = rtw89_fw_elem_dup_if_needed(rtwdev, elm);
 
 	return 0;
 }
@@ -2126,13 +2169,12 @@ static int rtw89_load_firmware_req(struct rtw89_dev *rtwdev,
 				   struct rtw89_fw_req_info *req,
 				   const char *fw_name, bool nowarn)
 {
-	int ret;
+	int ret = 0;
 
 	if (req->firmware) {
 		rtw89_debug(rtwdev, RTW89_DBG_FW,
 			    "full firmware has been early requested\n");
-		complete_all(&req->completion);
-		return 0;
+		goto out;
 	}
 
 	if (nowarn)
@@ -2140,6 +2182,8 @@ static int rtw89_load_firmware_req(struct rtw89_dev *rtwdev,
 	else
 		ret = request_firmware(&req->firmware, fw_name, rtwdev->dev);
 
+out:
+	req->free_after_probe = req->firmware && req->firmware->size > 0x200000;
 	complete_all(&req->completion);
 
 	return ret;
