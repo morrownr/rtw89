@@ -2130,7 +2130,10 @@ static void rtw89_phy_init_rf_nctl(struct rtw89_dev *rtwdev)
 	rtw89_phy_preinit_rf_nctl(rtwdev);
 
 	nctl_table = elm_info->rf_nctl ? elm_info->rf_nctl : chip->nctl_table;
+
+	rtw89_io_pack(rtwdev);
 	rtw89_phy_init_reg(rtwdev, nctl_table, false, rtw89_phy_config_bb_reg, NULL);
+	rtw89_io_unpack(rtwdev);
 
 	if (chip->nctl_post_table)
 		rtw89_rfk_parser(rtwdev, chip->nctl_post_table);
