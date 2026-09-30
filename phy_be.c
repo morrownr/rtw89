@@ -434,7 +434,7 @@ static void rtw89_phy_config_bb_gain_be(struct rtw89_dev *rtwdev,
 		rtw89_phy_cfg_bb_gain_op1db_be(rtwdev, arg, reg->data);
 		break;
 	case 15:
-		rtw89_phy_write32_idx(rtwdev, reg->addr & 0xFFFFF, MASKHWORD,
+		rtw89_phy_write32_idx(rtwdev, reg->addr & 0xFFFFF, MASKDWORD,
 				      reg->data, RTW89_PHY_0);
 		break;
 	case 4:
