@@ -321,10 +321,10 @@ static u32 rtw89_pci_get_rx_skb_idx(struct rtw89_dev *rtwdev,
 static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
 				       struct rtw89_pci_rx_ring *rx_ring)
 {
-	struct rtw89_rx_desc_info *desc_info = &rx_ring->diliver_desc;
+	struct rtw89_rx_desc_info *desc_info = &rx_ring->deliver_desc;
 	struct rtw89_pci_dma_ring *bd_ring = &rx_ring->bd_ring;
 	const struct rtw89_pci_info *info = rtwdev->pci_info;
-	struct sk_buff *new = rx_ring->diliver_skb;
+	struct sk_buff *new = rx_ring->deliver_skb;
 	struct rtw89_pci_rx_info *rx_info;
 	struct sk_buff *skb;
 	u32 rxinfo_size = sizeof(struct rtw89_pci_rxbd_info);
@@ -370,7 +370,7 @@ static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
 		if (!new)
 			goto err_sync_device;
 
-		rx_ring->diliver_skb = new;
+		rx_ring->deliver_skb = new;
 
 		/* first segment has RX desc */
 		offset = desc_info->offset + desc_info->rxd_len;
@@ -392,7 +392,7 @@ static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
 	}
 	if (ls) {
 		rtw89_core_rx(rtwdev, desc_info, new);
-		rx_ring->diliver_skb = NULL;
+		rx_ring->deliver_skb = NULL;
 		desc_info->ready = false;
 	}
 
@@ -404,7 +404,7 @@ err_sync_device:
 err_free_resource:
 	if (new)
 		dev_kfree_skb_any(new);
-	rx_ring->diliver_skb = NULL;
+	rx_ring->deliver_skb = NULL;
 	desc_info->ready = false;
 
 	return cnt;
@@ -1840,8 +1840,8 @@ static void rtw89_pci_reset_trx_rings(struct rtw89_dev *rtwdev)
 		else
 			bd_ring->wp = 0;
 		bd_ring->rp = 0;
-		rx_ring->diliver_skb = NULL;
-		rx_ring->diliver_desc.ready = false;
+		rx_ring->deliver_skb = NULL;
+		rx_ring->deliver_desc.ready = false;
 		rx_ring->target_rx_tag = 0;
 
 		if (info->group_bd_addr) {
@@ -3719,8 +3719,8 @@ static int rtw89_pci_alloc_rx_ring(struct rtw89_dev *rtwdev,
 		rx_ring->bd_ring.wp = 0;
 	rx_ring->bd_ring.rp = 0;
 	rx_ring->buf_sz = buf_sz;
-	rx_ring->diliver_skb = NULL;
-	rx_ring->diliver_desc.ready = false;
+	rx_ring->deliver_skb = NULL;
+	rx_ring->deliver_desc.ready = false;
 	rx_ring->target_rx_tag = 0;
 
 	for (i = 0; i < len; i++) {
