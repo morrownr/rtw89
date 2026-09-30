@@ -766,10 +766,12 @@ static void rtw89_wow_enter_ps(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_vif_link *rtwvif_link = rtwdev->wow.rtwvif_link;
 
-	if (rtw89_wow_mgd_linked(rtwdev))
+	if (rtw89_wow_mgd_linked(rtwdev)) {
 		rtw89_enter_lps(rtwdev, rtwvif_link->rtwvif, false);
-	else if (rtw89_wow_no_link(rtwdev))
+	} else if (rtw89_wow_no_link(rtwdev)) {
 		rtw89_fw_h2c_fwips(rtwdev, rtwvif_link, true);
+		rtw89_fw_h2c_lps_ch_ml_info_routing(rtwdev, rtwvif_link->rtwvif);
+	}
 }
 
 static void rtw89_wow_leave_ps(struct rtw89_dev *rtwdev, bool enable_wow)

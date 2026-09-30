@@ -5875,6 +5875,17 @@ int rtw89_chip_h2c_wow_cam_update(struct rtw89_dev *rtwdev,
 	return chip->ops->h2c_wow_cam_update(rtwdev, cam_info);
 }
 
+static inline void rtw89_fw_h2c_lps_ch_ml_info_routing(struct rtw89_dev *rtwdev,
+						       struct rtw89_vif *rtwvif)
+{
+	if (RTW89_CHK_FW_FEATURE(LPS_CH_INFO, &rtwdev->fw))
+		rtw89_fw_h2c_lps_ch_info(rtwdev, rtwvif);
+	else if (RTW89_CHK_FW_FEATURE(LPS_ML_INFO_V1, &rtwdev->fw))
+		rtw89_fw_h2c_lps_ml_cmn_info_v1(rtwdev, rtwvif);
+	else
+		rtw89_fw_h2c_lps_ml_cmn_info(rtwdev, rtwvif);
+}
+
 /* Must consider compatibility; don't insert new in the mid.
  * Fill each field's default value in rtw89_regd_entcpy().
  */
