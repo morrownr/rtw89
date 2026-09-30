@@ -1945,11 +1945,11 @@ void rtw89_core_fill_txdesc_fwcmd_v2(struct rtw89_dev *rtwdev,
 EXPORT_SYMBOL(rtw89_core_fill_txdesc_fwcmd_v2);
 
 static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
-					  struct sk_buff *skb,
+					  struct sk_buff *skb_ppdu,
 					  struct rtw89_rx_phy_ppdu *phy_ppdu)
 {
 	const struct rtw89_chip_info *chip = rtwdev->chip;
-	const struct rtw89_rxinfo *rxinfo = (const struct rtw89_rxinfo *)skb->data;
+	const struct rtw89_rxinfo *rxinfo = (const struct rtw89_rxinfo *)skb_ppdu->data;
 	const struct rtw89_rxinfo_user *user;
 	enum rtw89_chip_gen chip_gen = rtwdev->chip->chip_gen;
 	int rx_cnt_size = RTW89_PPDU_MAC_RX_CNT_SIZE;
@@ -2003,7 +2003,7 @@ static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
 		break;
 	}
 
-	phy_sts = skb->data + RTW89_PPDU_MAC_INFO_SIZE;
+	phy_sts = skb_ppdu->data + RTW89_PPDU_MAC_INFO_SIZE;
 	phy_sts += usr_num * RTW89_PPDU_MAC_INFO_USR_SIZE;
 	/* 8-byte alignment */
 	if (usr_num & BIT(0))
@@ -2012,11 +2012,11 @@ static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
 		phy_sts += rx_cnt_size;
 	phy_sts += plcp_size;
 
-	if (phy_sts > skb->data + skb->len)
+	if (phy_sts > skb_ppdu->data + skb_ppdu->len)
 		return -EINVAL;
 
 	phy_ppdu->buf = phy_sts;
-	phy_ppdu->len = skb->data + skb->len - phy_sts;
+	phy_ppdu->len = skb_ppdu->data + skb_ppdu->len - phy_sts;
 
 	return 0;
 }
@@ -2443,16 +2443,16 @@ bool rtw89_check_rx_statu_gi_match(struct ieee80211_rx_status *status, u8 gi_ltf
 }
 
 static bool rtw89_core_rx_ppdu_match(struct rtw89_dev *rtwdev,
-				     struct rtw89_rx_desc_info *desc_info,
+				     struct rtw89_rx_desc_info *desc_ppdu,
 				     struct ieee80211_rx_status *status)
 {
-	u8 band = desc_info->bb_sel ? RTW89_PHY_1 : RTW89_PHY_0;
+	u8 band = desc_ppdu->bb_sel ? RTW89_PHY_1 : RTW89_PHY_0;
 	u8 data_rate_mode, bw, rate_idx = MASKBYTE0, gi_ltf;
 	bool eht = false;
 	u16 data_rate;
 	bool ret;
 
-	data_rate = desc_info->data_rate;
+	data_rate = desc_ppdu->data_rate;
 	data_rate_mode = rtw89_get_data_rate_mode(rtwdev, data_rate);
 	if (data_rate_mode == DATA_RATE_MODE_NON_HT) {
 		rate_idx = rtw89_get_data_not_ht_idx(rtwdev, data_rate);
@@ -2468,9 +2468,9 @@ static bool rtw89_core_rx_ppdu_match(struct rtw89_dev *rtwdev,
 	}
 
 	eht = data_rate_mode == DATA_RATE_MODE_EHT;
-	bw = rtw89_hw_to_rate_info_bw(desc_info->bw);
-	gi_ltf = rtw89_rxdesc_to_nl_he_eht_gi(rtwdev, desc_info->gi_ltf, false, eht);
-	ret = rtwdev->ppdu_sts.curr_rx_ppdu_cnt[band] == desc_info->ppdu_cnt &&
+	bw = rtw89_hw_to_rate_info_bw(desc_ppdu->bw);
+	gi_ltf = rtw89_rxdesc_to_nl_he_eht_gi(rtwdev, desc_ppdu->gi_ltf, false, eht);
+	ret = rtwdev->ppdu_sts.curr_rx_ppdu_cnt[band] == desc_ppdu->ppdu_cnt &&
 	      status->rate_idx == rate_idx &&
 	      rtw89_check_rx_statu_gi_match(status, gi_ltf, eht) &&
 	      status->bw == bw;
@@ -4042,7 +4042,7 @@ static bool rtw89_core_skb_pn_valid(struct rtw89_dev *rtwdev,
 static void rtw89_core_rx_to_mac80211(struct rtw89_dev *rtwdev,
 				      struct rtw89_rx_phy_ppdu *phy_ppdu,
 				      struct rtw89_rx_desc_info *desc_info,
-				      struct sk_buff *skb_ppdu,
+				      struct sk_buff *skb,
 				      struct ieee80211_rx_status *rx_status)
 {
 	struct napi_struct *napi = &rtwdev->napi;
@@ -4056,57 +4056,57 @@ static void rtw89_core_rx_to_mac80211(struct rtw89_dev *rtwdev,
 		napi = NULL;
 
 	rtw89_core_hw_to_sband_rate(rx_status);
-	rtw89_core_rx_stats(rtwdev, phy_ppdu, desc_info, skb_ppdu);
+	rtw89_core_rx_stats(rtwdev, phy_ppdu, desc_info, skb);
 	rtw89_core_update_rx_status_by_ppdu(rtwdev, rx_status, phy_ppdu);
-	rtw89_core_update_radiotap(rtwdev, desc_info, skb_ppdu, rx_status, phy_ppdu);
+	rtw89_core_update_radiotap(rtwdev, desc_info, skb, rx_status, phy_ppdu);
 	rtw89_core_validate_rx_signal(rx_status);
-	rtw89_core_update_rx_freq_from_ie(rtwdev, skb_ppdu, rx_status);
+	rtw89_core_update_rx_freq_from_ie(rtwdev, skb, rx_status);
 	rtw89_core_correct_mcc_chan(rtwdev, desc_info, rx_status, phy_ppdu);
 
 	/* In low power mode, it does RX in thread context. */
 	local_bh_disable();
-	ieee80211_rx_napi(rtwdev->hw, NULL, skb_ppdu, napi);
+	ieee80211_rx_napi(rtwdev->hw, NULL, skb, napi);
 	local_bh_enable();
 	rtwdev->napi_budget_countdown--;
 }
 
 static void rtw89_core_rx_pending_skb(struct rtw89_dev *rtwdev,
 				      struct rtw89_rx_phy_ppdu *phy_ppdu,
-				      struct rtw89_rx_desc_info *desc_info,
-				      struct sk_buff *skb)
+				      struct rtw89_rx_desc_info *desc_ppdu,
+				      struct sk_buff *skb_ppdu)
 {
-	u8 band = desc_info->bb_sel ? RTW89_PHY_1 : RTW89_PHY_0;
+	u8 band = desc_ppdu->bb_sel ? RTW89_PHY_1 : RTW89_PHY_0;
 	int curr = rtwdev->ppdu_sts.curr_rx_ppdu_cnt[band];
-	struct sk_buff *skb_ppdu = NULL, *tmp;
+	struct sk_buff *skb = NULL, *tmp;
 	struct ieee80211_rx_status *rx_status;
 
 	if (curr > RTW89_MAX_PPDU_CNT)
 		return;
 
-	skb_queue_walk_safe(&rtwdev->ppdu_sts.rx_queue[band], skb_ppdu, tmp) {
-		skb_unlink(skb_ppdu, &rtwdev->ppdu_sts.rx_queue[band]);
-		rx_status = IEEE80211_SKB_RXCB(skb_ppdu);
-		if (rtw89_core_rx_ppdu_match(rtwdev, desc_info, rx_status))
+	skb_queue_walk_safe(&rtwdev->ppdu_sts.rx_queue[band], skb, tmp) {
+		skb_unlink(skb, &rtwdev->ppdu_sts.rx_queue[band]);
+		rx_status = IEEE80211_SKB_RXCB(skb);
+		if (rtw89_core_rx_ppdu_match(rtwdev, desc_ppdu, rx_status))
 			rtw89_chip_query_ppdu(rtwdev, phy_ppdu, rx_status);
 		rtw89_correct_cck_chan(rtwdev, rx_status);
-		rtw89_core_rx_to_mac80211(rtwdev, phy_ppdu, desc_info, skb_ppdu, rx_status);
+		rtw89_core_rx_to_mac80211(rtwdev, phy_ppdu, desc_ppdu, skb, rx_status);
 	}
 }
 
 static void rtw89_core_rx_process_ppdu_sts(struct rtw89_dev *rtwdev,
-					   struct rtw89_rx_desc_info *desc_info,
-					   struct sk_buff *skb)
+					   struct rtw89_rx_desc_info *desc_ppdu,
+					   struct sk_buff *skb_ppdu)
 {
-	struct rtw89_rx_phy_ppdu phy_ppdu = {.buf = skb->data, .valid = false,
-					     .len = skb->len,
-					     .to_self = desc_info->addr1_match,
-					     .rate = desc_info->data_rate,
-					     .mac_id = desc_info->mac_id,
-					     .phy_idx = desc_info->bb_sel};
+	struct rtw89_rx_phy_ppdu phy_ppdu = {.buf = skb_ppdu->data, .valid = false,
+					     .len = skb_ppdu->len,
+					     .to_self = desc_ppdu->addr1_match,
+					     .rate = desc_ppdu->data_rate,
+					     .mac_id = desc_ppdu->mac_id,
+					     .phy_idx = desc_ppdu->bb_sel};
 	int ret;
 
-	if (desc_info->mac_info_valid) {
-		ret = rtw89_core_rx_process_mac_ppdu(rtwdev, skb, &phy_ppdu);
+	if (desc_ppdu->mac_info_valid) {
+		ret = rtw89_core_rx_process_mac_ppdu(rtwdev, skb_ppdu, &phy_ppdu);
 		if (ret)
 			goto out;
 	}
@@ -4118,8 +4118,8 @@ static void rtw89_core_rx_process_ppdu_sts(struct rtw89_dev *rtwdev,
 	rtw89_core_rx_process_phy_sts(rtwdev, &phy_ppdu);
 
 out:
-	rtw89_core_rx_pending_skb(rtwdev, &phy_ppdu, desc_info, skb);
-	dev_kfree_skb_any(skb);
+	rtw89_core_rx_pending_skb(rtwdev, &phy_ppdu, desc_ppdu, skb_ppdu);
+	dev_kfree_skb_any(skb_ppdu);
 }
 
 static void rtw89_core_rx_process_report(struct rtw89_dev *rtwdev,
@@ -4517,24 +4517,24 @@ static void rtw89_core_flush_ppdu_rx_queue(struct rtw89_dev *rtwdev,
 	struct rtw89_ppdu_sts_info *ppdu_sts = &rtwdev->ppdu_sts;
 	u8 band = desc_info->bb_sel ? RTW89_PHY_1 : RTW89_PHY_0;
 	struct ieee80211_rx_status *rx_status;
-	struct sk_buff *skb_ppdu, *tmp;
+	struct sk_buff *skb, *tmp;
 
-	skb_queue_walk_safe(&ppdu_sts->rx_queue[band], skb_ppdu, tmp) {
-		skb_unlink(skb_ppdu, &ppdu_sts->rx_queue[band]);
-		rx_status = IEEE80211_SKB_RXCB(skb_ppdu);
-		rtw89_core_rx_to_mac80211(rtwdev, NULL, desc_info, skb_ppdu, rx_status);
+	skb_queue_walk_safe(&ppdu_sts->rx_queue[band], skb, tmp) {
+		skb_unlink(skb, &ppdu_sts->rx_queue[band]);
+		rx_status = IEEE80211_SKB_RXCB(skb);
+		rtw89_core_rx_to_mac80211(rtwdev, NULL, desc_info, skb, rx_status);
 	}
 }
 
 static
 void rtw89_core_rx_pkt_hdl(struct rtw89_dev *rtwdev, const struct sk_buff *skb,
-			   const struct rtw89_rx_desc_info *desc)
+			   const struct rtw89_rx_desc_info *desc_info)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
 	struct rtw89_sta_link *rtwsta_link;
 	struct ieee80211_sta *sta;
 	struct rtw89_sta *rtwsta;
-	u8 macid = desc->mac_id;
+	u8 macid = desc_info->mac_id;
 
 	if (!refcount_read(&rtwdev->refcount_ap_info))
 		return;
