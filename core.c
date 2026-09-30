@@ -3083,11 +3083,6 @@ static void rtw89_vif_rx_stats_iter(void *data, u8 *mac,
 	bool is_mld = ieee80211_vif_is_mld(vif);
 #endif
 
-	if (rtwdev->scanning &&
-	    (ieee80211_is_beacon(hdr->frame_control) ||
-	     ieee80211_is_probe_resp(hdr->frame_control)))
-		rtw89_core_cancel_6ghz_probe_tx(rtwdev, skb);
-
 	rcu_read_lock();
 
 	rtwvif_link = rtw89_vif_get_link_inst(rtwvif, desc_info->bb_sel);
@@ -3173,7 +3168,13 @@ static void rtw89_core_rx_stats(struct rtw89_dev *rtwdev,
 				struct rtw89_rx_desc_info *desc_info,
 				struct sk_buff *skb)
 {
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
 	struct rtw89_vif_rx_stats_iter_data iter_data;
+
+	if (rtwdev->scanning &&
+	    (ieee80211_is_beacon(hdr->frame_control) ||
+	     ieee80211_is_probe_resp(hdr->frame_control)))
+		rtw89_core_cancel_6ghz_probe_tx(rtwdev, skb);
 
 	rtw89_traffic_stats_accu(rtwdev, NULL, skb, true, false);
 
