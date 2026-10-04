@@ -526,6 +526,7 @@ enum btc_b2w_scoreboard {
 	BTC_BSCB_BT_CONNECT_56G = BIT(17),
 	BTC_BSCB_BT_LNAB0_56G = BIT(18),
 	BTC_BSCB_BT_LNAB1_56G = BIT(19),
+	BTC_BSCB_BT_BACKOFF_LNA = BIT(21),
 	BTC_BSCB_HID_ACT = BIT(23),
 	BTC_BSCB_BT_15DOT4 = BIT(24),
 	BTC_BSCB_BT_PROTECT = BIT(27),
@@ -829,6 +830,7 @@ enum btc_w2b_scoreboard {
 	BTC_WSCB_CTCODE = BIT(15),
 	BTC_WSCB_RXGAIN_56G = BIT(16),
 	BTC_WSCB_BT_HILNA_56G = BIT(17),
+	BTC_WSCB_BT_BACKOFF_LNA = BIT(18),
 	BTC_WSCB_ALL = GENMASK(23, 0),
 };
 
@@ -3871,6 +3873,8 @@ static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 index)
 			rtw89_fw_h2c_cxdrv_osi_info(rtwdev, index);
 		else if (ver->fcxosi == 6)
 			rtw89_fw_h2c_cxdrv_osi_info_v6(rtwdev, index);
+		else if (ver->fcxosi == 7)
+			rtw89_fw_h2c_cxdrv_osi_info_v7(rtwdev, index);
 		else
 			return;
 		break;
@@ -4018,7 +4022,7 @@ static void _set_gnt(struct rtw89_dev *rtwdev, u8 phy_map,
 
 		memcpy(o->wlact_set, dm->wlact_set, sizeof(o->wlact_set));
 
-		if (btc->ver->fcxosi == 6) {
+		if (btc->ver->fcxosi == 6 || btc->ver->fcxosi == 7) {
 			memcpy(o->gnt_set_be, dm->gnt_set, sizeof(o->gnt_set_be));
 			return;
 		} else if (btc->ver->fcxosi == 1) {

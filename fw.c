@@ -7286,7 +7286,81 @@ int rtw89_fw_h2c_cxdrv_osi_info_v6(struct rtw89_dev *rtwdev, u8 type)
 	h2c->osi.wl_tx_limit_en = osi->wl_tx_limit_en;
 	h2c->osi.fc_exec = osi->fc_exec;
 	h2c->osi.wl_btg_standby_chg = osi->wl_btg_standby_chg;
-	h2c->osi.rsvd = osi->rsvd;
+	h2c->osi.rsvd = 0;
+
+	memcpy(h2c->osi.bb_path_sel_bt, osi->bb_path_sel_bt, sizeof(osi->bb_path_sel_bt));
+	memcpy(h2c->osi.bb_phy_sel_bt, osi->bb_phy_sel_bt, sizeof(osi->bb_phy_sel_bt));
+	memcpy(h2c->osi.fbd_group_en, osi->fbd_group_en, sizeof(osi->fbd_group_en));
+
+	for (i = 0; i < RTW89_MAC_NUM; i++) {
+		h2c->osi.rf_center_freq[i] = cpu_to_le16(osi->rf_center_freq[i]);
+		for (j = 0; j < BTC_RF_NUM; j++)
+			h2c->osi.fbd_group_bound[i][j] =
+				cpu_to_le16(osi->fbd_group_bound[i][j]);
+	}
+
+	for (i = 0; i < RTW89_MAC_NUM; i++) {
+		for (j = 0; j < BTC_ALL_BT_EZL; j++)
+			h2c->osi.freq_diff_thres[i][j] =
+				cpu_to_le16(osi->freq_diff_thres[i][j]);
+	}
+
+	h2c->osi.wl_tx_limit_time = cpu_to_le32(osi->wl_tx_limit_time);
+
+	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+			      H2C_CAT_OUTSRC, BTFC_SET,
+			      SET_DRV_INFO, 0, 0,
+			      len);
+
+	ret = rtw89_h2c_tx(rtwdev, skb, false);
+	if (ret) {
+		rtw89_err(rtwdev, "failed to send h2c\n");
+		goto fail;
+	}
+
+	return 0;
+fail:
+	dev_kfree_skb_any(skb);
+
+	return ret;
+}
+
+int rtw89_fw_h2c_cxdrv_osi_info_v7(struct rtw89_dev *rtwdev, u8 type)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
+	struct rtw89_btc_fbtc_outsrc_set_info *osi = &btc->dm.ost_info;
+	struct rtw89_h2c_cxosi_v7 *h2c;
+	u32 len = sizeof(*h2c);
+	struct sk_buff *skb;
+	int ret;
+	u8 i, j;
+
+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
+	if (!skb) {
+		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_osi_v7\n");
+		return -ENOMEM;
+	}
+	skb_put(skb, len);
+	h2c = (struct rtw89_h2c_cxosi_v7 *)skb->data;
+
+	h2c->hdr.type = type;
+	h2c->hdr.ver = btc->ver->fcxosi;
+	h2c->hdr.len = len - H2C_LEN_CXDRVHDR_V7;
+
+	memcpy(h2c->osi.rf_band, osi->rf_band, sizeof(osi->rf_band));
+	memcpy(h2c->osi.btg_rx, osi->btg_rx, sizeof(osi->btg_rx));
+	memcpy(h2c->osi.nbtg_tx, osi->nbtg_tx, sizeof(osi->nbtg_tx));
+	memcpy(h2c->osi.gnt_set, osi->gnt_set, sizeof(osi->gnt_set));
+	memcpy(h2c->osi.wlact_set, osi->wlact_set, sizeof(osi->wlact_set));
+
+	h2c->osi.pta_req_hw_band = osi->pta_req_hw_band;
+	h2c->osi.rf_gbt_source = osi->rf_gbt_source;
+	h2c->osi.bt_enable_state = osi->bt_enable_state;
+	h2c->osi.bt_plut_type = osi->bt_plut_type;
+	h2c->osi.wl_tx_limit_en = osi->wl_tx_limit_en;
+	h2c->osi.fc_exec = osi->fc_exec;
+	h2c->osi.wl_btg_standby_chg = osi->wl_btg_standby_chg;
+	h2c->osi.option = u8_encode_bits(!!osi->is_spdt_bb, OPTION_SPDT_BB);
 
 	memcpy(h2c->osi.bb_path_sel_bt, osi->bb_path_sel_bt, sizeof(osi->bb_path_sel_bt));
 	memcpy(h2c->osi.bb_phy_sel_bt, osi->bb_phy_sel_bt, sizeof(osi->bb_phy_sel_bt));

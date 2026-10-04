@@ -4099,6 +4099,32 @@ struct rtw89_btc_fbtc_outsrc_set_info_v6 {
 	__le32 wl_tx_limit_time;
 } __packed;
 
+struct rtw89_btc_fbtc_outsrc_set_info_v7 {
+	u8 rf_band[BTC_RF_NUM];
+	u8 btg_rx[BTC_RF_NUM];
+	u8 nbtg_tx[BTC_RF_NUM];
+
+	struct rtw89_btc_gnt_ctrl gnt_set[RTW89_MAC_AX_COEX_GNT_NR];
+	struct rtw89_mac_ax_wl_act wlact_set[BTC_ALL_BT_EZL];
+
+	u8 pta_req_hw_band;
+	u8 rf_gbt_source;
+	u8 bt_enable_state;
+	u8 bt_plut_type;
+	u8 wl_tx_limit_en;
+	u8 fc_exec;
+	u8 wl_btg_standby_chg;
+	u8 option;
+#define OPTION_SPDT_BB BIT(0)
+	u8 bb_path_sel_bt[BTC_RF_NUM];
+	u8 bb_phy_sel_bt[RTW89_PHY_NUM];
+	u8 fbd_group_en[RTW89_MAC_NUM][2];
+	__le16 rf_center_freq[RTW89_MAC_NUM];
+	__le16 freq_diff_thres[RTW89_MAC_NUM][BTC_ALL_BT_EZL];
+	__le16 fbd_group_bound[RTW89_MAC_NUM][2];
+	__le32 wl_tx_limit_time;
+} __packed;
+
 struct rtw89_btc_fbtc_outsrc_set_info {
 	u8 rf_band[BTC_RF_NUM]; /* 0:2GHz/1:5GHz for MPI_bb_hwsi_ignore_gnt_wl() */
 	u8 btg_rx[BTC_RF_NUM]; /* for MPI_bb_btg_bt_rx() */
@@ -4119,7 +4145,7 @@ struct rtw89_btc_fbtc_outsrc_set_info {
 	u8 wl_tx_limit_en;
 	u8 fc_exec;
 	u8 wl_btg_standby_chg; /* keep RX-IQGen on in standby mode */
-	u8 rsvd;
+	u8 is_spdt_bb; /* v7: BT shares an SPDT with WL at BB level */
 
 	u8 bb_path_sel_bt[BTC_RF_NUM]; /* bb s0(1) select GNT_BT0 or BT1 */
 	u8 bb_phy_sel_bt[RTW89_PHY_NUM]; /* bb phy0(1) select GNT_BT0 or BT1 */
