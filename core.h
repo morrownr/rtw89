@@ -2830,10 +2830,9 @@ enum rtw89_btc_bt_func_type {
 
 #define RTW89_BTC_BTC_SCAN_V1_FLAG_ENABLE BIT(0)
 #define RTW89_BTC_BTC_SCAN_V1_FLAG_INTERLACE BIT(1)
-#define RTW89_BTC_BT_DEF_BR_TX_PWR 4
-#define RTW89_BTC_BT_DEF_LE_TX_PWR 4
+#define RTW89_BTC_BT_DEF_BR_TX_PWR 10 /* in dBm */
+#define RTW89_BTC_BT_DEF_LE_TX_PWR 10
 #define RTW89_BTC_DEFAULT_ANISO 10
-#define RTW89_BTC_BT_DEF_LE_TX_PWR_1 10
 
 struct rtw89_btc_bt_scan_info_v1 {
 	__le16 win;
