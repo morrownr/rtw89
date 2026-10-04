@@ -10292,6 +10292,7 @@ static int _show_wl_info(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
 	struct rtw89_btc_cx *cx = &btc->cx;
 	struct rtw89_btc_wl_info *wl = &cx->wl;
 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
+	struct rtw89_btc_wl_mlo_info *wl_minfo = &wl->mlo_info;
 	char *p = buf, *end = buf + bufsz;
 	u8 mode;
 
@@ -10318,6 +10319,25 @@ static int _show_wl_info(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
 		       wl->status.map.roaming ?  "Y" : "N",
 		       wl->status.map._4way ? "Y" : "N",
 		       wl->status.map.init_ok ? "Y" : "N");
+
+	if (rtwdev->chip->para_ver & BTC_FEAT_MLO_SUPPORT) {
+		p += scnprintf(p, end - p,
+			       " %-15s : type:%d/rf_comb:%d/dbcc_en:%d, ",
+			       "[MLO]", wl_minfo->wtype, wl_minfo->rf_combination,
+			       wl_rinfo->dbcc_en);
+		p += scnprintf(p, end - p,
+			       "HWB0(wmode:%d/ch:%d/rf_band:%d/p2p:%d), ",
+			       wl_minfo->wmode[RTW89_MAC_0],
+			       wl_minfo->ch_type[RTW89_MAC_0],
+			       wl_minfo->hwb_rf_band[RTW89_MAC_0],
+			       wl_rinfo->p2p_exist[RTW89_MAC_0]);
+		p += scnprintf(p, end - p,
+			       "HWB1(wmode:%d/ch:%d/rf_band:%d/p2p:%d)\n",
+			       wl_minfo->wmode[RTW89_MAC_1],
+			       wl_minfo->ch_type[RTW89_MAC_1],
+			       wl_minfo->hwb_rf_band[RTW89_MAC_1],
+			       wl_rinfo->p2p_exist[RTW89_MAC_1]);
+	}
 
 	p += _show_wl_role_info(rtwdev, p, end - p);
 
