@@ -2507,6 +2507,11 @@ struct rtw89_h2c_cxrole_v10 {
 	struct rtw89_btc_wl_role_info_v10 r;
 } __packed;
 
+struct rtw89_h2c_cxrole_v11 {
+	struct rtw89_h2c_cxhdr_v7 hdr;
+	struct rtw89_btc_wl_role_info_v11 r;
+} __packed;
+
 struct rtw89_h2c_cxmlo_v2 {
 	struct rtw89_h2c_cxhdr_v7 hdr;
 	struct rtw89_btc_wl_mlo_info_v2 mlo;
@@ -5547,6 +5552,7 @@ int rtw89_fw_h2c_cxdrv_role_v2(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_role_v7(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_role_v8(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_role_v10(struct rtw89_dev *rtwdev, u8 type);
+int rtw89_fw_h2c_cxdrv_role_v11(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_init_v11(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_mlo_v2(struct rtw89_dev *rtwdev, u8 type);
 int rtw89_fw_h2c_cxdrv_osi_info(struct rtw89_dev *rtwdev, u8 type);

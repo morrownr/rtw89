@@ -2229,6 +2229,23 @@ struct rtw89_btc_wl_role_info_v10 { /* H2C info, struct size must be n*4 bytes *
 	__le32 mrole_type; /* btc_wl_mrole_type: [31:16]:band1, [15:0]:band0 */
 } __packed;
 
+struct rtw89_btc_wl_role_info_v11 { /* H2C info, struct size must be n*4 bytes */
+	struct rtw89_btc_wl_rlink_v10 rlink[RTW89_BE_BTC_WL_MAX_ROLE_NUMBER][RTW89_MAC_NUM];
+	u8 link_mode;
+	u8 link_mode_hb1;
+	u8 p2p_exist;
+	u8 p2p_exist_hb1;
+
+	u8 pta_req_band;
+	u8 dbcc_en; /* 1+1 and 2.4G-included */
+	u8 dbcc_2g_phy; /* which phy operate in 2G, HW_PHY_0 or HW_PHY_1 */
+	u8 rsvd;
+
+	__le32 role_map;
+	__le32 role_map_hb1;
+	__le32 mrole_type; /* btc_wl_mrole_type: [31:16]:band1, [15:0]:band0 */
+} __packed;
+
 struct rtw89_btc_wl_rlink { /* Logic dynamic using */
 	u8 connected;
 	u8 pid;
@@ -2263,18 +2280,15 @@ struct rtw89_btc_wl_rlink { /* Logic dynamic using */
 
 struct rtw89_btc_wl_role_info { /* Logic dynamic using */
 	struct rtw89_btc_wl_rlink rlink[RTW89_BE_BTC_WL_MAX_ROLE_NUMBER][RTW89_MAC_NUM];
-	u8 link_mode;
-	u8 link_mode_hb1;
-	u8 p2p_exist;
-	u8 p2p_exist_hb1;
+	u8 link_mode[RTW89_MAC_NUM];
+	u8 p2p_exist[RTW89_MAC_NUM];
 
 	u8 pta_req_band;
 	u8 dbcc_en; /* 1+1 and 2.4G-included */
 	u8 dbcc_2g_phy; /* which phy operate in 2G, HW_PHY_0 or HW_PHY_1 */
 	u8 rsvd;
 
-	u32 role_map;
-	u32 role_map_hb1;
+	u32 role_map[RTW89_MAC_NUM];
 	u32 mrole_type; /* btc_wl_mrole_type: [31:16]:band1, [15:0]:band0 */
 
 	/* Before v10 use this linkmode */
@@ -2571,15 +2585,11 @@ struct rtw89_btc_wl_info {
 	u8 ch_map[12];
 	u8 ch_map_le[5];
 
-	bool is_5g_hi_ch;
-	bool is_5g_hi_ch_hb1;
-	bool go_client_exist;
-	bool go_client_exist_hb1;
-	bool noa_exist;
-	bool noa_exist_hb1;
+	bool is_5g_hi_ch[RTW89_MAC_NUM];
+	bool go_client_exist[RTW89_MAC_NUM];
+	bool noa_exist[RTW89_MAC_NUM];
 	bool pta_reg_mac_chg;
-	bool bg_mode;
-	bool bg_mode_hb1;
+	bool bg_mode[RTW89_MAC_NUM];
 	bool he_mode;
 	bool scbd_chg[BTC_ALL_BT];
 	bool fw_ver_mismatch;
