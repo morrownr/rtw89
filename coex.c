@@ -8610,6 +8610,26 @@ static void _set_bind_info(struct rtw89_btc *btc, u8 type)
 			b5g_score += link_weight[j][BTC_BT_B5G];
 	}
 
+	/*
+	 * Consider WL RFK band for coex (avoid missing RFK case)
+	 * If WL is doing RFK, check RFK band vs BT band overlap
+	 * Only add score when RFK band matches BT band
+	 */
+	if (wl->rfk_info.state != BTC_WRFK_STOP) {
+		if (wl->rfk_info.band == RTW89_BAND_2G) {
+			/* RFK on 2.4GHz, check if any BT is also on 2.4GHz */
+			if ((cx->bt0.rf_band_map & BIT(RTW89_BAND_2G)) ||
+			    (cx->bt1.rf_band_map & BIT(RTW89_BAND_2G)))
+				b2g_score = thres;
+		} else if (wl->rfk_info.band == RTW89_BAND_5G ||
+			   wl->rfk_info.band == RTW89_BAND_6G) {
+			/* RFK on 5/6GHz, check if any BT is also on 5GHz */
+			if ((cx->bt0.rf_band_map & BIT(RTW89_BAND_5G)) ||
+			    (cx->bt1.rf_band_map & BIT(RTW89_BAND_5G)))
+				b5g_score = thres;
+		}
+	}
+
 	/* rf-band bound by comparing link weight */
 	if (b2g_score == 0 && b5g_score == 0) /* no-rf-band overlap */
 		bd->rf_band = 0;
