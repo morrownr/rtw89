@@ -4362,6 +4362,8 @@ struct rtw89_btc_dm {
 	u8 client_ps_tdma_on;
 	u8 wl_trx_nss_en;
 	u8 trx_nss_lps_done; /* 1SS re-setup done for this exit-LPS */
+	u8 bttrx_en_done; /* BT TRX enable last programmed to RF */
+	u8 bttrx_en_ack; /* which bttrx_en_done bits are trustworthy */
 
 	u8 wl_pre_agc: 2;
 	u8 wl_lna2: 1;

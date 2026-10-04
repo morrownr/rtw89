@@ -8910,6 +8910,59 @@ static void _update_sdm_map(struct rtw89_dev *rtwdev)
 	memcpy(dm->sit_xmap, map, sizeof(map));
 }
 
+static void _set_bttrx_en(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_btc_wl_smap *wl_smap = &rtwdev->btc.cx.wl.status.map;
+	struct rtw89_btc_dm *dm = &rtwdev->btc.dm;
+	u8 state = dm->ost_info.bt_enable_state;
+	u8 i, want, done;
+
+	/* only dual-BT chips drive the BT TX/RX enable from the driver */
+	if (!(rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT))
+		return;
+
+	/*
+	 * RF is not accessible, leave the shadow alone. Leaving this state is
+	 * a radio-state run, which drops the shadow and re-programs below.
+	 */
+	if (wl_smap->rf_off || wl_smap->lps == BTC_LPS_RF_OFF)
+		return;
+
+	/*
+	 * RF may have been re-initialized, drop the shadow and re-program.
+	 * Power-off is not listed, it is always followed by an init run
+	 * before the next RF access.
+	 */
+	if (dm->run_reason == BTC_RSN_NTFY_INIT ||
+	    dm->run_reason == BTC_RSN_NTFY_RADIO_STATE)
+		dm->bttrx_en_ack = 0;
+
+	for (i = BTC_BT_1ST; i <= BTC_BT_2ND; i++) {
+		want = !!(state & BIT(i));
+		done = !!(dm->bttrx_en_done & BIT(i));
+
+		if (dm->bttrx_en_ack & BIT(i) && want == done)
+			continue;
+
+		if (rtw89_phy_btc_bttrx_en(rtwdev, i, want)) {
+			/* leave the bit un-acked, the next run retries it */
+			dm->bttrx_en_ack &= ~BIT(i);
+
+			rtw89_debug(rtwdev, RTW89_DBG_BTC,
+				    "[BTC], %s(): BT%d trx_en=%d write fail\n",
+				    __func__, i, want);
+			continue;
+		}
+
+		dm->bttrx_en_ack |= BIT(i);
+
+		if (want)
+			dm->bttrx_en_done |= BIT(i);
+		else
+			dm->bttrx_en_done &= ~BIT(i);
+	}
+}
+
 #define _bind_is_btonly 0x7
 static void _set_coex_binding(struct rtw89_dev *rtwdev)
 {
@@ -8927,7 +8980,7 @@ static void _set_coex_binding(struct rtw89_dev *rtwdev)
 	/*
 	 * sit_xmap(Space-Interaction) = ant_xmap | xtk_xmap
 	 * 1: WL-BT space-interference, always 1 if BTG/BTA/SPDT = 1
-	 * if dedicated-ant, it may be 1 if BT-Tx is bigger than WL-Rx(xtk_xmap)
+	 * if dedicated-ant, it may be 1 if BT-TX is bigger than WL-Rx(xtk_xmap)
 	 *
 	 * ant_xmap(ANT-Division-Multiplexing)
 	 * ==> dedicated-ant->0, BTG/BTA/SPDT->1
@@ -8972,8 +9025,8 @@ static void _set_coex_binding(struct rtw89_dev *rtwdev)
 	}
 
 	/*
-	 * WL 1SS MIMO-PS: WL Rx is confined to a single path, so the unused
-	 * path has no WL-Rx frequency interference with any BT.
+	 * WL 1SS MIMO-PS: WL RX is confined to a single path, so the unused
+	 * path has no WL-RX frequency interference with any BT.
 	 * RF_PATH_AB -> not 1SS, both paths keep their real fit_xmap.
 	 * Same helper as _update_sdm_map(), so xtk_xmap and fit_map always
 	 * agree on which RF-path is the unused one.
@@ -9028,15 +9081,23 @@ static void _set_coex_binding(struct rtw89_dev *rtwdev)
 
 	/* set BT on/off state for GNT_WL Combined-MUX control */
 	if (bt0->enable.now)
-		val |= BIT(0);
+		val |= BIT(BTC_BT_1ST);
 
 	if (bt1->enable.now)
-		val |= BIT(1);
+		val |= BIT(BTC_BT_2ND);
 
 	if (bt2->func_type)
-		val |= BIT(2);
+		val |= BIT(BTC_BT_EXT);
 
 	dm->ost_info.bt_enable_state = dm->bt_only ? _bind_is_btonly : val;
+
+	/*
+	 * Turn the BT TX/RX on/off by the BTG control in WL RF. Driven by
+	 * bt_enable_state shadow instead of its change, so a write the RF
+	 * layer rejects is retried in the next run. Call it every time, the
+	 * shadow compare inside is what suppresses the redundant RF I/O.
+	 */
+	_set_bttrx_en(rtwdev);
 }
 
 static void _update_run_ctrl_info(struct rtw89_dev *rtwdev)
@@ -9063,7 +9124,7 @@ static void _update_run_ctrl_info(struct rtw89_dev *rtwdev)
 		wl_ctrl_info->rf_ch[i] = wl->rf_ch_info[i].center_ch;
 	}
 
-	if (!memcmp(&btc->ctrl, &ctrl, sizeof(struct rtw89_btc_ctrl))) {
+	if (memcmp(&btc->ctrl, &ctrl, sizeof(struct rtw89_btc_ctrl))) {
 		memcpy(&btc->ctrl, &ctrl, sizeof(struct rtw89_btc_ctrl));
 		if (btc->ver->fcxctrl >= 9)
 			_fw_set_drv_info(rtwdev, CXDRVINFO_CTRL);
@@ -11443,6 +11504,12 @@ static int _show_dm_info(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
 	p += scnprintf(p, end - p,
 		       " %-15s : pre_agc:%d, btg_rx:%d\n",
 		       "[dm_bb_ctrl]", dm->wl_pre_agc, dm->wl_btg_rx);
+
+	if (rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT)
+		p += scnprintf(p, end - p,
+			       " %-15s : bt_en_state:0x%x, shadow[done:0x%x/ack:0x%x]\n",
+			       "[dm_bttrx_en]", dm->ost_info.bt_enable_state,
+			       dm->bttrx_en_done, dm->bttrx_en_ack);
 
 	p += scnprintf(p, end - p,
 		       " %-15s : wl_tx_limit[en:%d/max_t:%dus/max_retry:%d], bt_slot_reg:%d-TU, bt_scan_rx_low_pri:%d\n",
