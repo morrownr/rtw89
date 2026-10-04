@@ -3305,7 +3305,7 @@ static void rtw8922d_btc_set_rfe(struct rtw89_dev *rtwdev)
 		if (is_bt_share) { /* WL-S0 + (WL-S1 & BT0-S1) */
 			md->ant.type = BTC_ANT_SHARED;
 			md->bt0_pos = BTC_BT_BTG;
-			md->bt0_sw_type = BTC_SWITCH_INTERNAL;
+			md->bt0_sw_type = BTC_SWITCH_V1_INTERNAL;
 			dm->ant_xmap[BTC_RF_S1][BTC_BT_1ST] = 1;
 		} else { /* WL-S0 + BT0-S1 */
 			md->ant.type = BTC_ANT_DEDICATED;
