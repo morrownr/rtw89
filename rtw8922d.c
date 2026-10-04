@@ -3336,7 +3336,6 @@ static void rtw8922d_btc_set_rfe(struct rtw89_dev *rtwdev)
 			md->bt0_pos = BTC_BT_BTG;
 			md->bt0_sw_type = BTC_SWITCH_V1_INTERNAL;
 			dm->ant_xmap[BTC_RF_S1][BTC_BT_1ST] = 1;
-			dm->wl_trx_nss_en = 1; /* 1ss MIMO-PS capability */
 		} else {
 			md->ant.func[0] = BTC_EFMAP_NONE;
 			md->ant.func[1] = BTC_EFMAP_NONE;

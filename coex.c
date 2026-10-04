@@ -6993,6 +6993,133 @@ static void _set_fw_report_map(struct rtw89_dev *rtwdev)
 	rtw89_btc_fw_en_rpt(rtwdev, false, rpt_map);
 }
 
+static void _set_trx_nss(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
+	struct rtw89_btc_dm *dm = &btc->dm;
+	struct rtw89_btc_bind_bt_status *btdd = &dm->tdd_bind.bt_smap;
+	struct rtw89_btc_bind_bt_status *bfdd = &dm->fdd_bind.bt_smap;
+	struct rtw89_btc_wl_trx_nss_para *trx_nss = &dm->wl_trx_nss;
+	struct rtw89_btc_module *module = &btc->mdinfo;
+	struct rtw89_btc_cx *cx = &btc->cx;
+	struct rtw89_btc_wl_info *wl = &cx->wl;
+	bool bt0_cis = cx->bt0.link_info.leaudio_desc.cis_exist;
+	bool bt1_cis = cx->bt1.link_info.leaudio_desc.cis_exist;
+	u8 tx_ss, rx_ss, tx_path, rx_path, limit_path;
+	u8 tx_limit = 0, rx_limit = 0;
+
+	/* tx/rx_limit: 1 = 1ss, 0 = HW default */
+	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+		    "[BTC], %s(): wl_rinfo->link_mode=%d, dm->wl_trx_nss_en=%d\n",
+		    __func__, wl->role_info.link_mode[RTW89_MAC_0], dm->wl_trx_nss_en);
+
+	/*
+	 * Skip 1SS MIMO-PS if:
+	 * - manual mode or DBCC enabled
+	 * - !wl_trx_nss_en: no MIMO-PS capability. The RFE configs that share
+	 *   a WL path with BT are selected in ops->set_rfe() (e.g. 8922D only
+	 *   sets it for ant.num=2), so this flag is the single gate here, no
+	 *   extra ant.num/bt1_sw_type check.
+	 * - non-LNV vendor and no DUAL_BT. Dual-BT chips run MIMO-PS for every
+	 *   vendor, single-BT chips only for LNV (LNV: PCIE-12223)
+	 */
+	if (btc->manual_ctrl || wl->role_info.dbcc_en || !dm->wl_trx_nss_en ||
+	    (dm->vid != RTW89_CUSTID_LENOVO &&
+	     !(rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT)))
+		return;
+
+	/*
+	 * Disable 1SS limit when:
+	 * - No WiFi link (WL idle state)
+	 * - Out-of-band scenario (no BT coex needed)
+	 */
+	if (wl->role_info.link_mode[RTW89_MAC_0] == BTC_WLINK_NOLINK ||
+	    wl->role_info.link_mode[RTW89_MAC_1] == BTC_WLINK_NOLINK ||
+	    dm->out_of_band) {
+		tx_limit = 0;
+		rx_limit = 0;
+	} else if (bt0_cis || bt1_cis || btdd->cis_exist || bfdd->cis_exist) {
+		/*
+		 * Enable 2T1R when BT CIS profile exists (low latency audio).
+		 * tx_limit=1 (1T1R full isolation) reserved for future use
+		 * when WL needs to fully isolate Tx from BT on shared antenna.
+		 */
+		tx_limit = 0;
+		rx_limit = 1;
+	}
+
+	/*
+	 * BT1 at S0 has CIS -> WL must use S1 (path B)
+	 * BT0 at S1 has CIS -> WL must use S0 (path A)
+	 */
+	limit_path = bt1_cis ? RF_PATH_B : RF_PATH_A;
+
+	/*
+	 * Re-arm the exit-LPS one-shot once the event is over. lps_exiting is
+	 * held for a while by the LPS-exit timer, so it must not be used as
+	 * the force-exec condition directly.
+	 */
+	if (!wl->status.map.lps_exiting)
+		dm->trx_nss_lps_done = 0;
+
+	if (trx_nss->rx_limit == rx_limit && trx_nss->tx_limit == tx_limit &&
+	    (!rx_limit || trx_nss->rx_path == limit_path)) {
+		/*
+		 * WL just exited LPS: LPS may have cleared the BB/RF 1SS
+		 * setup, so re-issue cfg_1ss/cfg_trx_path/set_rfe once per
+		 * exit-LPS event. They are heavy (set_rfe() re-reads efuse and
+		 * does several RF I/O), so a one-shot flag instead of lps_exiting.
+		 */
+		if (wl->status.map.lps_exiting && !dm->trx_nss_lps_done)
+			goto force_exec;
+
+		return;
+	}
+
+force_exec:
+	/* one-shot consumed, no re-exec until the next exit-LPS event */
+	dm->trx_nss_lps_done = wl->status.map.lps_exiting;
+
+	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+		    "[BTC], %s(): stream_cnt=0x%02x, path_pos=0x%02x\n",
+		    __func__, module->ant.stream_cnt, module->ant.path_pos);
+
+	/*
+	 * Reduce TX to 1SS on the isolated path to avoid BT interference,
+	 * else restore TX to HW default stream count and path.
+	 */
+	if (tx_limit) {
+		tx_ss = 1;
+		tx_path = limit_path;
+	} else {
+		tx_ss = FIELD_GET(BTC_ANT_TX_MASK, module->ant.stream_cnt);
+		tx_path = FIELD_GET(BTC_ANT_TX_MASK, module->ant.path_pos);
+	}
+
+	/*
+	 * Reduce RX to 1SS on the isolated path to protect WL Rx stream,
+	 * else restore RX to HW default stream count and path.
+	 */
+	if (rx_limit) {
+		rx_ss = 1;
+		rx_path = limit_path;
+	} else {
+		rx_ss = FIELD_GET(BTC_ANT_RX_MASK, module->ant.stream_cnt);
+		rx_path = FIELD_GET(BTC_ANT_RX_MASK, module->ant.path_pos);
+	}
+
+	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+		    "[BTC], %s(): tx_ss=%d, rx_ss=%d, tx_path=%d, rx_path=%d\n",
+		    __func__, tx_ss, rx_ss, tx_path, rx_path);
+
+	/*
+	 * TODO: no driver API to apply tx_limit/rx_limit/tx_ss/rx_ss/tx_path/
+	 * rx_path to the BB/RF 1SS MIMO-PS HW state yet. Stop here so
+	 * trx_nss/always_freerun/ant.type/set_rfe()/_update_sdm_map() below
+	 * never run from a decision that was never applied to HW.
+	 */
+}
+
 static void _action_common(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
@@ -7002,6 +7129,7 @@ static void _action_common(struct rtw89_dev *rtwdev)
 	u8 i;
 
 	_wl_req_mac(rtwdev, rinfo->pta_req_band);
+	_set_trx_nss(rtwdev);
 	_update_zb_coex_tbl(rtwdev);
 	_set_btg_ctrl(rtwdev);
 	_set_wl_preagc_ctrl(rtwdev);
