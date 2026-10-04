@@ -8542,13 +8542,22 @@ static void _update_bt_bistdma_info(struct rtw89_dev *rtwdev, u8 bid,
 }
 
 #define BTC_BTINFO_PWR_LEN 5
-static void _update_bt_txpwr_info(struct rtw89_dev *rtwdev, u8 *buf, u32 len)
+static void _update_bt_txpwr_info(struct rtw89_dev *rtwdev, u8 bid, u8 *buf,
+				  u32 len)
 {
-	struct rtw89_btc_bt_info *bt = &rtwdev->btc.cx.bt0;
-	struct rtw89_btc_bt_link_info *b = &bt->link_info;
+	struct rtw89_btc_cx *cx = &rtwdev->btc.cx;
+	struct rtw89_btc_bt_link_info *b;
+	struct rtw89_btc_bt_info *bt;
 
 	if (len != BTC_BTINFO_PWR_LEN)
 		return;
+
+	bt = bid == BTC_BT_1ST ? &cx->bt0 : &cx->bt1;
+
+	if ((buf[BTC_BTINFO_L1] & BIT(7)) && bt->band_56G_support)
+		b = &bt->link_info_56g;
+	else
+		b = &bt->link_info;
 
 	if (!memcmp(bt->txpwr_info, buf, sizeof(bt->txpwr_info))) {
 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
@@ -10594,7 +10603,7 @@ void rtw89_btc_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
 		break;
 	case BTF_EVNT_BT_QUERY_TXPWR:
 		bt->bcnt[BTC_BCNT_TXPWR_UPDATE]++;
-		_update_bt_txpwr_info(rtwdev, buf, len);
+		_update_bt_txpwr_info(rtwdev, bid, buf, len);
 	}
 }
 
