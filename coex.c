@@ -7806,6 +7806,7 @@ static void _update_wl_mlo_info(struct rtw89_dev *rtwdev, u8 hw_band)
 		rf_band = wl->rf_band_map[RTW89_PHY_0];
 		mlo_info->path_rf_band[BTC_RF_S0] = rf_band;
 		mlo_info->path_rf_band[BTC_RF_S1] = rf_band;
+		mlo_info->rf_combination = BTC_MLO_RF_2_PLUS_0;
 		break;
 	case MLO_0_PLUS_2_1RF: /* 0+2 */
 	case MLO_0_PLUS_2_2RF:
@@ -7818,6 +7819,7 @@ static void _update_wl_mlo_info(struct rtw89_dev *rtwdev, u8 hw_band)
 		rf_band = wl->rf_band_map[RTW89_PHY_1];
 		mlo_info->path_rf_band[BTC_RF_S0] = rf_band;
 		mlo_info->path_rf_band[BTC_RF_S1] = rf_band;
+		mlo_info->rf_combination = BTC_MLO_RF_0_PLUS_2;
 		break;
 	case MLO_1_PLUS_1_1RF: /* 1+1 */
 	case MLO_1_PLUS_1_2RF: /* 1+1 */
@@ -7853,6 +7855,11 @@ static void _update_wl_mlo_info(struct rtw89_dev *rtwdev, u8 hw_band)
 		}
 
 		wl_rinfo->dbcc_en = 1; /* two HW-band both active */
+
+		if (mlo_info->link_status == MLO_2_PLUS_2_2RF)
+			mlo_info->rf_combination = BTC_MLO_RF_2_PLUS_2;
+		else
+			mlo_info->rf_combination = BTC_MLO_RF_1_PLUS_1;
 		break;
 	}
 
