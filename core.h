@@ -2577,6 +2577,7 @@ struct rtw89_btc_wl_info {
 
 	u8 port_id[RTW89_WIFI_ROLE_MLME_MAX];
 	u8 rssi_level;
+	u8 rssi; /* min WL RSSI among all active role/HW-band, 0~110% */
 	u8 cn_report;
 	u8 coex_mode;
 	u8 pta_req_mac;
@@ -4318,6 +4319,9 @@ struct rtw89_btc_dm {
 	u8 tdd_map[BTC_RF_NUM][BTC_ALL_BT_EZL];  /* WL-BT tdd-map */
 	u8 fdd_map[BTC_RF_NUM][BTC_ALL_BT_EZL];  /* WL-BT fdd-map */
 	u8 corx_map[BTC_RF_NUM][BTC_ALL_BT_EZL]; /* WL-BT Co-Rx */
+	/* RF-Sx view of fit_xmap, 1SS MIMO-PS applied */
+	u8 fit_map[BTC_RF_NUM][BTC_ALL_BT_EZL];
+	u8 fit_used_path; /* 1SS MIMO-PS Rx path, RF_PATH_AB if no limit */
 
 	u8 sit_xmap_last[BTC_RF_NUM][BTC_ALL_BT_EZL];
 	u8 fit_xmap_last[RTW89_PHY_NUM][BTC_ALL_BT_EZL];

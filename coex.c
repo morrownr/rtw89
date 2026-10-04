@@ -527,6 +527,7 @@ enum btc_b2w_scoreboard {
 	BTC_BSCB_BT_LNAB0_56G = BIT(18),
 	BTC_BSCB_BT_LNAB1_56G = BIT(19),
 	BTC_BSCB_BT_BACKOFF_LNA = BIT(21),
+	BTC_BSCB_BT_15DOT4_TRX = BIT(22),
 	BTC_BSCB_HID_ACT = BIT(23),
 	BTC_BSCB_BT_15DOT4 = BIT(24),
 	BTC_BSCB_BT_PROTECT = BIT(27),
@@ -1013,6 +1014,7 @@ static void _run_coex(struct rtw89_dev *rtwdev,
 static void _write_scbd(struct rtw89_dev *rtwdev, u8 bid, u32 val, bool state);
 static u8 _sned_h2c_w2bscbd(struct rtw89_dev *rtwdev, bool force_exec, u8 bid);
 static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid, bool is_c2h);
+static void _update_sdm_map(struct rtw89_dev *rtwdev);
 static const char *id_to_h2c(u32 id);
 
 static void _reset_h2c_macro(struct rtw89_btc *btc)
@@ -8202,6 +8204,10 @@ static void _update_bt_scbd(struct rtw89_dev *rtwdev, u8 bid, bool is_c2h)
 				    !!(val & BTC_BSCB_BT_LNAB1) * 2;
 
 		if (rtwdev->chip->para_ver & BTC_FEAT_DUAL_BT) {
+			if ((val & BTC_BSCB_BT_15DOT4_TRX) !=
+			    (bt->scbd & BTC_BSCB_BT_15DOT4_TRX))
+				_update_sdm_map(rtwdev);
+
 			if (val & BTC_BSCB_BT_15DOT4)
 				bt->func_type |= (BTC_BTF_THREAD | BTC_BTF_ZB);
 			else
@@ -8597,9 +8603,142 @@ static void _set_bind_info(struct rtw89_btc *btc, u8 type)
 		bd->bt_smap.ull_exist = 1;
 }
 
-#define _bind_is_btonly 0x7
-static void _set_coex_binding(struct rtw89_btc *btc)
+/*
+ * Get the only WL RF-path that still receives under 1SS MIMO-PS.
+ *
+ * Single source of truth for "is WL Rx confined to one RF-path, and which
+ * one". Both _update_sdm_map() (xtk_xmap) and _set_coex_binding() (fit_map)
+ * must agree, otherwise the two maps describe different WL Rx topologies.
+ *
+ * Conditions:
+ * - rx_limit: the BB/RF was actually programmed to 1SS by _set_trx_nss()
+ * - DL only: rx_limit shrinks the Rx stream, WL Tx still runs 2SS/2TX on both
+ *   paths for UL, so every path stays BT-interactive there
+ * - 2+0/0+2 only: both RF-path serve the same link on one HW-band, so there
+ *   is an unused path. In 1+1/2+2 each RF-path serves its own link on its own
+ *   HW-band and none of them can be dropped
+ *
+ * Return dm->wl_trx_nss.rx_path (RF_PATH_A/B, == BTC_RF_S0/S1) if 1SS
+ * MIMO-PS is active, RF_PATH_AB if WL keeps both Rx paths.
+ */
+static u8 _get_sdm_1ss_path(struct rtw89_dev *rtwdev)
 {
+	struct rtw89_btc_wl_trx_nss_para *trx_nss = &rtwdev->btc.dm.wl_trx_nss;
+	struct rtw89_btc_wl_info *wl = &rtwdev->btc.cx.wl;
+
+	if (!trx_nss->rx_limit ||
+	    !(wl->status.map.traffic_dir & BIT(RTW89_TFC_DL)))
+		return RF_PATH_AB;
+
+	if (wl->mlo_info.rf_combination != BTC_MLO_RF_2_PLUS_0 &&
+	    wl->mlo_info.rf_combination != BTC_MLO_RF_0_PLUS_2)
+		return RF_PATH_AB;
+
+	/*
+	 * rx_path is what _set_trx_nss() passed to cfg_trx_path(), it must be
+	 * a single path to be used as an RF-path index below
+	 */
+	if (trx_nss->rx_path != RF_PATH_A && trx_nss->rx_path != RF_PATH_B)
+		return RF_PATH_AB;
+
+	return trx_nss->rx_path;
+}
+
+static void _update_sdm_map(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
+	struct rtw89_btc_module *module = &btc->mdinfo;
+	struct rtw89_btc_cx *cx = &btc->cx;
+	struct rtw89_btc_bt_info *bt0 = &cx->bt0;
+	struct rtw89_btc_bt_info *bt1 = &cx->bt1;
+	struct rtw89_btc_wl_info *wl = &cx->wl;
+	struct rtw89_btc_dm *dm = &btc->dm;
+	u8 map[BTC_RF_NUM][BTC_ALL_BT_EZL];
+	bool mlo_1_plus_1 = false;
+	u8 used_path;
+	u8 i, j;
+
+	/*
+	 * xtk_xmap(Cross-talk map)-> 1: interaction, 0: no-interaction
+	 * calculate WL/BT interference by SIR
+	 * ==>1:If WL_RSSI < (BT-Pin -SIR), it means BT-Tx interfer with WL-Rx
+	 * ==>BT-pin = BT-Tx-Power - Ant-isolation
+	 */
+	if (wl->mlo_info.wtype != RTW89_MR_WTYPE_MLD2L1R_NONMLD &&
+	    (wl->mlo_info.rf_combination == BTC_MLO_RF_1_PLUS_1 ||
+	     wl->mlo_info.rf_combination == BTC_MLO_RF_2_PLUS_2))
+		mlo_1_plus_1 = true;
+
+	/*
+	 * WL running 1SS MIMO-PS (CIS LE-audio): WL Rx is confined to a single
+	 * path. The used path co-Rx with its co-ant BT (=1) or follows RSSI vs.
+	 * the other BT; the unused path no longer co-Rx with any BT (=0).
+	 * RF_PATH_AB -> not 1SS, keep the original per-path logic.
+	 *
+	 * Record it: this function also runs at the _set_trx_nss() exit, after
+	 * rx_limit/rx_path changed, so dm->fit_used_path stays the up-to-date
+	 * 1SS state for the _action_common() consumers that run later in the
+	 * same coex cycle (_set_wl_preagc_ctrl, _set_bt_corx_table).
+	 */
+	used_path = _get_sdm_1ss_path(rtwdev);
+	dm->fit_used_path = used_path;
+
+	memset(map, 0, sizeof(map));
+	for (i = 0; i < BTC_RF_NUM; i++) {
+		if (module->ant.num == 1 && i == BTC_RF_S1)
+			break;
+
+		for (j = 0; j < BTC_ALL_BT_EZL; j++) {
+			if ((bt0->scbd_c2h & BTC_BSCB_BT_15DOT4_TRX) ||
+			    (bt1->scbd_c2h & BTC_BSCB_BT_15DOT4_TRX)) {
+				/* 15.4 TRX active: force BT0/BT1 to TDD */
+				if (j < BTC_ALL_BT)
+					dm->xtk_xmap[i][j] = 1;
+				else
+					continue; /* j == EXT: not force TDD */
+			} else if (used_path != RF_PATH_AB && j < BTC_ALL_BT) {
+				/* 1SS MIMO-PS: only the used WL path co-Rx */
+				if (i != used_path)
+					dm->xtk_xmap[i][j] = 0;
+				else if (dm->ant_xmap[i][j] == 1)
+					dm->xtk_xmap[i][j] = 1;
+				else
+					dm->xtk_xmap[i][j] =
+						BTC_RSSI_LOW(dm->sir_state[j]) ? 1 : 0;
+			} else if (dm->ant_xmap[i][j] == 1) {
+				/* if WL RF-pathx co-ant with BTx */
+				dm->xtk_xmap[i][j] = 1;
+			} else if (((j == BTC_BT_1ST &&
+				     module->bt0_sw_type != BTC_SWITCH_V1_NONE) ||
+				    (j == BTC_BT_2ND &&
+				     module->bt1_sw_type != BTC_SWITCH_V1_NONE)) &&
+				   !mlo_1_plus_1) {
+				/*
+				 * if WL RF-pathx not co-ant/path with BTx
+				 * but BTx co-ant/path with the other WL-path
+				 * and WL is 2+0/0+2
+				 * ex: WL-S0 + (WL-S1 & BT0-S1) ->
+				 * BT0-S1 vs. WL-S0 = 1
+				 */
+				dm->xtk_xmap[i][j] = 1;
+			} else if (BTC_RSSI_LOW(dm->sir_state[j])) {
+				/* if WL_RSSI below BT-Tx interference thres */
+				dm->xtk_xmap[i][j] = 1;
+			} else {
+				dm->xtk_xmap[i][j] = 0;
+			}
+
+			map[i][j] = dm->ant_xmap[i][j] | dm->xtk_xmap[i][j];
+		}
+	}
+
+	memcpy(dm->sit_xmap, map, sizeof(map));
+}
+
+#define _bind_is_btonly 0x7
+static void _set_coex_binding(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
 	struct rtw89_btc_cx *cx = &btc->cx;
 	struct rtw89_btc_extsoc_info *bt2 =  &cx->bt_ext;
 	struct rtw89_btc_bt_info *bt0 = &cx->bt0;
@@ -8608,7 +8747,7 @@ static void _set_coex_binding(struct rtw89_btc *btc)
 	struct rtw89_btc_dm *dm = &btc->dm;
 	u8 path_hwb[BTC_RF_NUM] = {RTW89_PHY_0, RTW89_PHY_1};
 	u8 wl_rf_band[RTW89_BAND_NUM] = {};
-	u8 i, j, val = 0;
+	u8 i, j, val = 0, fit, used_path;
 
 	/*
 	 * sit_xmap(Space-Interaction) = ant_xmap | xtk_xmap
@@ -8658,20 +8797,48 @@ static void _set_coex_binding(struct rtw89_btc *btc)
 	}
 
 	/*
+	 * WL 1SS MIMO-PS: WL Rx is confined to a single path, so the unused
+	 * path has no WL-Rx frequency interference with any BT.
+	 * RF_PATH_AB -> not 1SS, both paths keep their real fit_xmap.
+	 * Same helper as _update_sdm_map(), so xtk_xmap and fit_map always
+	 * agree on which RF-path is the unused one.
+	 * e.g. CIS@BT_2ND -> rx_path=RF_PATH_B, used_path=S1:
+	 *      RF-S1 keeps its real fit_xmap, RF-S0 is cleared.
+	 */
+	used_path = _get_sdm_1ss_path(rtwdev);
+	dm->fit_used_path = used_path; /* record for dbg cmd "xmap" */
+
+	/*
 	 * tdd_map = sit_xmap * fdm_map, 1: WL-RF-Sx vs. BTx take TDD-Action
 	 * fdd_map =(!sit_xmap) * fdm_map, 1: WL-RF-Sx vs.BTx take FDD-Action
 	 * co-rx map = ant_xmap * fdm_map 1:WL/BT co-rx (for halbb-btg-ctrl)
 	 * sit_xmap,ant_xmap = 0 or 1, so tdd/fdd use multiplication (*)
+	 *
+	 * fit: WL-BT freq-interact(2bit band-map) of RF-Sx vs. BTx,
+	 * = fit_xmap[HWB][BTx], the used_path keeps this real band-map,
+	 * the unused path is cleared to 0 if 1SS MIMO-PS.
 	 */
 
 	for (i = 0; i < BTC_RF_NUM; i++)
 		for (j = 0; j < BTC_ALL_BT_EZL; j++) {
-			dm->tdd_map[i][j] = dm->sit_xmap[i][j] *
-					    dm->fit_xmap[path_hwb[i]][j];
-			dm->fdd_map[i][j] = !dm->sit_xmap[i][j] *
-					     dm->fit_xmap[path_hwb[i]][j];
-			dm->corx_map[i][j] = dm->ant_xmap[i][j] *
-					     dm->fit_xmap[path_hwb[i]][j];
+			fit = dm->fit_xmap[path_hwb[i]][j];
+
+			/*
+			 * 1SS MIMO-PS: no WL-Rx on the unused path.
+			 * Only the local fit is dropped, dm->fit_xmap keeps
+			 * the real per-HW-band map: it is indexed by HW-band,
+			 * and both RF-path may map to the same HW-band, so
+			 * clearing it there would also drop used_path's entry
+			 * (and the other MLO link's entry in DB_MCC).
+			 */
+			if (used_path != RF_PATH_AB && i != used_path)
+				fit = 0;
+
+			dm->fit_map[i][j] = fit; /* for dbg cmd "xmap" */
+
+			dm->tdd_map[i][j] = dm->sit_xmap[i][j] * fit;
+			dm->fdd_map[i][j] = !dm->sit_xmap[i][j] * fit;
+			dm->corx_map[i][j] = dm->ant_xmap[i][j] * fit;
 	}
 
 	/* TDD-Binding */
@@ -8794,7 +8961,7 @@ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
 	dm->fddt_train = BTC_FDDT_DISABLE;
 	bt->scan_rx_low_pri = false;
 
-	_set_coex_binding(btc);
+	_set_coex_binding(rtwdev);
 	_update_btc_state_map(rtwdev);
 
 	dm->freerun_chk = _check_freerun(rtwdev); /* check if meet freerun */
@@ -9031,6 +9198,8 @@ static void _set_init_info(struct rtw89_dev *rtwdev)
 	btc_fw_set_monreg(rtwdev);
 	_set_ext_interface(rtwdev);
 	_set_wl_tx_power(rtwdev, RTW89_BTC_WL_DEF_TX_PWR, RTW89_PHY_0);
+
+	_update_sdm_map(rtwdev);
 }
 
 void rtw89_btc_ntfy_init(struct rtw89_dev *rtwdev, u8 mode)
@@ -9970,6 +10139,96 @@ static void rtw89_btc_ntfy_wl_sta_iter(void *data, struct ieee80211_sta *sta)
 
 #define BTC_NHM_CHK_INTVL 20
 
+static bool _update_wl_rssi_status(struct rtw89_dev *rtwdev)
+{
+	struct rtw89_btc *btc = &rtwdev->btc;
+	struct rtw89_btc_cx *cx = &btc->cx;
+	struct rtw89_btc_wl_info *wl = &cx->wl;
+	struct rtw89_btc_dm *dm = &btc->dm;
+	struct rtw89_btc_bt_link_info *b;
+	u8 i, j, ant_iso, th, rssi, nxt, bt_enable;
+	u8 wl_rf_band = RTW89_BAND_2G, cnt = 0;
+	bool status_change = false;
+	s8 bt_pin;
+	s32 val;
+
+	/* Update WL RSSI (search the min value between all role/HW-band) */
+	rssi = 110; /* unit: % */
+	for (i = 0; i < RTW89_BE_BTC_WL_MAX_ROLE_NUMBER; i++) {
+		for (j = 0; j < RTW89_MAC_NUM; j++) {
+			if (!wl->rlink_info[i][j].active ||
+			    wl->rlink_info[i][j].connected == MLME_NO_LINK)
+				continue;
+
+			if (wl->rlink_info[i][j].stat.rssi < rssi) { /* find min */
+				rssi = wl->rlink_info[i][j].stat.rssi;
+				wl_rf_band = wl->rlink_info[i][j].band;
+				cnt++;
+			}
+		}
+	}
+
+	if (cnt == 0) /* no wifi link exist */
+		wl->rssi = 0;
+	else
+		wl->rssi = rssi;
+
+	/* SIR state: compare WL_RSSI with each BT-Tx interference */
+	for (i = BTC_BT_1ST; i <= BTC_BT_EXT; i++) {
+		switch (i) {
+		case BTC_BT_1ST:
+		default:
+			bt_enable = cx->bt0.enable.now;
+			ant_iso = cx->bt0.ant_iso_to_wl;
+			if (wl_rf_band != RTW89_BAND_2G) /* find same rf-band */
+				b = &cx->bt0.link_info_56g;
+			else
+				b = &cx->bt0.link_info;
+			if (b->bt_txpwr_desc.le_dbm > b->bt_txpwr_desc.br_dbm)
+				bt_pin = b->bt_txpwr_desc.le_dbm;
+			else
+				bt_pin = b->bt_txpwr_desc.br_dbm;
+			break;
+		case BTC_BT_2ND:
+			bt_enable = cx->bt1.enable.now;
+			ant_iso = cx->bt1.ant_iso_to_wl;
+			if (wl_rf_band != RTW89_BAND_2G) /* find same rf-band */
+				b = &cx->bt0.link_info_56g;
+			else
+				b = &cx->bt0.link_info;
+			if (b->bt_txpwr_desc.le_dbm > b->bt_txpwr_desc.br_dbm)
+				bt_pin = b->bt_txpwr_desc.le_dbm;
+			else
+				bt_pin = b->bt_txpwr_desc.br_dbm;
+			break;
+		case BTC_BT_EXT:
+			bt_enable = !!cx->bt_ext.func_type;
+			ant_iso = cx->bt_ext.ant_iso_to_wl;
+			bt_pin = cx->bt_ext.max_tx_pwr;
+			break;
+		}
+
+		val = 110 + bt_pin - ant_iso - dm->sir_thres;
+		if (!bt_enable || val <= 0)
+			th = 0;
+		else if (val >= 110)
+			th = 110;
+		else
+			th = (u8)val;
+
+		dm->tdd_rssi_thres = th;
+
+		nxt = _update_rssi_state(rtwdev, dm->sir_state[i], wl->rssi, th);
+
+		if (nxt != dm->sir_state[i]) {
+			dm->sir_state[i] = nxt;
+			status_change = true;
+		}
+	}
+
+	return status_change;
+}
+
 void rtw89_btc_ntfy_wl_sta(struct rtw89_dev *rtwdev)
 {
 	struct rtw89_btc *btc = &rtwdev->btc;
@@ -9995,6 +10254,9 @@ void rtw89_btc_ntfy_wl_sta(struct rtw89_dev *rtwdev)
 	if (dm->trx_info.wl_rssi != wl->rssi_level)
 		dm->trx_info.wl_rssi = wl->rssi_level;
 
+	if (_update_wl_rssi_status(rtwdev))
+		_update_sdm_map(rtwdev);
+
 	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): busy=%d\n",
 		    __func__, !!wl->status.map.busy);
 
@@ -10004,7 +10266,14 @@ void rtw89_btc_ntfy_wl_sta(struct rtw89_dev *rtwdev)
 		_fw_set_drv_info(rtwdev, CXDRVINFO_ROLE);
 	if (data.is_sta_change) {
 		wl->status.map.busy = data.busy_all;
-		wl->status.map.traffic_dir = data.dir_all;
+		if (wl->status.map.traffic_dir != data.dir_all) {
+			wl->status.map.traffic_dir = data.dir_all;
+			/*
+			 * traffic_dir (UL/DL) switch changes the 1SS MIMO-PS
+			 * xtk_xmap, recompute sit_xmap in the same coex cycle
+			 */
+			_update_sdm_map(rtwdev);
+		}
 		_run_coex(rtwdev, BTC_RSN_NTFY_WL_STA);
 	} else if (btc->dm.cnt_notify[BTC_NCNT_WL_STA] >=
 		   btc->dm.cnt_dm[BTC_DCNT_WL_STA_LAST] + BTC_NHM_CHK_INTVL) {
