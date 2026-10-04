@@ -686,6 +686,7 @@ struct rtw89_phy_gen_def {
 	void (*preinit_rf_nctl)(struct rtw89_dev *rtwdev);
 	void (*bb_wrap_init)(struct rtw89_dev *rtwdev);
 	void (*ch_info_init)(struct rtw89_dev *rtwdev);
+	int (*btc_bttrx_en)(struct rtw89_dev *rtwdev, u8 bt_en_int, bool enable);
 
 	void (*set_txpwr_byrate)(struct rtw89_dev *rtwdev,
 				 const struct rtw89_chan *chan,
@@ -1064,6 +1065,17 @@ static inline void rtw89_phy_ch_info_init(struct rtw89_dev *rtwdev)
 
 	if (phy->ch_info_init)
 		phy->ch_info_init(rtwdev);
+}
+
+static inline
+int rtw89_phy_btc_bttrx_en(struct rtw89_dev *rtwdev, u8 bt_en_int, bool enable)
+{
+	const struct rtw89_phy_gen_def *phy = rtwdev->chip->phy_def;
+
+	if (!phy->btc_bttrx_en)
+		return 0;
+
+	return phy->btc_bttrx_en(rtwdev, bt_en_int, enable);
 }
 
 static inline

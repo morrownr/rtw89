@@ -8582,6 +8582,8 @@
 #define RR_MODOPT_M_TXPWR GENMASK(5, 0)
 #define RR_WLSEL 0x02
 #define RR_WLSEL_AG GENMASK(18, 16)
+#define RR_BTG_CONTROL 0x4
+#define RR_BTG_CONTROL_EN BIT(2)
 #define RR_RSV1 0x05
 #define RR_RSV1_RST BIT(0)
 #define RR_BBDC 0x10005

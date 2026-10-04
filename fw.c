@@ -1026,6 +1026,7 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
 	__CFG_FW_FEAT(RTL8922A, lt, 0, 35, 109, 1, SCAN_OFFLOAD_BE_V1),
 	__CFG_FW_FEAT(RTL8922A, lt, 0, 35, 113, 2, SCAN_OFFLOAD_BE_V2),
 	__CFG_FW_FEAT(RTL8922A, lt, 0, 35, 119, 0, CH_INFO_BE_V1),
+	__CFG_FW_FEAT(RTL8922A, lt, 0, 35, 119, 3, NO_DRV_BT_TXRX_EN),
 	__CFG_FW_FEAT(RTL8922D, ge, 0, 0, 0, 0, MACID_PAUSE_SLEEP),
 	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 75, 2, SCAN_OFFLOAD),
 	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 75, 2, BEACON_FILTER),
@@ -1044,6 +1045,7 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 113, 2, SCAN_OFFLOAD_BE_V2),
 	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 119, 0, LPS_ML_INFO_V1_EXTRA),
 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 119, 0, CH_INFO_BE_V1),
+	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 119, 3, NO_DRV_BT_TXRX_EN),
 };
 
 static void rtw89_fw_iterate_feature_cfg(struct rtw89_fw_info *fw,
