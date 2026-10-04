@@ -4186,10 +4186,10 @@ static void _set_bt_tx_power(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
 		buf[1] = rf_band;  /* bit-map: bit1->5GHz/6Ghz, bit0->2.4GHz */
 
 		if (!force_exec && !btc->cli_h2c_cmd) {
-			if (rf_band == RTW89_BAND_2G &&
+			if (rf_band == BIT(RTW89_BAND_2G) &&
 			    bt->tx_power_now == level)
 				continue;
-			else if (rf_band != RTW89_BAND_2G &&
+			else if (rf_band != BIT(RTW89_BAND_2G) &&
 				 bt->tx_power_now_6g == level)
 				continue;
 		}
@@ -4199,7 +4199,7 @@ static void _set_bt_tx_power(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
 
 		if (!_send_fw_cmd(rtwdev, BTFC_SET, h2c_func, buf, len)) {
 			btc->dm.rf_trx_para.bt_tx_power[i] = level;
-			if (rf_band == RTW89_BAND_2G)
+			if (rf_band == BIT(RTW89_BAND_2G))
 				bt->tx_power_now = level;
 			else
 				bt->tx_power_now_6g = level;
@@ -4240,7 +4240,7 @@ static void _set_bt_rx_gain(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
 		id_stop = bid;
 	}
 
-	if (rf_band == RTW89_BAND_2G)
+	if (rf_band == BIT(RTW89_BAND_2G))
 		scbd_bit |= BTC_WSCB_RXGAIN;
 	else
 		scbd_bit |= BTC_WSCB_RXGAIN_56G;
@@ -4256,10 +4256,10 @@ static void _set_bt_rx_gain(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
 
 		/* return if same setup */
 		if (!force_exec && !btc->cli_h2c_cmd) {
-			if (rf_band == RTW89_BAND_2G &&
+			if (rf_band == BIT(RTW89_BAND_2G) &&
 			    bt->lna_constrain == level)
 				continue;
-			else if (rf_band != RTW89_BAND_2G &&
+			else if (rf_band != BIT(RTW89_BAND_2G) &&
 				 bt->lna_constrain_6g == level)
 				continue;
 		}
@@ -4400,9 +4400,9 @@ static void _set_rf_trx_para(struct rtw89_dev *rtwdev)
 
 	if (bmode == BTC_WLINK_NOLINK) {
 		return;
-	} else if (rf_band == RTW89_BAND_5G) {
+	} else if (rf_band == BIT(RTW89_BAND_5G)) {
 		mode = BTC_WLINK_V0_5G;
-	} else if (rf_band == RTW89_BAND_2G && bmode == BTC_WLINK_STA) {
+	} else if (rf_band == BIT(RTW89_BAND_2G) && bmode == BTC_WLINK_STA) {
 		mode = BTC_WLINK_V0_2G_STA;
 	}
 
