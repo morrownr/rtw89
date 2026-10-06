@@ -901,7 +901,9 @@ void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request
 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
 	struct rtw89_dev *rtwdev = hw->priv;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 4, 0)
 	wiphy_lock(wiphy);
+#endif
 	rtw89_leave_ps_mode(rtwdev);
 
 	if (rtwdev->regulatory.programmed)
@@ -920,7 +922,9 @@ policy:
 
 	rtw89_core_set_chip_txpwr(rtwdev);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 4, 0)
 	wiphy_unlock(wiphy);
+#endif
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
