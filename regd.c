@@ -663,6 +663,9 @@ static const char * const rtw89_regd_string[] = {
 	RTW89_DEF_REGD_STR(QATAR),
 	RTW89_DEF_REGD_STR(UK),
 	RTW89_DEF_REGD_STR(THAILAND),
+	RTW89_DEF_REGD_STR(NZ),
+	RTW89_DEF_REGD_STR(BR),
+	RTW89_DEF_REGD_STR(AR),
 };
 
 static_assert(ARRAY_SIZE(rtw89_regd_string) == RTW89_REGD_NUM);

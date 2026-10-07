@@ -963,6 +963,9 @@ enum rtw89_regulation_type {
 	RTW89_QATAR	= 13,
 	RTW89_UK	= 14,
 	RTW89_THAILAND	= 15,
+	RTW89_NZ	= 16,
+	RTW89_BR	= 17,
+	RTW89_AR	= 18,
 	RTW89_REGD_NUM,
 };
 
