@@ -26,6 +26,16 @@ static bool rtw89_disable_ps_mode;
 module_param_named(disable_ps_mode, rtw89_disable_ps_mode, bool, 0644);
 MODULE_PARM_DESC(disable_ps_mode, "Set Y to disable low power mode");
 
+/* Upstream hard-codes -53 / -38 dBm. */
+static int rtw89_mlsr_goto_2ghz_rssi = -80;
+module_param_named(mlsr_goto_2ghz_rssi, rtw89_mlsr_goto_2ghz_rssi, int, 0644);
+MODULE_PARM_DESC(mlsr_goto_2ghz_rssi,
+		 "Beacon RSSI (dBm) at or below which MLSR moves to the 2.4 GHz link (default: -80)");
+static int rtw89_mlsr_exit_2ghz_rssi = -65;
+module_param_named(mlsr_exit_2ghz_rssi, rtw89_mlsr_exit_2ghz_rssi, int, 0644);
+MODULE_PARM_DESC(mlsr_exit_2ghz_rssi,
+		 "Beacon RSSI (dBm) at or above which MLSR leaves the 2.4 GHz link (default: -65)");
+
 #define RTW89_DEF_CHAN(_freq, _hw_val, _flags, _band)	\
 	{ .center_freq = _freq, .hw_value = _hw_val, .flags = _flags, .band = _band, }
 #define RTW89_DEF_CHAN_2G(_freq, _hw_val)	\
@@ -5422,8 +5432,8 @@ void rtw89_traffic_stats_init(struct rtw89_dev *rtwdev,
 	ewma_tp_init(&stats->rx_ewma_tp);
 }
 
-#define RTW89_MLSR_GOTO_2GHZ_THRESHOLD -53
-#define RTW89_MLSR_EXIT_2GHZ_THRESHOLD -38
+#define RTW89_MLSR_GOTO_2GHZ_THRESHOLD rtw89_mlsr_goto_2ghz_rssi
+#define RTW89_MLSR_EXIT_2GHZ_THRESHOLD rtw89_mlsr_exit_2ghz_rssi
 static void rtw89_core_mlsr_link_decision(struct rtw89_dev *rtwdev,
 					  struct rtw89_vif *rtwvif)
 {
