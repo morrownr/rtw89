@@ -519,8 +519,14 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
 		ext_key = true;
 		break;
 	case WLAN_CIPHER_SUITE_AES_CMAC:
-		hw_key_type = RTW89_SEC_KEY_TYPE_BIP_CCMP128;
-		break;
+		/* BIP (802.11w PMF group management key): the TX path
+		 * (rtw89_core_tx_update_sec_key) has no BIP support and the driver
+		 * does not request IEEE80211_KEY_FLAG_GENERATE_MMIE, so protected
+		 * group-addressed management frames would go out without an MMIE
+		 * ("key cipher not supported 1027078"). Let mac80211 handle BIP in
+		 * software; data and unicast management frames stay HW-encrypted.
+		 */
+		return -EOPNOTSUPP;
 	default:
 		return -EOPNOTSUPP;
 	}
