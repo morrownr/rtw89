@@ -359,11 +359,13 @@ static int rtw8852b_read_efuse(struct rtw89_dev *rtwdev, u8 *log_map,
 	int ret;
 
 	ret = rtw8852bx_read_efuse(rtwdev, log_map, block);
+	if (ret)
+		return ret;
 
 	if (rtwdev->efuse.rfe_type == 41)
 		set_bit(RTW89_QUIRK_1ANT, rtwdev->quirks);
 
-	return ret;
+	return 0;
 }
 
 static void rtw8852b_pwr_sps_ana(struct rtw89_dev *rtwdev)
