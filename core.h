@@ -202,6 +202,10 @@ static inline u64 roundup_u64(u64 x, u32 y)
  }
  #endif
 
+#ifndef __counted_by_le
+#define __counted_by_le(member)
+#endif
+
 #define MASKBYTE0 0xff
 #define MASKBYTE1 0xff00
 #define MASKBYTE2 0xff0000
