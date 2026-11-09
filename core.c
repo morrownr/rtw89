@@ -7042,6 +7042,13 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
 	bitmap_or(rtwdev->quirks, rtwdev->quirks, &rtwdev->chip->default_quirks,
 		  NUM_OF_RTW89_QUIRKS);
 
+	/* Leaving inactive power save powers the chip up again, firmware download
+	 * included, which takes seconds over USB, and connecting leaves it several
+	 * times (scans, link changes). Keep the chip powered while idle instead.
+	 */
+	if (rtwdev->hci.type == RTW89_HCI_TYPE_USB)
+		rtw89_core_dm_disable_set(rtwdev, RTW89_DM_INACTIVE_PS);
+
 	INIT_LIST_HEAD(&rtwdev->ba_list);
 	INIT_LIST_HEAD(&rtwdev->forbid_ba_list);
 	INIT_LIST_HEAD(&rtwdev->rtwvifs_list);
