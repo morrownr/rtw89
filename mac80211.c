@@ -277,6 +277,20 @@ static void rtw89_ops_remove_interface(struct ieee80211_hw *hw,
 	rtw89_vif_unset_link(rtwvif, RTW89_VIF_IDLE_LINK_ID);
 
 bottom:
+	/* mac80211 can remove an MLD station interface whose links are still
+	 * valid ("destroying interface with valid links"). Their channel
+	 * contexts are then never unassigned, so the interface is still on the
+	 * channel manager's active list. Take it off: add_interface
+	 * re-initialises mgnt_entry, and an entry re-initialised while still
+	 * linked makes every walk of the active list loop forever, e.g. in
+	 * rtw89_hw_scan_set_extra_op_info() under the wiphy lock.
+	 */
+	if (!list_empty(&rtwvif->mgnt_entry)) {
+		rtw89_warn(rtwdev, "%s: interface still in the active list\n",
+			   __func__);
+		list_del_init(&rtwvif->mgnt_entry);
+	}
+
 	list_del_init(&rtwvif->list);
 	rtw89_core_release_bit_map(rtwdev->hw_port, port);
 	rtw89_release_mac_id(rtwdev, macid);
